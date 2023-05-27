@@ -48,7 +48,7 @@ void Route::InitUpload(std::string value)
     _upload = value;
 }
 
-Route::Route(Server *Base, TokenVectsIter& begin, TokenVectsIter& end) : Server(*Base), _pattren(), _limit_except(), _cgi(), _upload()
+Route::Route(Server *Base, TokenVectsIter& begin, TokenVectsIter& end) : Server(*Base), _pattren("/"), _limit_except(), _cgi(), _upload()
 {
     initRoute MemberInit[9] = {&Route::InitPattern, &Route::InitLimitExcept, &Route::InitCgi, &Route::InitUpload, &Route::InitRoot, &Route::InitIndex, &Route::InitErrorPage, &Route::InitClienBodySize,&Route::InitAutoIndex};
     static std::string keywords[10] = {"pattern", "limit_except", "cgi", "upload", "root", "index", "error_page", "client_body_size", "AutoIndex", InvalidLocationKey};

@@ -6,7 +6,7 @@
 /*   By: waboutzo <waboutzo@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/15 15:38:53 by waboutzo          #+#    #+#             */
-/*   Updated: 2023/05/27 17:18:43 by waboutzo         ###   ########.fr       */
+/*   Updated: 2023/05/27 19:06:51 by waboutzo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,6 +31,7 @@ int main(int ac, char **av)
 		std::string content(((ac != 2) ? OpenPath() : OpenPath(av[1])));
 
 		Configuration conf(content);
+		std::cout << conf << std::endl;
 	}
 	catch(const std::exception& e)
 	{

@@ -1,5 +1,4 @@
 .vscode
 **/*.o
 .vscode
-*.conf
 TODO

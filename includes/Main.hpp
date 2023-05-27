@@ -20,7 +20,7 @@
 #define NOROUTE				"define a server without location is forbidden"
 #define ServerError			": can't be in the server scope"
 #define BlockErro			": can't be in the main scope"
-#define DefaultPath			"./sample.conf"
+#define DefaultPath			"./conf/sample.conf"
 #define EmptyFile			"empty config file"
 #define FileFailed			"failed to open the file : "
 #define SyntaxError			"Syntax error, please insert a valid config file format"

@@ -6,7 +6,7 @@
 /*   By: waboutzo <waboutzo@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/23 19:29:06 by waboutzo          #+#    #+#             */
-/*   Updated: 2023/05/27 16:47:46 by waboutzo         ###   ########.fr       */
+/*   Updated: 2023/05/27 19:05:49 by waboutzo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -105,7 +105,7 @@ void Server::InitAutoIndex(std::string value)
 struct PortValidator {
     void operator()(size_t port) {
         if (port > 65535)
-            throw CustomeExceptionMsg("InvalidPort");
+            throw CustomeExceptionMsg(InvalidPort);
     }
 };
 
