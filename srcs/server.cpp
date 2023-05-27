@@ -24,7 +24,7 @@ Server::Server(TokenVectsIter& begin, TokenVectsIter& end)  : _host(), _ports(),
     std::string *key;
 
 
-    while (begin < end)
+    while (++begin < end)
     {
         if (begin->second == END_BLOCK || begin->second == BLOCK)
             break;
@@ -36,9 +36,9 @@ Server::Server(TokenVectsIter& begin, TokenVectsIter& end)  : _host(), _ports(),
         if (*key == InvalidSeverKey)
             throw CustomeExceptionMsg(directive[0].first + InvalidSeverKey);
         ((this->*MemberInit[key - keywords]))(directive[1].first);
-        begin++;
     }
 }
+
 
 Server::Server(const Server& other)
 {

@@ -40,5 +40,6 @@ std::ostream& operator<<(std::ostream& o, Route obj)
     std::cout << ";" << std::endl;
     print_vec(obj._cgi, "  cgi:");
     std::cout << std::endl;
+    print_vec(obj._redirect, "  redirect:");
     return o;
 }

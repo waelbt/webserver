@@ -4,7 +4,7 @@ SRC		= main.cpp  srcs/ParcingTools.cpp srcs/server.cpp srcs/routes.cpp srcs/Conf
 
 OBJ		= ${SRC:.cpp=.o}
 
-CPPFLAGS = -Wall -Wextra -Werror -std=c++98 -fsanitize=address -g
+CPPFLAGS = -Wall -Wextra -Werror -std=c++98 
 
 CXX = c++
 

@@ -30,7 +30,7 @@ Configuration::Configuration(std::string content)
 			if (it.first->first == "server")
 			{
 				delete server;
-				server = new Server(++it.first, it.second);
+				server = new Server(it.first, it.second);
 				string_trim(*(it.first));
 				location = 0;
 				while(it.first->first == "location")

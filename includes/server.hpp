@@ -12,6 +12,7 @@
 
 #include "Main.hpp"
 //base_class
+		
 class Server
 {
 	protected:
@@ -49,6 +50,7 @@ class Route : public Server
 		std::vector<std::string> _limit_except;
 		std::vector<s_cgi> _cgi;
 		std::string _upload;
+		std::vector<std::string> _redirect;
 	public:
 		Route();
 		Route(Server* base, TokenVectsIter& begin, TokenVectsIter& end);
@@ -56,9 +58,11 @@ class Route : public Server
 		void InitLimitExcept(std::string value);
 		void InitCgi(std::string value);
 		void InitUpload(std::string value);
+		void InitRedirect(std::string value);
 		friend std::ostream& operator<<(std::ostream& o, Route obj);
 		~Route();
 };
+
 
 
 typedef void (Server::*initserver)(std::string);

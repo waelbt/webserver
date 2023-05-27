@@ -50,10 +50,15 @@ void Route::InitUpload(std::string value)
         _upload = value;
 }
 
+void Route::InitRedirect(std::string value)
+{
+    _redirect = converter(value, token_to_string);
+}
+
 Route::Route(Server *Base, TokenVectsIter& begin, TokenVectsIter& end) : Server(*Base), _pattren("/"), _limit_except(), _cgi(), _upload()
 {
-    initRoute MemberInit[9] = {&Route::InitPattern, &Route::InitLimitExcept, &Route::InitCgi, &Route::InitUpload, &Route::InitRoot, &Route::InitIndex, &Route::InitErrorPage, &Route::InitClienBodySize,&Route::InitAutoIndex};
-    static std::string keywords[10] = {"pattern", "limit_except", "cgi", "upload", "root", "index", "error_page", "client_max_body_size", "AutoIndex", InvalidLocationKey};
+    initRoute MemberInit[10] = {&Route::InitPattern, &Route::InitLimitExcept, &Route::InitCgi, &Route::InitUpload, &Route::InitRoot, &Route::InitIndex, &Route::InitErrorPage, &Route::InitClienBodySize,&Route::InitAutoIndex, &Route::InitRedirect};
+    static std::string keywords[11] = {"pattern", "limit_except", "cgi", "upload", "root", "index", "error_page", "client_max_body_size", "AutoIndex", "redirect", InvalidLocationKey};
     std::vector<TokenPair> directive;
     std::string *key;
 
@@ -65,7 +70,7 @@ Route::Route(Server *Base, TokenVectsIter& begin, TokenVectsIter& end) : Server(
         if (directive.size() != 2)
             throw CustomeExceptionMsg(DirErr);
         std::for_each(directive.begin(), directive.end(), string_trim);
-        key = std::find(keywords, keywords + 9, directive[0].first);
+        key = std::find(keywords, keywords + 10, directive[0].first);
         if (*key == InvalidLocationKey)
             throw CustomeExceptionMsg(directive[0].first + InvalidLocationKey);
         ((this->*MemberInit[key - keywords]))(directive[1].first);
