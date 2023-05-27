@@ -60,9 +60,9 @@ std::vector<Route> Configuration::getRoutes() const
 	return _routes;
 }
 
-std::ostream& operator<<(std::ostream& o, Configuration obj)
+
+void Configuration::showdata() const
 {
-	for (std::vector<Route>::iterator it = obj._routes.begin(); it !=  obj._routes.end(); it++)
+	for (std::vector<Route>::const_iterator it = _routes.begin(); it != _routes.end(); it++)
 		std::cout << *it << std::endl;
-	return o;
 }

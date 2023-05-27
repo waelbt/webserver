@@ -31,7 +31,7 @@ int main(int ac, char **av)
 		std::string content(((ac != 2) ? OpenPath() : OpenPath(av[1])));
 
 		Configuration conf(content);
-		std::cout << conf << std::endl;
+		conf.showdata();
 	}
 	catch(const std::exception& e)
 	{

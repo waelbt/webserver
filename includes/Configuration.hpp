@@ -21,6 +21,6 @@ class Configuration
         std::vector<Route> _routes;
     public:
         Configuration(std::string tokens);
+        void showdata() const;
         std::vector<Route> getRoutes() const;
-        friend std::ostream& operator<<(std::ostream& o, Configuration obj);
 };

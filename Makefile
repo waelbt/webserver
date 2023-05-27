@@ -1,6 +1,6 @@
 NAME	= webserve
 
-SRC		= main.cpp  srcs/parcing_tools.cpp srcs/server.cpp srcs/routes.cpp srcs/Configuration.cpp
+SRC		= main.cpp  srcs/ParcingTools.cpp srcs/server.cpp srcs/routes.cpp srcs/Configuration.cpp srcs/ShowData.cpp
 
 OBJ		= ${SRC:.cpp=.o}
 

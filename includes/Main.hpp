@@ -70,7 +70,17 @@ TokenPair 						selectToken(StrIter& begin, const StrIter& end, int& level, bool
 std::string 					token_to_string(TokenPair& pair);
 std::vector<TokenPair> 			SplitValues(std::string value, bool (*func)(const char&) = is_symbol);
 
+template <typename T>
+void print_vec( const std::vector<T>& vec, std::string name)
+{
+    typedef typename std::vector<T>::const_iterator const_iterator;
 
+    for (const_iterator it = vec.begin(); it != vec.end(); it++)
+    {
+        std::cout << name;
+        std::cout << " "<< *it;
+    }    
+}
 struct s_cgi
 {
 	std::vector<std::string> _exec;
@@ -101,8 +111,6 @@ std::vector<std::string> converter(const std::string& content, func function)
 	}
     return values;
 }
-
-
 
 std::ostream& operator<<(std::ostream& o, s_err_pages obj);
 std::ostream& operator<<(std::ostream& o, s_cgi obj);

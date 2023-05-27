@@ -119,22 +119,5 @@ s_err_pages::s_err_pages(std::string value)
     _page = *end;
 }
 
-std::ostream& operator<<(std::ostream& o, s_err_pages obj)
-{
-    for (std::vector<size_t>::iterator it = obj._status.begin(); it != obj._status.end(); it++)
-        std::cout << *it << " ";
-    std::cout << "         error page: "  << obj._page << std::endl;
-    return o;
-}
-
-
-std::ostream& operator<<(std::ostream& o, s_cgi obj)
-{
-    for (std::vector<std::string>::iterator it = obj._exec.begin(); it != obj._exec.end(); it++)
-        std::cout << *it << " ";
-    std::cout << "         path: "  << obj._path << std::endl;
-    return o;
-}
-
 Server::~Server()
 {}
