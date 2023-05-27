@@ -1,8 +1,8 @@
 NAME	= webserve
 
-SRC		= main.cpp  srcs/ParcingTools.cpp srcs/server.cpp srcs/routes.cpp srcs/Configuration.cpp srcs/ShowData.cpp
+SRCS		= main.cpp  srcs/ParcingTools.cpp srcs/server.cpp srcs/routes.cpp srcs/Configuration.cpp srcs/ShowData.cpp
 
-OBJ		= ${SRC:.cpp=.o}
+OBJ		= ${SRCS:.cpp=.o}
 
 CPPFLAGS = -Wall -Wextra -Werror -std=c++98 
 

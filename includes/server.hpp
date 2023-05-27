@@ -12,7 +12,7 @@
 
 #include "Main.hpp"
 //base_class
-		
+
 class Server
 {
 	protected:
@@ -29,16 +29,16 @@ class Server
 		Server();
 		Server(TokenVectsIter& begin, TokenVectsIter& end);
         Server(const Server& other);
-		void InitHost(std::string value);
-		void InitPort(std::string value);
-		void InitServerName(std::string value);
-		void InitRoot(std::string value);
-		void InitIndex(std::string value);
-		void InitErrorPage(std::string value);
-		void InitClienBodySize(std::string value);
-		void InitAutoIndex(std::string value);
+		virtual void InitHost(std::string value);
+		virtual void InitPort(std::string value);
+		virtual void InitServerName(std::string value);
+		virtual void InitRoot(std::string value);
+		virtual void InitIndex(std::string value);
+		virtual void InitErrorPage(std::string value);
+		virtual void InitClienBodySize(std::string value);
+		virtual void InitAutoIndex(std::string value);
         Server& operator=(const Server& other);
-		~Server();
+		virtual ~Server();
 };
 
 // //	child class
