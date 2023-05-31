@@ -38,14 +38,14 @@ Configuration::Configuration(std::string content)
 					string_trim(*(it.first));
 					location++;
 				}
-				if (!location || it.first->second != END_BLOCK){
-					throw CustomeExceptionMsg((!location) ? NOROUTE : ServerError);}
+				if (!location || it.first->second != END_BLOCK)
+					throw CustomeExceptionMsg((!location) ? NOROUTE : ServerError);
 			}
-			else  {
-				throw CustomeExceptionMsg(it.first->first + BlockErro);}
+			else
+				throw CustomeExceptionMsg(it.first->first + BlockErro);
 		}
-		else if ((it.first->second != END))  {
-			throw CustomeExceptionMsg(it.first->first + BlockErro);}
+		else if ((it.first->second != END))
+			throw CustomeExceptionMsg(it.first->first + BlockErro);
 		it.first++;
 	}
 	if (_routes.empty())
