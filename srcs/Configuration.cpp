@@ -14,12 +14,10 @@
 
 Configuration::Configuration(std::string content)
 {
-	int											location;
-	TokenVects 									data;
-	std::pair<TokenVectsIter, TokenVectsIter>	it;
+	int											locationCount;
+	TokenVects 									data(SplitValues(content));
+	std::pair<TokenVectsIter, TokenVectsIter>	it(std::make_pair(data.begin(),  data.end()));
 
-	data = SplitValues(content);
-	it = std::make_pair(data.begin(),  data.end());
 	while (it.first < it.second)
 	{
 		if (it.first->second == BLOCK)
@@ -29,16 +27,16 @@ Configuration::Configuration(std::string content)
 			{
 				Server  server(it.first, it.second);
 				string_trim(*(it.first));
-				location = 0;
+				locationCount = 0;
 				while(it.first->first == "location")
 				{
 					_routes.insert(_routes.end(), Route(server, it.first, it.second));
 					it.first++;
 					string_trim(*(it.first));
-					location++;
+					locationCount++;
 				}
-				if (!location || it.first->second != END_BLOCK)
-					throw CustomeExceptionMsg((!location) ? NOROUTE : ServerError);
+				if (!locationCount || it.first->second != END_BLOCK)
+					throw CustomeExceptionMsg((!locationCount) ? NOROUTE : ServerError);
 			}
 			else
 				throw CustomeExceptionMsg(it.first->first + BlockErro);
