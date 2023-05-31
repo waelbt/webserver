@@ -55,7 +55,7 @@ void Route::InitRedirect(std::string value)
     _redirect = converter(value, token_to_string);
 }
 
-Route::Route(Server *Base, TokenVectsIter& begin, TokenVectsIter& end) : Server(*Base), _pattren("/"), _limit_except(), _cgi(), _upload()
+Route::Route(const Server& Base, TokenVectsIter& begin, TokenVectsIter& end) : Server(Base), _pattren("/"), _limit_except(), _cgi(), _upload()
 {
     initRoute MemberInit[10] = {&Route::InitPattern, &Route::InitLimitExcept, &Route::InitCgi, &Route::InitUpload, &Route::InitRoot, &Route::InitIndex, &Route::InitErrorPage, &Route::InitClienBodySize,&Route::InitAutoIndex, &Route::InitRedirect};
     static std::string keywords[11] = {"pattern", "limit_except", "cgi", "upload", "root", "index", "error_page", "client_max_body_size", "AutoIndex", "redirect", InvalidLocationKey};

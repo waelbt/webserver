@@ -53,7 +53,7 @@ class Route : public Server
 		std::vector<std::string> _redirect;
 	public:
 		Route();
-		Route(Server* base, TokenVectsIter& begin, TokenVectsIter& end);
+		Route(const Server& base, TokenVectsIter& begin, TokenVectsIter& end);
 		void InitPattern(std::string value);
 		void InitLimitExcept(std::string value);
 		void InitCgi(std::string value);

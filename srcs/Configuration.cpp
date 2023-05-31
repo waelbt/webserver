@@ -15,11 +15,10 @@
 Configuration::Configuration(std::string content)
 {
 	int											location;
-	Server              						*server;
+	Server              						server;
 	TokenVects 									data;
 	std::pair<TokenVectsIter, TokenVectsIter>	it;
 
-	server = NULL;
 	data = SplitValues(content);
 	it = std::make_pair(data.begin(),  data.end());
 	while (it.first < it.second)
@@ -29,8 +28,7 @@ Configuration::Configuration(std::string content)
 			string_trim(*(it.first));
 			if (it.first->first == "server")
 			{
-				delete server;
-				server = new Server(it.first, it.second);
+				Server  server(it.first, it.second);
 				string_trim(*(it.first));
 				location = 0;
 				while(it.first->first == "location")
@@ -41,16 +39,15 @@ Configuration::Configuration(std::string content)
 					location++;
 				}
 				if (!location || it.first->second != END_BLOCK){
-					delete server; throw CustomeExceptionMsg((!location) ? NOROUTE : ServerError);}
+					throw CustomeExceptionMsg((!location) ? NOROUTE : ServerError);}
 			}
 			else  {
-				delete server; throw CustomeExceptionMsg(it.first->first + BlockErro);}
+				throw CustomeExceptionMsg(it.first->first + BlockErro);}
 		}
 		else if ((it.first->second != END))  {
-			delete server; throw CustomeExceptionMsg(it.first->first + BlockErro);}
+			throw CustomeExceptionMsg(it.first->first + BlockErro);}
 		it.first++;
 	}
-	delete server;
 	if (_routes.empty())
 		throw CustomeExceptionMsg(EmptyFile);
 }
