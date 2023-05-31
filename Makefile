@@ -1,6 +1,9 @@
 NAME	= webserve
 
-SRCS		= main.cpp  srcs/ParcingTools.cpp srcs/server.cpp srcs/routes.cpp srcs/Configuration.cpp srcs/ShowData.cpp
+PARSING = ParcingTools server routes Configuration ShowData
+
+SRCS	= $(addsuffix .cpp, $(addprefix srcs/, $(PARSING))) \
+			main.cpp
 
 OBJ		= ${SRCS:.cpp=.o}
 
