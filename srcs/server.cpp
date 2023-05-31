@@ -73,7 +73,7 @@ void Server::InitPort(std::string value)
 
 void Server::InitServerName(std::string value)
 {
-    _server_name = value;
+    _server_name = converter(value, token_to_string);
 }
 
 void Server::InitRoot(std::string value)
@@ -103,8 +103,8 @@ void Server::InitAutoIndex(std::string value)
 }
 
 struct PortValidator {
-    void operator()(size_t port) {
-        if (port > 65535)
+    void operator()(int port) {
+        if (port < 0 || port > 65535)
             throw CustomeExceptionMsg(InvalidPort);
     }
 };

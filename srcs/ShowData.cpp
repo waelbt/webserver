@@ -2,7 +2,7 @@
 
 std::ostream& operator<<(std::ostream& o, s_err_pages obj)
 {
-    for (std::vector<size_t>::iterator it = obj._status.begin(); it != obj._status.end(); it++)
+    for (std::vector<int>::iterator it = obj._status.begin(); it != obj._status.end(); it++)
         std::cout << " " << *it;
     std::cout << " " << obj._page << ";" << std::endl;
     return o;
@@ -26,7 +26,8 @@ std::ostream& operator<<(std::ostream& o, Route obj)
     std::cout << "  listen:";
     print_vec(obj._ports, "");
     std::cout << ";" << std::endl;
-    std::cout << "  server name: " << obj._server_name << ";" << std::endl;
+    std::cout << "  server name:";
+    print_vec(obj._server_name, "");
     std::cout << "  root: " << obj._root << ";" << std::endl;
     std::cout << "  index: ";
     print_vec(obj._index, "");

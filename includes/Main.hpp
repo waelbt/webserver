@@ -91,7 +91,7 @@ struct s_cgi
 
 struct s_err_pages
 {
-	std::vector<size_t> _status;
+	std::vector<int> _status;
 	std::string _page;
 
 	s_err_pages(std::string value);
