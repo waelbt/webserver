@@ -15,7 +15,6 @@
 Configuration::Configuration(std::string content)
 {
 	int											location;
-	Server              						server;
 	TokenVects 									data;
 	std::pair<TokenVectsIter, TokenVectsIter>	it;
 
