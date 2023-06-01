@@ -11,17 +11,12 @@
 #include <time.h>
 
 //macros
-#define ISVALIDSOCKET(s) ((s) >= 0)
-#define CLOSESOCKET(s) close(s)
-#define SOCKET int
-#define GETSOCKETERRNO() (errno)
-
 
 int main(void)
 {
     struct addrinfo hints;
     struct addrinfo *bind_address;
-    SOCKET socket_listen;
+    int socket_listen;
     printf("Configuring local address...\n");
 
     memset(&hints, 0, sizeof(hints)); //remove garbage value
@@ -41,5 +36,39 @@ int main(void)
 
     printf("Creating socket...\n");
     socket_listen = socket(bind_address->ai_family, bind_address->ai_socktype, bind_address->ai_protocol);
+    if (socket_listen < 0) {
+        fprintf(stderr, "socket() failed. (%d)\n", errno);
+        return 1;
+    }
+    printf("Binding socket to local address...\n");
+    if (bind(socket_listen,
+        bind_address->ai_addr, bind_address->ai_addrlen)) {
+        fprintf(stderr, "bind() failed. (%d)\n", errno);
+        return 1;
+    }
+    freeaddrinfo(bind_address);
+    printf("Listening...\n");
+    /* which is 10 in this case, tells listen() how many connections it is allowed to queue up. */
+    if (listen(socket_listen, 10) < 0) {
+        fprintf(stderr, "listen() failed. (%d)\n", errno);
+        return 1;
+    }
+
+    printf("Waiting for connection...\n");
+    struct sockaddr_storage client_address;
+    socklen_t client_len = sizeof(client_address);
+    int socket_client = accept(socket_listen, (struct sockaddr*) &client_address, &client_len);
+    if (socket_client < 0) {
+        fprintf(stderr, "accept() failed. (%d)\n", errno);
+        return 1;
+    }
+
+
+    printf("Client is connected... ");
+    char address_buffer[100];
+    getnameinfo((struct sockaddr*)&client_address,
+    client_len, address_buffer, sizeof(address_buffer), 0, 0,
+    NI_NUMERICHOST);
+    printf("%s\n", address_buffer);
     return 0;
 }
