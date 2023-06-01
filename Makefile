@@ -1,6 +1,6 @@
 NAME	= webserve
 
-PARSING = ParcingTools server routes Configuration ShowData
+PARSING = ParcingTools server routes Configuration
 
 SRCS	= $(addsuffix .cpp, $(addprefix srcs/, $(PARSING))) \
 			main.cpp

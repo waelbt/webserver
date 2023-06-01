@@ -48,6 +48,21 @@ typedef std::vector<TokenPair>				TokenVects;
 typedef TokenVects::iterator	TokenVectsIter;
 
 
+struct s_cgi
+{
+	std::vector<std::string> _exec;
+	std::string _path;
+
+	s_cgi(std::string value);
+};
+
+struct s_err_pages
+{
+	std::vector<int> _status;
+	std::string _page;
+
+	s_err_pages(std::string value);
+};
 
 class CustomeExceptionMsg : public std::exception {
 	protected:
@@ -81,21 +96,6 @@ void print_vec( const std::vector<T>& vec, std::string name)
         std::cout << " "<< *it;
     }    
 }
-struct s_cgi
-{
-	std::vector<std::string> _exec;
-	std::string _path;
-
-	s_cgi(std::string value);
-};
-
-struct s_err_pages
-{
-	std::vector<int> _status;
-	std::string _page;
-
-	s_err_pages(std::string value);
-};
 
 
 template <typename func>
