@@ -1,6 +1,0 @@
-// Getting to Grips with Socket APIs / Chapter 2 / 65
-note that the TCP client could call bind() before connect() if it is particular about
-which network interface is being used to connect with. This is sometimes important on
-servers that have multiple network interfaces. It's often not important for general purpose
-software.
-

@@ -1,16 +1,4 @@
-//lib
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <netdb.h>
-#include <unistd.h>
-#include <errno.h>
-#include <stdio.h>
-#include <string.h>
-#include <time.h>
-
-//macros
+#include "server.hpp"
 
 int main(void)
 {
@@ -37,20 +25,20 @@ int main(void)
     printf("Creating socket...\n");
     socket_listen = socket(bind_address->ai_family, bind_address->ai_socktype, bind_address->ai_protocol);
     if (socket_listen < 0) {
-        fprintf(stderr, "socket() failed. (%d)\n", errno);
+        fprintf(stderr, "socket() failed. (%s)\n", strerror(errno));
         return 1;
     }
     printf("Binding socket to local address...\n");
     if (bind(socket_listen,
         bind_address->ai_addr, bind_address->ai_addrlen)) {
-        fprintf(stderr, "bind() failed. (%d)\n", errno);
+        fprintf(stderr, "bind() failed. (%s)\n", strerror(errno));
         return 1;
     }
     freeaddrinfo(bind_address);
     printf("Listening...\n");
     /* which is 10 in this case, tells listen() how many connections it is allowed to queue up. */
     if (listen(socket_listen, 10) < 0) {
-        fprintf(stderr, "listen() failed. (%d)\n", errno);
+        fprintf(stderr, "listen() failed. (%s)\n", strerror(errno));
         return 1;
     }
 
@@ -59,7 +47,7 @@ int main(void)
     socklen_t client_len = sizeof(client_address);
     int socket_client = accept(socket_listen, (struct sockaddr*) &client_address, &client_len);
     if (socket_client < 0) {
-        fprintf(stderr, "accept() failed. (%d)\n", errno);
+        fprintf(stderr, "accept() failed. (%s)\n", strerror(errno));
         return 1;
     }
 
@@ -70,5 +58,42 @@ int main(void)
     client_len, address_buffer, sizeof(address_buffer), 0, 0,
     NI_NUMERICHOST);
     printf("%s\n", address_buffer);
+
+    /*If nothing has been received yet,recv() blocks until it has something. If the connection is terminated by the client, recv() returns 0 or -1*/
+    printf("Reading request...\n");
+    char request[1024];
+    int bytes_received = recv(socket_client, request, 1024, 0);
+    if (bytes_received < 0){
+        fprintf(stderr, "accept() failed. (%s)\n", strerror(errno));
+        return 1;
+    }
+    printf("Received %d bytes.\n", bytes_received);
+    /*It is a common mistake to try
+    printing data that's received from recv() directly as a C string. There is no guarantee that
+    the data received from recv() is null terminated! */
+    printf("%.*s", bytes_received, request);
+
+
+    printf("Sending response...\n");
+    const char *response = "HTTP/1.1 200 OK\r\n" "Connection: close\r\n" "Content-Type: text/plain\r\n\r\n" "Local time is: ";
+    int bytes_sent = send(socket_client, response, strlen(response), 0);
+    printf("Sent %d of %d bytes.\n", bytes_sent, (int)strlen(response));
+
+
+
+    time_t timer;
+    time(&timer);
+    char *time_msg = ctime(&timer);
+    bytes_sent = send(socket_client, time_msg, strlen(time_msg), 0);
+     /* send() returns the number of bytes sent. You should generally check that the number of
+    bytes sent was as expected, and you should attempt to send the rest if it's not. We are
+    ignoring that detail here for simplicity */
+    printf("Sent %d of  %d bytes.\n", bytes_sent, (int)strlen(time_msg));
+
+    /*We must then close the client connection to indicate to the browser that we've sent all of our data*/
+    printf("Closing connection...\n");
+    close(socket_client);
+    close(socket_listen);
+    printf("Finished.\n");
     return 0;
 }
