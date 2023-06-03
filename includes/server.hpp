@@ -17,7 +17,7 @@ class Server
 {
 	protected:
 		std::string 										_host;
-		std::vector<size_t> 								_ports;
+		std::vector<int> 									_ports;
 		std::vector<std::string>							_server_name;
 	//	can be overrided
 		std::string											_root;
