@@ -63,7 +63,7 @@ int main(void)
         return 1;
     }
 
-
+    /*This step is completely optional*/
     printf("Client is connected... ");
     char address_buffer[100];
     getnameinfo((struct sockaddr*)&client_address,
