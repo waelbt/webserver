@@ -53,6 +53,11 @@ TokenPair selectToken(StrIter& begin, const StrIter& end, int& level, bool (*fun
 	return std::make_pair(value, *iter);
 }
 
+void PortValidator::operator()(int port) {
+    if (port < 0 || port > 65535)
+        throw CustomeExceptionMsg(InvalidPort);
+}
+
 long long to_integer(const std::string& string)
 {
     long long num;

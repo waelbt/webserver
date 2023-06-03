@@ -74,6 +74,10 @@ class CustomeExceptionMsg : public std::exception {
 		virtual ~CustomeExceptionMsg() throw();
 };
 
+struct PortValidator {
+    void operator()(int port);
+};
+
 bool							is_space(const char& c);
 bool							is_symbol(const char& c);
 bool							is_semicolon(const char& c);

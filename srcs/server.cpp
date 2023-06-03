@@ -102,12 +102,45 @@ void Server::InitAutoIndex(std::string value)
     (value == "on") ? _AutoIndex = true : _AutoIndex = false;
 }
 
-struct PortValidator {
-    void operator()(int port) {
-        if (port < 0 || port > 65535)
-            throw CustomeExceptionMsg(InvalidPort);
-    }
-};
+std::string Server::getHost() const
+{
+    return this->_host;
+}
+
+std::vector<int>    Server::getPorts() const
+{
+    return this->_ports;
+}
+
+std::vector<std::string>    Server::getServerNames() const
+{
+    return this->_server_name;
+}
+
+std::string Server::getRoot() const
+{
+    return this->_root;
+}
+
+std::vector<std::string>    Server::getIndex() const
+{
+    return this->_index;
+}
+
+std::vector<s_err_pages>    Server::getErrorPages() const
+{
+    return this->_error_pages;
+}
+
+size_t  Server::getClientMaxBodySize() const
+{
+    return this->_client_max_body_size;
+}
+
+bool    Server::getAutoIndex() const
+{
+    return this->_AutoIndex;
+}
 
 s_err_pages::s_err_pages(std::string value)
 {

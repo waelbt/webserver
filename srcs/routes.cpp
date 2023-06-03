@@ -76,15 +76,41 @@ Route::Route(const Server& Base, TokenVectsIter& begin, TokenVectsIter& end) : S
     }
 }
 
+
+std::string Route::getPattren() const
+{
+    return _pattren;
+}
+
+std::vector<std::string> Route::getLimit_except() const
+{
+    return _limit_except;
+}
+
+std::vector<s_cgi> Route::getCgi() const
+{
+    return _cgi;
+}
+
+std::string Route::getUpload() const
+{
+    return _upload;
+}
+
+std::vector<std::string> Route::getRedirect() const
+{
+    return _redirect;
+}
+
 std::ostream& operator<<(std::ostream& o, Route obj)
 {
     std::cout << "location  " << obj._pattren  << ": " << std::endl;
-    std::cout << "  hosts: "<< obj._host << std::endl;
+    std::cout << "  hosts: "<< obj.getHost() << std::endl;
     std::cout << "  listen:";
-    print_vec(obj._ports, "");
+    print_vec(obj.getPorts(), "");
     std::cout << ";" << std::endl;
     std::cout << "  server name:";
-    print_vec(obj._server_name, "");
+    print_vec(obj.getServerNames(), "");
     std::cout << "  root: " << obj._root << ";" << std::endl;
     std::cout << "  index: ";
     print_vec(obj._index, "");

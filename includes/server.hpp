@@ -15,11 +15,11 @@
 
 class Server
 {
-	protected:
+	private:
 		std::string 										_host;
 		std::vector<int> 									_ports;
 		std::vector<std::string>							_server_name;
-	//	can be overrided
+	protected:
 		std::string											_root;
 		std::vector<std::string> 							_index;
 		std::vector<s_err_pages> 	 						_error_pages;
@@ -29,6 +29,7 @@ class Server
 		Server();
 		Server(TokenVectsIter& begin, TokenVectsIter& end);
         Server(const Server& other);
+		Server& operator=(const Server& other);
 		virtual void InitHost(std::string value);
 		virtual void InitPort(std::string value);
 		virtual void InitServerName(std::string value);
@@ -37,7 +38,14 @@ class Server
 		virtual void InitErrorPage(std::string value);
 		virtual void InitClienBodySize(std::string value);
 		virtual void InitAutoIndex(std::string value);
-        Server& operator=(const Server& other);
+		std::string 				getHost() const;
+		std::vector<int> 			getPorts() const;
+		std::vector<std::string>	getServerNames() const;
+		std::string					getRoot() const;
+		std::vector<std::string> 	getIndex() const;
+		std::vector<s_err_pages> 	getErrorPages() const;
+		size_t 						getClientMaxBodySize() const;
+		bool 						getAutoIndex() const;
 		virtual ~Server();
 };
 
@@ -59,6 +67,11 @@ class Route : public Server
 		void InitCgi(std::string value);
 		void InitUpload(std::string value);
 		void InitRedirect(std::string value);
+		std::string getPattren() const;
+		std::vector<std::string> getLimit_except() const;
+		std::vector<s_cgi> getCgi() const;
+		std::string getUpload() const;
+		std::vector<std::string> getRedirect() const;
 		friend std::ostream& operator<<(std::ostream& o, Route obj);
 		~Route();
 };
