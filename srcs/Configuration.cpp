@@ -14,7 +14,6 @@
 
 Configuration::Configuration(std::string content)
 {
-	int											locationCount;
 	TokenVects 									data(SplitValues(content));
 	std::pair<TokenVectsIter, TokenVectsIter>	it(std::make_pair(data.begin(),  data.end()));
 
@@ -24,20 +23,7 @@ Configuration::Configuration(std::string content)
 		{
 			string_trim(*(it.first));
 			if (it.first->first == "server")
-			{
-				Server  server(it.first, it.second);
-				string_trim(*(it.first));
-				locationCount = 0;
-				while(it.first->first == "location")
-				{
-					_routes.insert(_routes.end(), Route(server, it.first, it.second));
-					it.first++;
-					string_trim(*(it.first));
-					locationCount++;
-				}
-				if (!locationCount || it.first->second != END_BLOCK)
-					throw CustomeExceptionMsg((!locationCount) ? NOROUTE : ServerError);
-			}
+				_servers.insert(_servers.end(), Server(it.first, it.second));
 			else
 				throw CustomeExceptionMsg(it.first->first + BlockErro);
 		}
@@ -45,18 +31,18 @@ Configuration::Configuration(std::string content)
 			throw CustomeExceptionMsg(it.first->first + BlockErro);
 		it.first++;
 	}
-	if (_routes.empty())
+	if (_servers.empty())
 		throw CustomeExceptionMsg(EmptyFile);
 }
 
-std::vector<Route> Configuration::getRoutes() const
+std::vector<Server> Configuration::getter() const
 {
-	return _routes;
+	return _servers;
 }
 
 
 void Configuration::showdata() const
 {
-	for (std::vector<Route>::const_iterator it = _routes.begin(); it != _routes.end(); it++)
+	for (std::vector<Server>::const_iterator it = _servers.begin(); it != _servers.end(); it++)
 		std::cout << *it << std::endl;
 }

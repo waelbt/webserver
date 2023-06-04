@@ -23,40 +23,40 @@ s_cgi::s_cgi(std::string value)
     _path = *end;
 }
 
-Route::Route() : _pattren("/"), _limit_except(), _cgi(), _upload()
+Location::Location() : _pattren("/"), _limit_except(), _cgi(), _upload()
 {
 }
 
-void Route::InitPattern(std::string value)
+void Location::InitPattern(std::string value)
 {
     if (value != "")
         _pattren =  value; //maybe : i will check later if the path is valid or not
 }
 
-void Route::InitLimitExcept(std::string value)
+void Location::InitLimitExcept(std::string value)
 {
     _limit_except = converter(value, token_to_string);
 }
 
-void Route::InitCgi(std::string value)
+void Location::InitCgi(std::string value)
 {
     _cgi.insert(_cgi.end(), s_cgi(value));
 }
 
-void Route::InitUpload(std::string value)
+void Location::InitUpload(std::string value)
 {
     if (value != "")
         _upload = value;
 }
 
-void Route::InitRedirect(std::string value)
+void Location::InitRedirect(std::string value)
 {
     _redirect = converter(value, token_to_string);
 }
 
-Route::Route(const Server& Base, TokenVectsIter& begin, TokenVectsIter& end) : Server(Base), _pattren("/"), _limit_except(), _cgi(), _upload()
+Location::Location(const CommonEntity& Base, TokenVectsIter& begin, TokenVectsIter& end) : CommonEntity(Base), _pattren("/"), _limit_except(), _cgi(), _upload()
 {
-    initRoute MemberInit[10] = {&Route::InitPattern, &Route::InitLimitExcept, &Route::InitCgi, &Route::InitUpload, &Route::InitRoot, &Route::InitIndex, &Route::InitErrorPage, &Route::InitClienBodySize,&Route::InitAutoIndex, &Route::InitRedirect};
+    LocationMethods init[10] = {&Location::InitPattern, &Location::InitLimitExcept, &Location::InitCgi, &Location::InitUpload, &Location::InitRoot, &Location::InitIndex, &Location::InitErrorPage, &Location::InitClienBodySize,&Location::InitAutoIndex, &Location::InitRedirect};
     static std::string keywords[11] = {"pattern", "limit_except", "cgi", "upload", "root", "index", "error_page", "client_max_body_size", "AutoIndex", "redirect", InvalidLocationKey};
     std::vector<TokenPair> directive;
     std::string *key;
@@ -72,62 +72,56 @@ Route::Route(const Server& Base, TokenVectsIter& begin, TokenVectsIter& end) : S
         key = std::find(keywords, keywords + 10, directive[0].first);
         if (*key == InvalidLocationKey)
             throw CustomeExceptionMsg(directive[0].first + InvalidLocationKey);
-        ((this->*MemberInit[key - keywords]))(directive[1].first);
+        ((this->*init[key - keywords]))(directive[1].first);
     }
 }
 
 
-std::string Route::getPattren() const
+std::string Location::getPattren() const
 {
     return _pattren;
 }
 
-std::vector<std::string> Route::getLimit_except() const
+std::vector<std::string> Location::getLimit_except() const
 {
     return _limit_except;
 }
 
-std::vector<s_cgi> Route::getCgi() const
+std::vector<s_cgi> Location::getCgi() const
 {
     return _cgi;
 }
 
-std::string Route::getUpload() const
+std::string Location::getUpload() const
 {
     return _upload;
 }
 
-std::vector<std::string> Route::getRedirect() const
+std::vector<std::string> Location::getRedirect() const
 {
     return _redirect;
 }
 
-std::ostream& operator<<(std::ostream& o, Route obj)
+std::ostream& operator<<(std::ostream& o, Location obj)
 {
-    std::cout << "location  " << obj._pattren  << ": " << std::endl;
-    std::cout << "  hosts: "<< obj.getHost() << std::endl;
-    std::cout << "  listen:";
-    print_vec(obj.getPorts(), "");
-    std::cout << ";" << std::endl;
-    std::cout << "  server name:";
-    print_vec(obj.getServerNames(), "");
-    std::cout << "  root: " << obj._root << ";" << std::endl;
+    std::cout << "location  " << obj.getPattren()  << ": " << std::endl;
+    std::cout << "  root: " << obj.getRoot() << ";" << std::endl;
     std::cout << "  index: ";
-    print_vec(obj._index, "");
+    print_vec(obj.getIndex(), "");
     std::cout << ";" << std::endl;
-    print_vec(obj._error_pages, "  error pages:");
-    std::cout << "  client_max_body_size: " << obj._client_max_body_size << ";" << std::endl;
-    std::cout << "  auto index: " << ((obj._AutoIndex) ? (std::cout << "true") :  (std::cout << "false")) << ";" << std::endl;
-    std::cout << "  upload: " << obj._upload << ";" << std::endl;
+    print_vec(obj.getErrorPages(), "  error pages:");
+    std::cout << "  client_max_body_size: " << obj.getClientMaxBodySize() << ";" << std::endl;
+    std::cout << "  auto index: " << ((obj.getAutoIndex()) ? (std::cout << "true") :  (std::cout << "false")) << ";" << std::endl;
+    std::cout << "  upload: " << obj.getUpload() << ";" << std::endl;
     std::cout << "  limit_except: ";
-    print_vec(obj._limit_except, "");
+    print_vec(obj.getLimit_except() , "");
     std::cout << ";" << std::endl;
-    print_vec(obj._cgi, "  cgi:");
+    print_vec(obj.getCgi(), "  cgi:");
     std::cout << std::endl;
-    print_vec(obj._redirect, "  redirect:");
+    print_vec(obj.getRedirect(), "  redirect:");
     return o;
 }
 
-Route::~Route()
+Location::~Location()
 {
 }

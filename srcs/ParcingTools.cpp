@@ -102,3 +102,13 @@ std::ostream& operator<<(std::ostream& o, s_cgi obj)
     std::cout << " " << obj._path << ";" <<std::endl;
     return o;
 }
+
+s_err_pages::s_err_pages(std::string value)
+{
+    std::vector<std::string>  values(converter(value, token_to_string));
+    std::vector<std::string>::iterator end = values.end();
+
+    std::transform(values.begin(), --end, std::back_inserter(this->_status), to_integer);
+    std::for_each(_status.begin(), _status.end(), PortValidator());
+    _page = *end;
+}

@@ -1,13 +1,13 @@
 NAME	= webserve
 
-PARSING = ParcingTools server routes Configuration
+PARSING = ParcingTools Configuration server CommonEntity location
 
 SRCS	= $(addsuffix .cpp, $(addprefix srcs/, $(PARSING))) \
 			main.cpp
 
 OBJ		= ${SRCS:.cpp=.o}
 
-CPPFLAGS = -Wall -Wextra -Werror -std=c++98 
+CPPFLAGS = -Wall -Wextra -Werror -std=c++98 -fsanitize=address
 
 CXX = c++
 

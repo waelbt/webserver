@@ -18,9 +18,9 @@ class Configuration
 {
     // delait the duplicated servers that do same HOST:PORT
     private:
-        std::vector<Route> _routes;
+        std::vector<Server> _servers;
     public:
         Configuration(std::string tokens);
         void showdata() const;
-        std::vector<Route> getRoutes() const;
+        std::vector<Server> getter() const;
 };

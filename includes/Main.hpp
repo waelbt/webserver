@@ -97,7 +97,7 @@ void print_vec( const std::vector<T>& vec, std::string name)
     for (const_iterator it = vec.begin(); it != vec.end(); it++)
     {
         std::cout << name;
-        std::cout << " "<< *it;
+        std::cout << " " << *it;
     }    
 }
 

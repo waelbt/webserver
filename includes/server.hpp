@@ -13,12 +13,11 @@
 #include "Main.hpp"
 //base_class
 
-class Server
+
+// //	child class
+
+class CommonEntity
 {
-	private:
-		std::string 										_host;
-		std::vector<int> 									_ports;
-		std::vector<std::string>							_server_name;
 	protected:
 		std::string											_root;
 		std::vector<std::string> 							_index;
@@ -26,32 +25,23 @@ class Server
 		size_t 												_client_max_body_size;
 		bool 												_AutoIndex;
 	public:
-		Server();
-		Server(TokenVectsIter& begin, TokenVectsIter& end);
-        Server(const Server& other);
-		Server& operator=(const Server& other);
-		virtual void InitHost(std::string value);
-		virtual void InitPort(std::string value);
-		virtual void InitServerName(std::string value);
-		virtual void InitRoot(std::string value);
-		virtual void InitIndex(std::string value);
-		virtual void InitErrorPage(std::string value);
-		virtual void InitClienBodySize(std::string value);
-		virtual void InitAutoIndex(std::string value);
-		std::string 				getHost() const;
-		std::vector<int> 			getPorts() const;
-		std::vector<std::string>	getServerNames() const;
+		CommonEntity();
+		CommonEntity(TokenVectsIter begin, TokenVectsIter end);
+		CommonEntity(const CommonEntity& other);
+		CommonEntity& operator=(const CommonEntity& other);
+		void InitRoot(std::string value);
+		void InitIndex(std::string value);
+		void InitErrorPage(std::string value);
+		void InitClienBodySize(std::string value);
+		void InitAutoIndex(std::string value);
 		std::string					getRoot() const;
 		std::vector<std::string> 	getIndex() const;
 		std::vector<s_err_pages> 	getErrorPages() const;
 		size_t 						getClientMaxBodySize() const;
 		bool 						getAutoIndex() const;
-		virtual ~Server();
 };
 
-// //	child class
-
-class Route : public Server
+class Location : public CommonEntity
 {
 	private:
 		std::string _pattren;
@@ -60,8 +50,8 @@ class Route : public Server
 		std::string _upload;
 		std::vector<std::string> _redirect;
 	public:
-		Route();
-		Route(const Server& base, TokenVectsIter& begin, TokenVectsIter& end);
+		Location();
+		Location(const CommonEntity& base, TokenVectsIter& begin, TokenVectsIter& end);
 		void InitPattern(std::string value);
 		void InitLimitExcept(std::string value);
 		void InitCgi(std::string value);
@@ -72,11 +62,35 @@ class Route : public Server
 		std::vector<s_cgi> getCgi() const;
 		std::string getUpload() const;
 		std::vector<std::string> getRedirect() const;
-		friend std::ostream& operator<<(std::ostream& o, Route obj);
-		~Route();
+		friend std::ostream& operator<<(std::ostream& o, Location obj);
+		~Location();
+};
+
+class Server
+{
+	private:
+		std::string 										_host;
+		std::vector<int> 									_ports;
+		std::vector<std::string>							_server_name;
+		std::vector<Location>								_locations;
+	public:
+		Server();
+		Server(TokenVectsIter& begin, TokenVectsIter& end);
+		void initAttributes(TokenVectsIter& begin, TokenVectsIter& end);
+        Server(const Server& other);
+		Server& operator=(const Server& other);
+		void InitHost(std::string value);
+		void InitPort(std::string value);
+		void InitServerName(std::string value);
+		std::string 				getHost() const;
+		std::vector<int> 			getPorts() const;
+		std::vector<std::string>	getServerNames() const;
+		std::vector<Location>		getLocations() const;
+		friend std::ostream& operator<<(std::ostream& o, Server obj);
+		~Server();
 };
 
 
-
+typedef void (CommonEntity::*CommonEntityMethods)(std::string);
+typedef void (Location::*LocationMethods)(std::string);
 typedef void (Server::*initserver)(std::string);
-typedef void (Route::*initRoute)(std::string);

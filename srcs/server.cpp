@@ -12,17 +12,37 @@
 
 #include "../includes/server.hpp"
 
-Server::Server() : _host(), _ports(), _server_name(), _root(), _index(), _error_pages(), _client_max_body_size(), _AutoIndex()
+Server::Server() : _host(), _ports(), _server_name()
 {
 }
 
-Server::Server(TokenVectsIter& begin, TokenVectsIter& end)  : _host(), _ports(), _server_name(), _root(), _index(), _error_pages(), _client_max_body_size(), _AutoIndex()
+Server::Server(TokenVectsIter& begin, TokenVectsIter& end)  : _host(), _ports(), _server_name()
 {
-    initserver MemberInit[8] = {&Server::InitHost, &Server::InitPort, &Server::InitServerName, &Server::InitRoot, &Server::InitIndex, &Server::InitErrorPage, &Server::InitClienBodySize, &Server::InitAutoIndex};
+    int             Count;
+    CommonEntity    tmp(begin, end);
+
+    initAttributes(begin, end);
+    string_trim(*(begin));
+    Count = 0;
+    while(begin->first == "location")
+    {
+        _locations.insert(_locations.end(), Location(tmp, begin, end));
+        begin++;
+        string_trim(*begin);
+        Count++;
+    }
+    if (!Count || begin->second != END_BLOCK)
+		throw CustomeExceptionMsg((!Count) ? NOROUTE : ServerError);
+}
+
+
+
+void Server::initAttributes(TokenVectsIter& begin, TokenVectsIter& end)
+{
     static std::string keywords[9] = {"host", "listen", "server_name", "root", "index", "error_page", "client_body_size", "AutoIndex", InvalidSeverKey};
+    initserver MemberInit[3] = {&Server::InitHost, &Server::InitPort, &Server::InitServerName};
     std::vector<TokenPair> directive;
     std::string *key;
-
 
     while (++begin < end)
     {
@@ -35,7 +55,8 @@ Server::Server(TokenVectsIter& begin, TokenVectsIter& end)  : _host(), _ports(),
         key = std::find(keywords, keywords + 8, directive[0].first);
         if (*key == InvalidSeverKey)
             throw CustomeExceptionMsg(directive[0].first + InvalidSeverKey);
-        ((this->*MemberInit[key - keywords]))(directive[1].first);
+        if ((key - keywords) < 3)
+            ((this->*MemberInit[key - keywords]))(directive[1].first);
     }
 }
 
@@ -50,11 +71,7 @@ Server& Server::operator=(const Server& other)
     _host = other._host;
     _ports = other._ports;
     _server_name = other._server_name;
-    _root = other._root;
-    _index = other._index;
-    _error_pages = other._error_pages;
-    _client_max_body_size = other._client_max_body_size;
-    _AutoIndex = other._AutoIndex;
+    _locations = other._locations;
     return *this;
 }
 
@@ -76,32 +93,6 @@ void Server::InitServerName(std::string value)
     _server_name = converter(value, token_to_string);
 }
 
-void Server::InitRoot(std::string value)
-{
-    _root = value;
-}
-
-
-void Server::InitIndex(std::string value)
-{
-    _index = converter(value, token_to_string);
-}
-
-void Server::InitErrorPage(std::string value)
-{
-    _error_pages.insert(_error_pages.end(), s_err_pages(value));
-}
-
-void Server::InitClienBodySize(std::string value)
-{
-    _client_max_body_size = to_integer(value);
-}
-
-void Server::InitAutoIndex(std::string value)
-{
-    (value == "on") ? _AutoIndex = true : _AutoIndex = false;
-}
-
 std::string Server::getHost() const
 {
     return this->_host;
@@ -117,40 +108,27 @@ std::vector<std::string>    Server::getServerNames() const
     return this->_server_name;
 }
 
-std::string Server::getRoot() const
+
+std::vector<Location>   Server::getLocations() const
 {
-    return this->_root;
+    return _locations;
 }
 
-std::vector<std::string>    Server::getIndex() const
+std::ostream& operator<<(std::ostream& o, Server obj)
 {
-    return this->_index;
+    std::cout << "Server:" << std::endl;
+    std::cout << " hosts: "<< obj.getHost() << std::endl;
+    std::cout << " listen:";
+    print_vec(obj.getPorts(), "");
+    std::cout << ";" << std::endl;
+    std::cout << " server name:";
+    print_vec(obj.getServerNames(), "");
+    std::cout << ";\n" << std::endl;
+    print_vec(obj.getLocations(), "");
+    return o;
 }
 
-std::vector<s_err_pages>    Server::getErrorPages() const
-{
-    return this->_error_pages;
-}
 
-size_t  Server::getClientMaxBodySize() const
-{
-    return this->_client_max_body_size;
-}
-
-bool    Server::getAutoIndex() const
-{
-    return this->_AutoIndex;
-}
-
-s_err_pages::s_err_pages(std::string value)
-{
-    std::vector<std::string>  values(converter(value, token_to_string));
-    std::vector<std::string>::iterator end = values.end();
-
-    std::transform(values.begin(), --end, std::back_inserter(this->_status), to_integer);
-    std::for_each(_status.begin(), _status.end(), PortValidator());
-    _page = *end;
-}
 
 Server::~Server()
 {}
