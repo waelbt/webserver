@@ -12,11 +12,11 @@
 /* ************************************************************************** */
 
 
-#include "../includes/Configuration.hpp"
+#include "../../includes/Configuration.hpp"
 
 s_cgi::s_cgi(std::string value)
 {
-    std::vector<std::string>  values(converter(value, token_to_string));
+    std::vector<std::string>  values(converter(value, TokenToString()));
     std::vector<std::string>::iterator end = values.end();
 
     _exec = std::vector<std::string>(values.begin(), --end);
@@ -35,7 +35,7 @@ void Location::InitPattern(std::string value)
 
 void Location::InitLimitExcept(std::string value)
 {
-    _limit_except = converter(value, token_to_string);
+    _limit_except = converter(value, TokenToString());
 }
 
 void Location::InitCgi(std::string value)
@@ -51,7 +51,7 @@ void Location::InitUpload(std::string value)
 
 void Location::InitRedirect(std::string value)
 {
-    _redirect = converter(value, token_to_string);
+    _redirect = converter(value, TokenToString());
 }
 
 Location::Location(const CommonEntity& Base, TokenVectsIter& begin, TokenVectsIter& end) : CommonEntity(Base), _pattren("/"), _limit_except(), _cgi(), _upload()
@@ -60,7 +60,9 @@ Location::Location(const CommonEntity& Base, TokenVectsIter& begin, TokenVectsIt
     static std::string keywords[11] = {"pattern", "limit_except", "cgi", "upload", "root", "index", "error_page", "client_max_body_size", "AutoIndex", "redirect", InvalidLocationKey};
     std::vector<TokenPair> directive;
     std::string *key;
+    size_t counter;
 
+    counter = 0;
     while (++begin < end)
     {
         if (begin->second == END_BLOCK || begin->second == BLOCK)
@@ -73,7 +75,10 @@ Location::Location(const CommonEntity& Base, TokenVectsIter& begin, TokenVectsIt
         if (*key == InvalidLocationKey)
             throw CustomeExceptionMsg(directive[0].first + InvalidLocationKey);
         ((this->*init[key - keywords]))(directive[1].first);
+        counter++;
     }
+    if (!counter)
+        throw CustomeExceptionMsg(EmptyLocation);
 }
 
 

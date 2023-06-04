@@ -10,7 +10,7 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "../includes/Configuration.hpp"
+#include "../../includes/Configuration.hpp"
 
 Configuration::Configuration(std::string content)
 {
@@ -23,7 +23,7 @@ Configuration::Configuration(std::string content)
 		{
 			string_trim(*(it.first));
 			if (it.first->first == "server")
-				_servers.insert(_servers.end(), ServerEntity(it.first, it.second));
+				_servers.insert(_servers.end(), ServerData(it.first, it.second));
 			else
 				throw CustomeExceptionMsg(it.first->first + BlockErro);
 		}
@@ -35,14 +35,13 @@ Configuration::Configuration(std::string content)
 		throw CustomeExceptionMsg(EmptyFile);
 }
 
-std::vector<ServerEntity> Configuration::getter() const
+std::vector<ServerData> Configuration::getter() const
 {
 	return _servers;
 }
 
-
 void Configuration::showdata() const
 {
-	for (std::vector<ServerEntity>::const_iterator it = _servers.begin(); it != _servers.end(); it++)
+	for (std::vector<ServerData>::const_iterator it = _servers.begin(); it != _servers.end(); it++)
 		std::cout << *it << std::endl;
 }

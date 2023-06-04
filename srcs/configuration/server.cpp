@@ -10,13 +10,13 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "../includes/Configuration.hpp"
+#include "../../includes/Configuration.hpp"
 
-ServerEntity::ServerEntity() : _host(), _ports(), _server_name()
+ServerData::ServerData() : _host(), _ports(), _server_name()
 {
 }
 
-ServerEntity::ServerEntity(TokenVectsIter& begin, TokenVectsIter& end)  : _host(), _ports(), _server_name()
+ServerData::ServerData(TokenVectsIter& begin, TokenVectsIter& end)  : _host(), _ports(), _server_name()
 {
     int             Count;
     CommonEntity    tmp(begin, end);
@@ -35,15 +35,15 @@ ServerEntity::ServerEntity(TokenVectsIter& begin, TokenVectsIter& end)  : _host(
 		throw CustomeExceptionMsg((!Count) ? NOROUTE : ServerError);
 }
 
-
-
-void ServerEntity::initAttributes(TokenVectsIter& begin, TokenVectsIter& end)
+void ServerData::initAttributes(TokenVectsIter& begin, TokenVectsIter& end)
 {
     static std::string keywords[9] = {"host", "listen", "server_name", "root", "index", "error_page", "client_body_size", "AutoIndex", InvalidSeverKey};
-    ServerEntity::methods MemberInit[3] = {&ServerEntity::InitHost, &ServerEntity::InitPort, &ServerEntity::InitServerName};
+    ServerData::methods MemberInit[3] = {&ServerData::InitHost, &ServerData::InitPort, &ServerData::InitServerName};
     std::vector<TokenPair> directive;
     std::string *key;
+    size_t counter;
 
+    counter = 0;
     while (++begin < end)
     {
         if (begin->second == END_BLOCK || begin->second == BLOCK)
@@ -56,17 +56,23 @@ void ServerEntity::initAttributes(TokenVectsIter& begin, TokenVectsIter& end)
         if (*key == InvalidSeverKey)
             throw CustomeExceptionMsg(directive[0].first + InvalidSeverKey);
         if ((key - keywords) < 3)
+        {
+            if (key - keywords < 2)
+                counter++;
             ((this->*MemberInit[key - keywords]))(directive[1].first);
+        }
     }
+    if (counter != 2)
+        throw CustomeExceptionMsg(MISSINGPORTHOST);
 }
 
 
-ServerEntity::ServerEntity(const ServerEntity& other)
+ServerData::ServerData(const ServerData& other)
 {
     *this = other;
 }
 
-ServerEntity& ServerEntity::operator=(const ServerEntity& other)
+ServerData& ServerData::operator=(const ServerData& other)
 {
     _host = other._host;
     _ports = other._ports;
@@ -75,48 +81,50 @@ ServerEntity& ServerEntity::operator=(const ServerEntity& other)
     return *this;
 }
 
-void ServerEntity::InitHost(std::string value)
+void ServerData::InitHost(std::string value)
 {
     _host = value;
 }
 
-
-void ServerEntity::InitPort(std::string value)
+void ServerData::InitPort(std::string value)
 {
-    std::vector<std::string>  values(converter(value, token_to_string));
+    std::vector<std::string>  values(converter(value, TokenToString()));
 
+    if (values.empty())
+        throw CustomeExceptionMsg(EmptyDirective);
     std::transform(values.begin(), values.end(), std::back_inserter(_ports), to_integer);
+    std::sort(_ports.begin(), _ports.end());
 }
 
-void ServerEntity::InitServerName(std::string value)
+void ServerData::InitServerName(std::string value)
 {
-    _server_name = converter(value, token_to_string);
+    _server_name = converter(value, TokenToString());
 }
 
-std::string ServerEntity::getHost() const
+std::string ServerData::getHost() const
 {
     return this->_host;
 }
 
-std::vector<int>    ServerEntity::getPorts() const
+std::vector<int>    ServerData::getPorts() const
 {
     return this->_ports;
 }
 
-std::vector<std::string>    ServerEntity::getServerNames() const
+std::vector<std::string>    ServerData::getServerNames() const
 {
     return this->_server_name;
 }
 
 
-std::vector<Location>   ServerEntity::getLocations() const
+std::vector<Location>   ServerData::getLocations() const
 {
     return _locations;
 }
 
-std::ostream& operator<<(std::ostream& o, ServerEntity obj)
+std::ostream& operator<<(std::ostream& o, ServerData obj)
 {
-    std::cout << "ServerEntity:" << std::endl;
+    std::cout << "ServerData:" << std::endl;
     std::cout << " hosts: "<< obj.getHost() << std::endl;
     std::cout << " listen:";
     print_vec(obj.getPorts(), "");
@@ -128,7 +136,5 @@ std::ostream& operator<<(std::ostream& o, ServerEntity obj)
     return o;
 }
 
-
-
-ServerEntity::~ServerEntity()
+ServerData::~ServerData()
 {}

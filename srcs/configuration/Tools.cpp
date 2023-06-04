@@ -1,4 +1,15 @@
-#include "../includes/MainHeader.hpp"
+#include "../../includes/Configuration.hpp"
+
+
+void PortValidator::operator()(int port) {
+    if (port < 0 || port > 65535)
+        throw CustomeExceptionMsg(InvalidPort);
+}
+
+std::string TokenToString::operator()(TokenPair& pair)
+{
+    return pair.first;
+}
 
 CustomeExceptionMsg::CustomeExceptionMsg() : _message() {
 }
@@ -53,10 +64,6 @@ TokenPair selectToken(StrIter& begin, const StrIter& end, int& level, bool (*fun
 	return std::make_pair(value, *iter);
 }
 
-void PortValidator::operator()(int port) {
-    if (port < 0 || port > 65535)
-        throw CustomeExceptionMsg(InvalidPort);
-}
 
 long long to_integer(const std::string& string)
 {
@@ -81,11 +88,6 @@ std::vector<TokenPair> SplitValues(std::string value, bool (*func)(const char&))
     return res;
 }
 
-std::string token_to_string(TokenPair& pair)
-{
-    return pair.first;
-}
-
 std::ostream& operator<<(std::ostream& o, s_err_pages obj)
 {
     for (std::vector<int>::iterator it = obj._status.begin(); it != obj._status.end(); it++)
@@ -105,7 +107,7 @@ std::ostream& operator<<(std::ostream& o, s_cgi obj)
 
 s_err_pages::s_err_pages(std::string value)
 {
-    std::vector<std::string>  values(converter(value, token_to_string));
+    std::vector<std::string>  values(converter(value, TokenToString()));
     std::vector<std::string>::iterator end = values.end();
 
     std::transform(values.begin(), --end, std::back_inserter(this->_status), to_integer);
