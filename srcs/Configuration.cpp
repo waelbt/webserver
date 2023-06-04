@@ -23,7 +23,7 @@ Configuration::Configuration(std::string content)
 		{
 			string_trim(*(it.first));
 			if (it.first->first == "server")
-				_servers.insert(_servers.end(), Server(it.first, it.second));
+				_servers.insert(_servers.end(), ServerEntity(it.first, it.second));
 			else
 				throw CustomeExceptionMsg(it.first->first + BlockErro);
 		}
@@ -35,7 +35,7 @@ Configuration::Configuration(std::string content)
 		throw CustomeExceptionMsg(EmptyFile);
 }
 
-std::vector<Server> Configuration::getter() const
+std::vector<ServerEntity> Configuration::getter() const
 {
 	return _servers;
 }
@@ -43,6 +43,6 @@ std::vector<Server> Configuration::getter() const
 
 void Configuration::showdata() const
 {
-	for (std::vector<Server>::const_iterator it = _servers.begin(); it != _servers.end(); it++)
+	for (std::vector<ServerEntity>::const_iterator it = _servers.begin(); it != _servers.end(); it++)
 		std::cout << *it << std::endl;
 }

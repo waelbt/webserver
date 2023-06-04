@@ -10,7 +10,7 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "../includes/server.hpp"
+#include "../includes/Configuration.hpp"
 
 CommonEntity::CommonEntity() : _root(), _index(), _error_pages(), _client_max_body_size(), _AutoIndex()
 {
@@ -23,7 +23,7 @@ CommonEntity::CommonEntity(const CommonEntity& other)
 
 CommonEntity::CommonEntity(TokenVectsIter begin, TokenVectsIter end): _root(), _index(), _error_pages(), _client_max_body_size(), _AutoIndex()
 {
-    CommonEntityMethods MemberInit[5] = {&CommonEntity::InitRoot, &CommonEntity::InitIndex, &CommonEntity::InitErrorPage, &CommonEntity::InitClienBodySize, &CommonEntity::InitAutoIndex};
+    CommonEntity::methods MemberInit[5] = {&CommonEntity::InitRoot, &CommonEntity::InitIndex, &CommonEntity::InitErrorPage, &CommonEntity::InitClienBodySize, &CommonEntity::InitAutoIndex};
     static std::string keywords[6] = {"root", "index", "error_page", "client_body_size", "AutoIndex", InvalidSeverKey};
     std::vector<TokenPair> directive;
     std::string *key;

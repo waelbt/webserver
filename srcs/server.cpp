@@ -10,13 +10,13 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "../includes/server.hpp"
+#include "../includes/Configuration.hpp"
 
-Server::Server() : _host(), _ports(), _server_name()
+ServerEntity::ServerEntity() : _host(), _ports(), _server_name()
 {
 }
 
-Server::Server(TokenVectsIter& begin, TokenVectsIter& end)  : _host(), _ports(), _server_name()
+ServerEntity::ServerEntity(TokenVectsIter& begin, TokenVectsIter& end)  : _host(), _ports(), _server_name()
 {
     int             Count;
     CommonEntity    tmp(begin, end);
@@ -37,10 +37,10 @@ Server::Server(TokenVectsIter& begin, TokenVectsIter& end)  : _host(), _ports(),
 
 
 
-void Server::initAttributes(TokenVectsIter& begin, TokenVectsIter& end)
+void ServerEntity::initAttributes(TokenVectsIter& begin, TokenVectsIter& end)
 {
     static std::string keywords[9] = {"host", "listen", "server_name", "root", "index", "error_page", "client_body_size", "AutoIndex", InvalidSeverKey};
-    initserver MemberInit[3] = {&Server::InitHost, &Server::InitPort, &Server::InitServerName};
+    ServerEntity::methods MemberInit[3] = {&ServerEntity::InitHost, &ServerEntity::InitPort, &ServerEntity::InitServerName};
     std::vector<TokenPair> directive;
     std::string *key;
 
@@ -61,12 +61,12 @@ void Server::initAttributes(TokenVectsIter& begin, TokenVectsIter& end)
 }
 
 
-Server::Server(const Server& other)
+ServerEntity::ServerEntity(const ServerEntity& other)
 {
     *this = other;
 }
 
-Server& Server::operator=(const Server& other)
+ServerEntity& ServerEntity::operator=(const ServerEntity& other)
 {
     _host = other._host;
     _ports = other._ports;
@@ -75,48 +75,48 @@ Server& Server::operator=(const Server& other)
     return *this;
 }
 
-void Server::InitHost(std::string value)
+void ServerEntity::InitHost(std::string value)
 {
     _host = value;
 }
 
 
-void Server::InitPort(std::string value)
+void ServerEntity::InitPort(std::string value)
 {
     std::vector<std::string>  values(converter(value, token_to_string));
 
     std::transform(values.begin(), values.end(), std::back_inserter(_ports), to_integer);
 }
 
-void Server::InitServerName(std::string value)
+void ServerEntity::InitServerName(std::string value)
 {
     _server_name = converter(value, token_to_string);
 }
 
-std::string Server::getHost() const
+std::string ServerEntity::getHost() const
 {
     return this->_host;
 }
 
-std::vector<int>    Server::getPorts() const
+std::vector<int>    ServerEntity::getPorts() const
 {
     return this->_ports;
 }
 
-std::vector<std::string>    Server::getServerNames() const
+std::vector<std::string>    ServerEntity::getServerNames() const
 {
     return this->_server_name;
 }
 
 
-std::vector<Location>   Server::getLocations() const
+std::vector<Location>   ServerEntity::getLocations() const
 {
     return _locations;
 }
 
-std::ostream& operator<<(std::ostream& o, Server obj)
+std::ostream& operator<<(std::ostream& o, ServerEntity obj)
 {
-    std::cout << "Server:" << std::endl;
+    std::cout << "ServerEntity:" << std::endl;
     std::cout << " hosts: "<< obj.getHost() << std::endl;
     std::cout << " listen:";
     print_vec(obj.getPorts(), "");
@@ -130,5 +130,5 @@ std::ostream& operator<<(std::ostream& o, Server obj)
 
 
 
-Server::~Server()
+ServerEntity::~ServerEntity()
 {}
