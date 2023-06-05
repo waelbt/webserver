@@ -73,7 +73,7 @@ bool							is_space(const char& c);
 bool							is_symbol(const char& c);
 bool							is_semicolon(const char& c);
 void							string_trim(TokenPair& pair);
-void							string_trim(TokenPair& pair);
+void							is_integer(std::string num);
 bool							is_directive(const char& c);
 long long						to_integer(const std::string& string);
 TokenPair 						selectToken(StrIter& begin, const StrIter& end, int& level, bool (*func)(const char&));
@@ -107,8 +107,6 @@ std::vector<std::string> converter(const std::string& content, func function)
 	}
     return values;
 }
-
-
 
 struct s_cgi
 {
@@ -197,7 +195,7 @@ class ServerData
 		typedef void (ServerData::*methods)(std::string);
 	private:
 		std::string 										_host;
-		std::vector<int> 									_ports;
+		std::vector<std::string> 							_ports;
 		std::vector<std::string>							_server_name;
 		std::vector<Location>								_locations;
 	public:
@@ -210,7 +208,7 @@ class ServerData
 		void InitPort(std::string value);
 		void InitServerName(std::string value);
 		std::string 				getHost() const;
-		std::vector<int> 			getPorts() const;
+		std::vector<std::string> 			getPorts() const;
 		std::vector<std::string>	getServerNames() const;
 		std::vector<Location>		getLocations() const;
 		friend std::ostream& operator<<(std::ostream& o, ServerData obj);

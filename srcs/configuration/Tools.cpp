@@ -64,15 +64,19 @@ TokenPair selectToken(StrIter& begin, const StrIter& end, int& level, bool (*fun
 	return std::make_pair(value, *iter);
 }
 
+void is_integer(std::string num)
+{
+    if(std::find_if(num.begin(), num.end(), isalpha) != num.end())
+        throw CustomeExceptionMsg("failed to convert " + num + " to an integer");
+}
 
 long long to_integer(const std::string& string)
 {
     long long num;
     std::stringstream strstrean(string);
-
+    
+    is_integer(string);
     strstrean >> num;
-    if(std::find_if(string.begin(), string.end(), isalpha) != string.end())
-        throw CustomeExceptionMsg("failed to convert " + string + " to an integer");
     return num;
 }
 

@@ -88,11 +88,11 @@ void ServerData::InitHost(std::string value)
 
 void ServerData::InitPort(std::string value)
 {
-    std::vector<std::string>  values(converter(value, TokenToString()));
+    std::vector<std::string>  _ports(converter(value, TokenToString()));
 
-    if (values.empty())
+    if (_ports.empty())
         throw CustomeExceptionMsg(EmptyDirective);
-    std::transform(values.begin(), values.end(), std::back_inserter(_ports), to_integer);
+    std::for_each(_ports.begin(), _ports.end(), is_integer);
     std::sort(_ports.begin(), _ports.end());
 }
 
@@ -106,7 +106,7 @@ std::string ServerData::getHost() const
     return this->_host;
 }
 
-std::vector<int>    ServerData::getPorts() const
+std::vector<std::string>    ServerData::getPorts() const
 {
     return this->_ports;
 }
