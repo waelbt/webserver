@@ -10,7 +10,133 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "MainHeader.hpp"
+#include <iostream>
+#include <string>
+#include <exception>
+#include <algorithm>
+#include <fstream>
+#include <stack>
+#include <stdlib.h>
+#include <map>
+#include <sstream>
+#include <fcntl.h>
+#include <queue>
+#include <unistd.h>
+#include <string>
+#include <exception>
+#include <vector>
+
+
+#define NOROUTE				"define a server without location is forbidden"
+#define ServerError			": can't be in the server scope"
+#define BlockErro			": can't be in the main scope"
+#define DefaultPath			"./conf/sample.conf"
+#define EmptyFile			"empty config file"
+#define FileFailed			"failed to open the file : "
+#define SyntaxError			"Syntax error, please insert a valid config file format"
+#define CreationFailed 		"can't create a server object without having a block token -_-"
+#define InvalidSeverKey		" inappropriate for the server context"
+#define InvalidLocationKey 	" inappropriate for the location context"
+#define InvalidPort			"invalid ports number"
+#define MaxBodySize			"you reach the max body size the can be send by client"
+#define DirErr				"invalid directive syntax"
+#define MISSINGPORTHOST		"you should explicitly set the port and the host directives"
+#define EmptyDirective 		"empty directive, set a valid value pls"
+#define EmptyLocation 		"empty lcoation context !!!!!"
+
+//EntityType
+#define KEY ':'
+#define VAL ';'
+#define END '\0'
+#define BLOCK '{'
+#define END_BLOCK '}'
+
+typedef char 								EntityType;
+typedef std::string::iterator 				StrIter;
+typedef	std::pair<std::string,EntityType>		TokenPair;
+typedef std::pair<std::string,std::string>	StringPair;
+typedef	std::vector<StringPair>				ConfEntity;
+typedef	std::vector<StringPair>::iterator	ConfEntityIer;
+typedef std::vector<TokenPair>				TokenVects;
+typedef TokenVects::iterator	TokenVectsIter;
+
+struct PortValidator {
+    void operator()(int port);
+};
+
+
+struct TokenToString {
+	std::string  operator()(TokenPair& pair);
+};
+
+bool							is_space(const char& c);
+bool							is_symbol(const char& c);
+bool							is_semicolon(const char& c);
+void							string_trim(TokenPair& pair);
+void							string_trim(TokenPair& pair);
+bool							is_directive(const char& c);
+long long						to_integer(const std::string& string);
+TokenPair 						selectToken(StrIter& begin, const StrIter& end, int& level, bool (*func)(const char&));
+std::string 					token_to_string(TokenPair& pair);
+std::vector<TokenPair> 			SplitValues(std::string value, bool (*func)(const char&) = is_symbol);
+
+
+template <typename T>
+void print_vec( const std::vector<T>& vec, std::string name)
+{
+    typedef typename std::vector<T>::const_iterator const_iterator;
+
+    for (const_iterator it = vec.begin(); it != vec.end(); it++)
+    {
+        std::cout << name;
+        std::cout << " " << *it;
+    }    
+}
+
+
+template <typename func>
+std::vector<std::string> converter(const std::string& content, func function)
+{
+    std::vector<std::string> values;
+    std::vector<TokenPair> tokens;
+
+    tokens = SplitValues(content, is_semicolon);
+	for (std::vector<TokenPair>::iterator it = tokens.begin(); it != tokens.end(); it++)
+	{
+		values.insert(values.end(), function(*it));
+	}
+    return values;
+}
+
+
+
+struct s_cgi
+{
+	std::vector<std::string> _exec;
+	std::string _path;
+
+	s_cgi(std::string value);
+	friend std::ostream& operator<<(std::ostream& o, s_cgi obj);
+};
+
+struct s_err_pages
+{
+	std::vector<int> _status;
+	std::string _page;
+
+	s_err_pages(std::string value);
+	friend std::ostream& operator<<(std::ostream& o, s_err_pages obj);
+};
+
+class CustomeExceptionMsg : public std::exception {
+	protected:
+    	std::string _message;
+	public:
+        CustomeExceptionMsg();
+    	CustomeExceptionMsg(const std::string& message);
+		const char* what() const throw();
+		virtual ~CustomeExceptionMsg() throw();
+};
 
 class CommonEntity
 {
@@ -65,21 +191,21 @@ class Location : public CommonEntity
 		~Location();
 };
 
-class ServerEntity
+class ServerData
 {
 	public:
-		typedef void (ServerEntity::*methods)(std::string);
+		typedef void (ServerData::*methods)(std::string);
 	private:
 		std::string 										_host;
 		std::vector<int> 									_ports;
 		std::vector<std::string>							_server_name;
 		std::vector<Location>								_locations;
 	public:
-		ServerEntity();
-		ServerEntity(TokenVectsIter& begin, TokenVectsIter& end);
+		ServerData();
+		ServerData(TokenVectsIter& begin, TokenVectsIter& end);
 		void initAttributes(TokenVectsIter& begin, TokenVectsIter& end);
-        ServerEntity(const ServerEntity& other);
-		ServerEntity& operator=(const ServerEntity& other);
+        ServerData(const ServerData& other);
+		ServerData& operator=(const ServerData& other);
 		void InitHost(std::string value);
 		void InitPort(std::string value);
 		void InitServerName(std::string value);
@@ -87,17 +213,17 @@ class ServerEntity
 		std::vector<int> 			getPorts() const;
 		std::vector<std::string>	getServerNames() const;
 		std::vector<Location>		getLocations() const;
-		friend std::ostream& operator<<(std::ostream& o, ServerEntity obj);
-		~ServerEntity();
+		friend std::ostream& operator<<(std::ostream& o, ServerData obj);
+		~ServerData();
 };
 
 class Configuration
 {
     // delait the duplicated servers that do same HOST:PORT
     private:
-        std::vector<ServerEntity> _servers;
+        std::vector<ServerData> _servers;
     public:
         Configuration(std::string tokens);
         void showdata() const;
-        std::vector<ServerEntity> getter() const;
+        std::vector<ServerData> getter() const;
 };
