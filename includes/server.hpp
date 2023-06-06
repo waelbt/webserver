@@ -189,39 +189,39 @@ class Location : public CommonEntity
 		~Location();
 };
 
-class ServerData
+class Configuration
 {
 	public:
-		typedef void (ServerData::*methods)(std::string);
+		typedef void (Configuration::*methods)(std::string);
 	private:
 		std::string 										_host;
 		std::vector<std::string> 							_ports;
 		std::vector<std::string>							_server_name;
 		std::vector<Location>								_locations;
 	public:
-		ServerData();
-		ServerData(TokenVectsIter& begin, TokenVectsIter& end);
+		Configuration();
+		Configuration(TokenVectsIter& begin, TokenVectsIter& end);
 		void initAttributes(TokenVectsIter& begin, TokenVectsIter& end);
-        ServerData(const ServerData& other);
-		ServerData& operator=(const ServerData& other);
+        Configuration(const Configuration& other);
+		Configuration& operator=(const Configuration& other);
 		void InitHost(std::string value);
 		void InitPort(std::string value);
 		void InitServerName(std::string value);
 		std::string 				getHost() const;
-		std::vector<std::string> 			getPorts() const;
+		std::vector<std::string> 	getPorts() const;
 		std::vector<std::string>	getServerNames() const;
 		std::vector<Location>		getLocations() const;
-		friend std::ostream& operator<<(std::ostream& o, ServerData obj);
-		~ServerData();
+		friend std::ostream& operator<<(std::ostream& o, Configuration obj);
+		~Configuration();
 };
 
-class Configuration
+class Server
 {
-    // delait the duplicated servers that do same HOST:PORT
     private:
-        std::vector<ServerData> _servers;
+        Configuration _conf;
     public:
-        Configuration(std::string tokens);
-        void showdata() const;
-        std::vector<ServerData> getter() const;
+		Server(const Configuration& conf);
+		void setup();
+		Configuration	getter() const;
+        void showConfig() const;
 };

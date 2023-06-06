@@ -12,7 +12,8 @@
 /* ************************************************************************** */
 
 
-#include "../../includes/Configuration.hpp"
+#include "../includes/server.hpp"
+
 
 s_cgi::s_cgi(std::string value)
 {

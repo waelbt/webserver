@@ -1,8 +1,8 @@
 NAME	= webserve
 
-PARSING = Tools Configuration server CommonEntity location
+PARSING = utils commonEntity configuration location server
 
-SRCS	= $(addsuffix .cpp, $(addprefix srcs/configuration/, $(PARSING))) \
+SRCS	= $(addsuffix .cpp, $(addprefix srcs/, $(PARSING))) \
 			main.cpp
 
 OBJ		= ${SRCS:.cpp=.o}

@@ -10,13 +10,14 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "../../includes/Configuration.hpp"
+#include "../includes/server.hpp"
 
-ServerData::ServerData() : _host(), _ports(), _server_name()
+
+Configuration::Configuration() : _host(), _ports(), _server_name()
 {
 }
 
-ServerData::ServerData(TokenVectsIter& begin, TokenVectsIter& end)  : _host(), _ports(), _server_name()
+Configuration::Configuration(TokenVectsIter& begin, TokenVectsIter& end)  : _host(), _ports(), _server_name()
 {
     int             Count;
     CommonEntity    tmp(begin, end);
@@ -35,10 +36,10 @@ ServerData::ServerData(TokenVectsIter& begin, TokenVectsIter& end)  : _host(), _
 		throw CustomeExceptionMsg((!Count) ? NOROUTE : ServerError);
 }
 
-void ServerData::initAttributes(TokenVectsIter& begin, TokenVectsIter& end)
+void Configuration::initAttributes(TokenVectsIter& begin, TokenVectsIter& end)
 {
     static std::string keywords[9] = {"host", "listen", "server_name", "root", "index", "error_page", "client_body_size", "AutoIndex", InvalidSeverKey};
-    ServerData::methods MemberInit[3] = {&ServerData::InitHost, &ServerData::InitPort, &ServerData::InitServerName};
+    Configuration::methods MemberInit[3] = {&Configuration::InitHost, &Configuration::InitPort, &Configuration::InitServerName};
     std::vector<TokenPair> directive;
     std::string *key;
     size_t counter;
@@ -67,12 +68,12 @@ void ServerData::initAttributes(TokenVectsIter& begin, TokenVectsIter& end)
 }
 
 
-ServerData::ServerData(const ServerData& other)
+Configuration::Configuration(const Configuration& other)
 {
     *this = other;
 }
 
-ServerData& ServerData::operator=(const ServerData& other)
+Configuration& Configuration::operator=(const Configuration& other)
 {
     _host = other._host;
     _ports = other._ports;
@@ -81,12 +82,12 @@ ServerData& ServerData::operator=(const ServerData& other)
     return *this;
 }
 
-void ServerData::InitHost(std::string value)
+void Configuration::InitHost(std::string value)
 {
     _host = value;
 }
 
-void ServerData::InitPort(std::string value)
+void Configuration::InitPort(std::string value)
 {
     std::vector<std::string>  _ports(converter(value, TokenToString()));
 
@@ -96,35 +97,35 @@ void ServerData::InitPort(std::string value)
     std::sort(_ports.begin(), _ports.end());
 }
 
-void ServerData::InitServerName(std::string value)
+void Configuration::InitServerName(std::string value)
 {
     _server_name = converter(value, TokenToString());
 }
 
-std::string ServerData::getHost() const
+std::string Configuration::getHost() const
 {
     return this->_host;
 }
 
-std::vector<std::string>    ServerData::getPorts() const
+std::vector<std::string>    Configuration::getPorts() const
 {
     return this->_ports;
 }
 
-std::vector<std::string>    ServerData::getServerNames() const
+std::vector<std::string>    Configuration::getServerNames() const
 {
     return this->_server_name;
 }
 
 
-std::vector<Location>   ServerData::getLocations() const
+std::vector<Location>   Configuration::getLocations() const
 {
     return _locations;
 }
 
-std::ostream& operator<<(std::ostream& o, ServerData obj)
+std::ostream& operator<<(std::ostream& o, Configuration obj)
 {
-    std::cout << "ServerData:" << std::endl;
+    std::cout << "Server:" << std::endl;
     std::cout << " hosts: "<< obj.getHost() << std::endl;
     std::cout << " listen:";
     print_vec(obj.getPorts(), "");
@@ -136,5 +137,5 @@ std::ostream& operator<<(std::ostream& o, ServerData obj)
     return o;
 }
 
-ServerData::~ServerData()
+Configuration::~Configuration()
 {}

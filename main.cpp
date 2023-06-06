@@ -10,7 +10,33 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "includes/Configuration.hpp"
+#include "includes/server.hpp"
+
+
+std::vector<Server> getServers(std::string content)
+{
+	TokenVects 									data(SplitValues(content));
+	std::vector<Server> 						servers;
+	std::pair<TokenVectsIter, TokenVectsIter>	it(std::make_pair(data.begin(),  data.end()));
+
+	while (it.first < it.second)
+	{
+		if (it.first->second == BLOCK)
+		{
+			string_trim(*(it.first));
+			if (it.first->first == "server")
+				servers.insert(servers.end(), Server(Configuration(it.first, it.second)));
+			else
+				throw CustomeExceptionMsg(it.first->first + BlockErro);
+		}
+		else if ((it.first->second != END))
+			throw CustomeExceptionMsg(it.first->first + BlockErro);
+		it.first++;
+	}
+	if (servers.empty())
+		throw CustomeExceptionMsg(EmptyFile);
+	return servers;
+}
 
 std::string OpenPath(const std::string& file_name = DefaultPath)
 {
@@ -29,9 +55,14 @@ int main(int ac, char **av)
 	try
 	{
 		std::string content(((ac != 2) ? OpenPath() : OpenPath(av[1])));
+		std::vector<Server> servers;
 
-		Configuration conf(content);
-		conf.showdata();
+		servers = getServers(content);
+		for (std::vector<Server>::iterator it = servers.begin(); it < servers.end(); it++)
+		{
+			it->showConfig();
+			it->setup();
+		}
 	}
 	catch(const std::exception& e)
 	{
