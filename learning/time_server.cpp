@@ -48,7 +48,7 @@ int main(void)
     int socket_listen;
     printf("Configuring local address...\n");
 
-    memset(&hints, 0, sizeof(hints)); //remove garbage value
+    memset(&hints, 0, sizeof(hints));
     hints.ai_family = AF_INET;
     hints.ai_socktype = SOCK_STREAM;
     // hints.ai_flags = AI_PASSIVE;
