@@ -11,4 +11,4 @@
 #include <stdlib.h>
 #include <string.h>
 
-typedef int SOCKET
+typedef int SOCKET;

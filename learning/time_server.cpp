@@ -1,5 +1,46 @@
 #include "server.hpp"
 
+// SOCKET create_socket(const char* host, const char *port) {
+//     struct addrinfo hints;
+//     struct addrinfo *bind_address;
+//     SOCKET socket_listen;
+
+//     printf("Configuring local address...\n");
+//     memset(&hints, 0, sizeof(hints));
+//     hints.ai_family = AF_INET;
+//     hints.ai_socktype = SOCK_STREAM;
+//     hints.ai_flags = AI_PASSIVE;
+//     getaddrinfo(host, port, &hints, &bind_address);
+
+//     printf("Creating socket...\n");    
+//     socket_listen = socket(bind_address->ai_family,
+//     bind_address->ai_socktype, bind_address->ai_protocol);
+//     if (socket_listen < 0) 
+//     {
+//         fprintf(stderr, "socket() failed. (%s)\n", strerror(errno));
+//         exit(1);
+//     }
+
+//     printf("Binding socket to local address...\n");
+//     if (bind(socket_listen, bind_address->ai_addr, bind_address->ai_addrlen))
+//     {
+//         fprintf(stderr, "bind() failed. (%s)\n", strerror(errno));
+//         exit(1);
+//     }
+//     freeaddrinfo(bind_address);
+
+//     printf("Listening...\n");
+//     if (listen(socket_listen, 10) < 0)
+//     {
+//         fprintf(stderr, "listen() failed. (%s)\n", strerror(errno));
+//         exit(1);
+//     }
+//     return socket_listen;
+// }
+// struct in_addr ipAddress;
+// inet_pton(AF_INET, "192.168.0.100", &ipAddress)
+
+
 int main(void)
 {
     struct addrinfo hints;
@@ -10,7 +51,7 @@ int main(void)
     memset(&hints, 0, sizeof(hints)); //remove garbage value
     hints.ai_family = AF_INET;
     hints.ai_socktype = SOCK_STREAM;
-    hints.ai_flags = AI_PASSIVE;
+    // hints.ai_flags = AI_PASSIVE;
 
     getaddrinfo(0, "8080", &hints, &bind_address);
     /* he getaddrinfo() function has many uses, but for our
@@ -89,6 +130,13 @@ int main(void)
     bytes sent was as expected, and you should attempt to send the rest if it's not. We are
     ignoring that detail here for simplicity */
     printf("Sent %d of  %d bytes.\n", bytes_sent, (int)strlen(time_msg));
+
+    // By enabling the SO_REUSEADDR option, you prevent the "Address already in use" error message that could occur when attempting to bind to a local address that is still in the TIME_WAIT state. This option is commonly used in server applications that need to quickly restart and rebind to the same address and port.
+    // int yes = 1;
+    // if (setsockopt(socket_listen, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof yes) == -1) {
+    //     perror("setsockopt");
+    //     exit(1);
+    // } wael reja3 l hadi
 
     /*We must then close the client connection to indicate to the browser that we've sent all of our data*/
     printf("Closing connection...\n");

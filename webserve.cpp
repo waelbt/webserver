@@ -1,41 +1,53 @@
 #include "webserve.hpp"
+#include <iostream>
+// SOCKET create_socket(const char* host, const char *port) {
+int main(int argc, char *argv[])
+{
+    struct addrinfo hints, *res, *p;
+    int status;
+    char ipstr[INET6_ADDRSTRLEN];
 
-SOCKET create_socket(const char* host, const char *port) {
-    struct addrinfo hints;
-    struct addrinfo *bind_address;
-    SOCKET socket_listen;
+    if (argc != 2) {
+        fprintf(stderr,"usage: showip hostname\n");
+        return 1;
+    }
 
-    printf("Configuring local address...\n");
-    memset(&hints, 0, sizeof(hints));
-    hints.ai_family = AF_INET;
+    memset(&hints, 0, sizeof hints);
+    hints.ai_family = AF_UNSPEC; // AF_INET or AF_INET6 to force version
     hints.ai_socktype = SOCK_STREAM;
-    hints.ai_flags = AI_PASSIVE;
-    getaddrinfo(host, port, &hints, &bind_address);
 
-    printf("Creating socket...\n");    
-    socket_listen = socket(bind_address->ai_family,
-    bind_address->ai_socktype, bind_address->ai_protocol);
-    if (socket_listen < 0) 
-    {
-        fprintf(stderr, "socket() failed. (%s)\n", strerror(errno));
-        exit(1);
+    if ((status = getaddrinfo(argv[1], NULL, &hints, &res)) != 0) {
+        fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(status));
+        return 2;
     }
 
-    printf("Binding socket to local address...\n");
-    if (bind(socket_listen, bind_address->ai_addr, bind_address->ai_addrlen))
-    {
-        fprintf(stderr, "bind() failed. (%s)\n", strerror(errno));
-        exit(1);
-    }
-    freeaddrinfo(bind_address);
+    printf("IP addresses for %s:\n\n", argv[1]);
 
-    printf("Listening...\n");
-    if (listen(socket_listen, 10) < 0)
-    {
-        fprintf(stderr, "listen() failed. (%s)\n", strerror(errno));
-        exit(1);
+    for(p = res;p != NULL; p = p->ai_next) {
+        void *addr;
+        char *ipver;
+
+        // get the pointer to the address itself,
+        // different fields in IPv4 and IPv6:
+        if (p->ai_family == AF_INET) { // IPv4
+            struct sockaddr_in *ipv4 = (struct sockaddr_in *)p->ai_addr;
+            addr = &(ipv4->sin_addr);
+            ipver = "IPv4";
+        } else { // IPv6
+            struct sockaddr_in6 *ipv6 = (struct sockaddr_in6 *)p->ai_addr;
+            addr = &(ipv6->sin6_addr);
+            ipver = "IPv6";
+        }
+
+        // convert the IP to a string and print it:
+        inet_ntop(p->ai_family, addr, ipstr, sizeof(ipstr));
+        printf("  %s: %s\n", ipver, ipstr);
     }
-    return socket_listen;
+
+    freeaddrinfo(res); // free the linked list
+
+    SOCKET sockfd = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
+
+    bind(sockfd, res->ai_addr, res->ai_addrlen);
+    return 0;
 }
-// struct in_addr ipAddress;
-// inet_pton(AF_INET, "192.168.0.100", &ipAddress)
