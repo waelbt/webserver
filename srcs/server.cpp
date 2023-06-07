@@ -12,18 +12,28 @@
 
 #include "../includes/server.hpp"
 
-Server::Server(const Configuration& conf) : _conf(conf)
+size_t	Server::_counter = 0;
+
+Server::Server(const Configuration& conf) : _id(++_counter), _conf(conf)
 {
+	try
+	{
+		_listen_sockets = create_socket(_conf.getHost(), _conf.getPort());
+	}
+	catch(std::exception& e)
+	{
+		std::cerr << "server  number" + std::to_string(this->_id) +  ": " << e.what() << std::endl;
+	}
 }
 
-void Server::setup()
+void Server::run()
 {
+	
 }
 
-Configuration Server::getter() const
-{
-	return _conf;
-}
+// void Server::setup()
+// {
+// }
 
 void Server::showConfig() const
 {

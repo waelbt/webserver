@@ -21,10 +21,21 @@
 #include <sstream>
 #include <fcntl.h>
 #include <queue>
-#include <unistd.h>
 #include <string>
 #include <exception>
 #include <vector>
+
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <netdb.h>
+#include <unistd.h>
+#include <errno.h>
+#include <stdio.h>
+#include <string.h>
+#include <time.h>
+
 
 
 #define NOROUTE				"define a server without location is forbidden"
@@ -51,6 +62,9 @@
 #define BLOCK '{'
 #define END_BLOCK '}'
 
+#define MAX_PENDING_CNX 10
+#define MAX_REQUEST_SIZE 2047
+
 typedef char 								EntityType;
 typedef std::string::iterator 				StrIter;
 typedef	std::pair<std::string,EntityType>		TokenPair;
@@ -59,6 +73,12 @@ typedef	std::vector<StringPair>				ConfEntity;
 typedef	std::vector<StringPair>::iterator	ConfEntityIer;
 typedef std::vector<TokenPair>				TokenVects;
 typedef TokenVects::iterator	TokenVectsIter;
+
+
+
+typedef int	SOCKET;
+typedef struct addrinfo s_addrinfo;
+typedef struct sockaddr_storage s_sockaddr_storage;
 
 struct PortValidator {
     void operator()(int port);
@@ -80,6 +100,7 @@ TokenPair 						selectToken(StrIter& begin, const StrIter& end, int& level, bool
 std::string 					token_to_string(TokenPair& pair);
 std::vector<TokenPair> 			SplitValues(std::string value, bool (*func)(const char&) = is_symbol);
 
+SOCKET create_socket(const std::string& host, const std::string& port);
 
 template <typename T>
 void print_vec( const std::vector<T>& vec, std::string name)
@@ -195,7 +216,7 @@ class Configuration
 		typedef void (Configuration::*methods)(std::string);
 	private:
 		std::string 										_host;
-		std::vector<std::string> 							_ports;
+		std::string 										_port;
 		std::vector<std::string>							_server_name;
 		std::vector<Location>								_locations;
 	public:
@@ -208,20 +229,35 @@ class Configuration
 		void InitPort(std::string value);
 		void InitServerName(std::string value);
 		std::string 				getHost() const;
-		std::vector<std::string> 	getPorts() const;
+		std::string					getPort() const;
 		std::vector<std::string>	getServerNames() const;
 		std::vector<Location>		getLocations() const;
 		friend std::ostream& operator<<(std::ostream& o, Configuration obj);
 		~Configuration();
 };
 
+// class Client {
+// 	private:
+// 		SOCKET _server_socket;
+// 		socklen_t _address_length;
+// 		s_sockaddr_storage _address;
+// 		SOCKET _socket;
+// 		char _request[MAX_REQUEST_SIZE + 1];
+// 		int _received;
+// 	public:
+// 		Client(SOCKET server_socket);
+// };
+
 class Server
 {
     private:
+		static size_t	_counter;
+		size_t	_id;
         Configuration _conf;
+		SOCKET _listen_sockets;
     public:
 		Server(const Configuration& conf);
-		void setup();
-		Configuration	getter() const;
+		// void setup();
+		void run();
         void showConfig() const;
 };

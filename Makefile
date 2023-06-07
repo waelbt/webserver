@@ -1,6 +1,6 @@
 NAME	= webserve
 
-PARSING = utils commonEntity configuration location server
+PARSING = utils commonEntity configuration location server networkingMethods
 
 SRCS	= $(addsuffix .cpp, $(addprefix srcs/, $(PARSING))) \
 			main.cpp

@@ -60,8 +60,8 @@ int main(int ac, char **av)
 		servers = getServers(content);
 		for (std::vector<Server>::iterator it = servers.begin(); it < servers.end(); it++)
 		{
-			it->showConfig();
-			it->setup();
+			// it->showConfig();
+			it->run();
 		}
 	}
 	catch(const std::exception& e)

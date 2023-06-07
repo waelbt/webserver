@@ -13,11 +13,11 @@
 #include "../includes/server.hpp"
 
 
-Configuration::Configuration() : _host(), _ports(), _server_name()
+Configuration::Configuration() : _host(), _port(), _server_name()
 {
 }
 
-Configuration::Configuration(TokenVectsIter& begin, TokenVectsIter& end)  : _host(), _ports(), _server_name()
+Configuration::Configuration(TokenVectsIter& begin, TokenVectsIter& end)  : _host(), _port(), _server_name()
 {
     int             Count;
     CommonEntity    tmp(begin, end);
@@ -76,7 +76,7 @@ Configuration::Configuration(const Configuration& other)
 Configuration& Configuration::operator=(const Configuration& other)
 {
     _host = other._host;
-    _ports = other._ports;
+    _port = other._port;
     _server_name = other._server_name;
     _locations = other._locations;
     return *this;
@@ -89,12 +89,9 @@ void Configuration::InitHost(std::string value)
 
 void Configuration::InitPort(std::string value)
 {
-    std::vector<std::string>  _ports(converter(value, TokenToString()));
-
-    if (_ports.empty())
-        throw CustomeExceptionMsg(EmptyDirective);
-    std::for_each(_ports.begin(), _ports.end(), is_integer);
-    std::sort(_ports.begin(), _ports.end());
+    _port = value;
+    is_integer(_port);
+    // std::for_each(_ports.begin(), _ports.end(), is_integer);
 }
 
 void Configuration::InitServerName(std::string value)
@@ -107,9 +104,9 @@ std::string Configuration::getHost() const
     return this->_host;
 }
 
-std::vector<std::string>    Configuration::getPorts() const
+std::string    Configuration::getPort() const
 {
-    return this->_ports;
+    return this->_port;
 }
 
 std::vector<std::string>    Configuration::getServerNames() const
@@ -126,10 +123,8 @@ std::vector<Location>   Configuration::getLocations() const
 std::ostream& operator<<(std::ostream& o, Configuration obj)
 {
     std::cout << "Server:" << std::endl;
-    std::cout << " hosts: "<< obj.getHost() << std::endl;
-    std::cout << " listen:";
-    print_vec(obj.getPorts(), "");
-    std::cout << ";" << std::endl;
+    std::cout << " hosts: "<< obj.getHost() << ";" << std::endl;
+    std::cout << " listen:" << obj.getPort() << ";" << std::endl;
     std::cout << " server name:";
     print_vec(obj.getServerNames(), "");
     std::cout << ";\n" << std::endl;
