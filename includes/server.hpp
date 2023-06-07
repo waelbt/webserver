@@ -251,10 +251,9 @@ class Configuration
 class Server
 {
     private:
-		static size_t	_counter;
-		size_t	_id;
         Configuration _conf;
 		SOCKET _listen_sockets;
+		// clients
     public:
 		Server(const Configuration& conf);
 		// void setup();

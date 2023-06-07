@@ -12,9 +12,7 @@
 
 #include "../includes/server.hpp"
 
-size_t	Server::_counter = 0;
-
-Server::Server(const Configuration& conf) : _id(++_counter), _conf(conf)
+Server::Server(const Configuration& conf):  _conf(conf)
 {
 	try
 	{
@@ -22,7 +20,7 @@ Server::Server(const Configuration& conf) : _id(++_counter), _conf(conf)
 	}
 	catch(std::exception& e)
 	{
-		std::cerr << "server  number" + std::to_string(this->_id) +  ": " << e.what() << std::endl;
+		// std::cerr << "server  number" + std::to_string(this->_id) +  ": " << e.what() << std::endl;
 	}
 }
 
