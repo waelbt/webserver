@@ -54,12 +54,13 @@ int main(int ac, char **av)
 {
 	try
 	{
+		//map of servers each server had a key which is he's socket
 		std::string content(((ac != 2) ? OpenPath() : OpenPath(av[1])));
 		std::vector<Server> servers;
 
-		Server::clear_set();
+		// Server::clear_set();
 		servers = fill_servers(content);
-		// Server::run();
+		servers[0].run();
 	}
 	catch(const std::exception& e)
 	{

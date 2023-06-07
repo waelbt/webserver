@@ -12,24 +12,18 @@
 
 #include "../includes/server.hpp"
 
-fd_set Server::_server_set;
-SOCKET Server::_max_socket = 0;
-std::vector<Client> Server::_client;
+// fd_set Server::_server_set;
+// SOCKET Server::_max_socket = 0;
+// std::vector<Client> Server::_client;
 
-Server::Server(const Configuration& conf):  _conf(conf)
+Server::Server(const Configuration& conf): _max_socket(), _conf(conf), _client()
 {
-	try
-	{
-		setup_server_socket(_conf.getHost(), _conf.getPort());
-		std::cout << _listen_sockets << std::endl;
-		FD_SET(_listen_sockets, &_server_set);
-		if (_max_socket < _listen_sockets)
-			_max_socket = _listen_sockets;
-	}
-	catch(std::exception& e)
-	{
-		std::cerr << e.what() << std::endl;
-	}
+	setup_server_socket(_conf.getHost(), _conf.getPort());
+	FD_ZERO(&_server_set);
+	FD_SET(_listen_sockets, &_server_set);
+	// FD_SET(0, &_server_set);
+	if (_max_socket < _listen_sockets)
+		_max_socket = _listen_sockets;
 }
 
 
@@ -65,7 +59,7 @@ Client& Server::get_client(SOCKET client_socket)
 
 	for(i = 0; i < _client.size(); i++)
 	{
-		if (_client[i].ClientSocket() == client_socket)
+		if (_client[i]._socket == client_socket)
 			break;
 	}
 	if(i == _client.size())
@@ -80,32 +74,24 @@ fd_set Server::wait_on_client()
 
 	for (size_t size = 0; size < _client.size(); size++)
 	{
-		FD_SET(_client[size].ClientSocket(), &reads);
-		if (_client[size].ClientSocket() > _max_socket)
- 			_max_socket = _client[size].ClientSocket();
+		FD_SET(_client[size]._socket, &reads);
+		if (_client[size]._socket > _max_socket)
+ 			_max_socket = _client[size]._socket;
 	}
-	if (select(_max_socket+1, &reads, 0, 0, 0) < 0)
+	// i should set the timeout parameter 
+	if (select(_max_socket + 1, &reads, 0, 0, 0) < 0)
 		throw CustomeExceptionMsg("select() failed. ("+  std::string(strerror(errno)) + ")");
 	return reads;
 }
 
-void Server::clear_set()
+void Server::drop_client(size_t i)
 {
-	FD_ZERO(&_server_set);
+	if (i < _client.size())
+	{
+		close(_client[i]._socket);
+		_client.erase(_client.begin() + i);
+	}
 }
-
-
-void Server::new_connection_handler(fd_set reads) 
-{
-	(void) reads;
-	//  for (SOCKET fd = 0; fd < _max_server_socket; ++fd)
-	// {
-        // if (FD_ISSET(fd, &reads))
-		// 	_client.insert(_client.end(), Client(fd));
-	// }
-}
-
-
 
 void Server::run()
 {
@@ -114,9 +100,29 @@ void Server::run()
 	while (1)
 	{
 		reads = wait_on_client();
-		
-
+		if (FD_ISSET(_listen_sockets, &reads))
+			_client.insert(_client.end(), Client(_listen_sockets));
+		for (size_t i = 0; i < _client.size(); i++)
+		{
+			if (FD_ISSET(_client[i]._socket, &reads))
+			{
+				int r = recv(_client[i]._socket, _client[i]._request + _client[i]._received, MAX_REQUEST_SIZE - _client[i]._received, 0);
+				if (r < 1)
+				{
+					std::cout << "Unexpected disconnect from " << _client[i].get_client_address() << std::endl;
+					drop_client(i);
+				}
+				else
+				{
+					_client[i]._received += r;
+					_client[i]._request[_client[i]._received] = '\0';
+					std::cout << _client[i]._request << std::endl;
+					// request handling
+				}
+			}
+		}
 	}
+	close(_listen_sockets);
 }
 
 void Server::showConfig() const

@@ -38,7 +38,7 @@ Configuration::Configuration(TokenVectsIter& begin, TokenVectsIter& end)  : _hos
 
 void Configuration::initAttributes(TokenVectsIter& begin, TokenVectsIter& end)
 {
-    static std::string keywords[9] = {"host", "listen", "server_name", "root", "index", "error_page", "client_body_size", "AutoIndex", InvalidSeverKey};
+    static std::string keywords[9] = {"host", "listen", "server_name", "root", "index", "error_page", "client_max_body_size", "AutoIndex", InvalidSeverKey};
     Configuration::methods MemberInit[3] = {&Configuration::InitHost, &Configuration::InitPort, &Configuration::InitServerName};
     std::vector<TokenPair> directive;
     std::string *key;
