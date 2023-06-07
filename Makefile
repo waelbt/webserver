@@ -1,13 +1,13 @@
 NAME	= webserve
 
-PARSING = utils commonEntity configuration location server networkingMethods
+PARSING = utils commonEntity configuration location server client
 
 SRCS	= $(addsuffix .cpp, $(addprefix srcs/, $(PARSING))) \
 			main.cpp
 
 OBJ		= ${SRCS:.cpp=.o}
 
-CPPFLAGS = -Wall -Wextra -Werror -std=c++98 -fsanitize=address
+CPPFLAGS = -Wall -Wextra -Werror -std=c++98 -g -fsanitize=address
 
 CXX = c++
 

@@ -13,7 +13,7 @@
 #include "includes/server.hpp"
 
 
-std::vector<Server> getServers(std::string content)
+std::vector<Server> fill_servers(std::string content)
 {
 	TokenVects 									data(SplitValues(content));
 	std::vector<Server> 						servers;
@@ -57,12 +57,9 @@ int main(int ac, char **av)
 		std::string content(((ac != 2) ? OpenPath() : OpenPath(av[1])));
 		std::vector<Server> servers;
 
-		servers = getServers(content);
-		for (std::vector<Server>::iterator it = servers.begin(); it < servers.end(); it++)
-		{
-			// it->showConfig();
-			it->run();
-		}
+		Server::clear_set();
+		servers = fill_servers(content);
+		// Server::run();
 	}
 	catch(const std::exception& e)
 	{

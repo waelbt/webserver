@@ -236,27 +236,40 @@ class Configuration
 		~Configuration();
 };
 
-// class Client {
-// 	private:
-// 		SOCKET _server_socket;
-// 		socklen_t _address_length;
-// 		s_sockaddr_storage _address;
-// 		SOCKET _socket;
-// 		char _request[MAX_REQUEST_SIZE + 1];
-// 		int _received;
-// 	public:
-// 		Client(SOCKET server_socket);
-// };
+class Client {
+	private:
+		SOCKET _server_socket;
+		s_sockaddr_storage _address;
+		socklen_t _address_length;
+		SOCKET _socket;
+		// char _request[MAX_REQUEST_SIZE + 1];
+		// int _received;
+	public:
+		Client(SOCKET server_socket);
+		SOCKET ServerSocket() const;
+		SOCKET ClientSocket() const;
+		socklen_t GetAddressLen() const; 
+		std::string get_client_address();
+};
 
 class Server
 {
+	public:
+		typedef std::vector<Client>::iterator clientIter;
     private:
+		static fd_set _server_set;
+		static SOCKET _max_socket;
         Configuration _conf;
 		SOCKET _listen_sockets;
-		// clients
+		static std::vector<Client> _client;
     public:
 		Server(const Configuration& conf);
-		// void setup();
-		void run();
+		static s_addrinfo *get_s_addrinfo(std::string host, std::string port);
+		void setup_server_socket(std::string host, std::string port);
+		static fd_set wait_on_client();
+		static Client& get_client(SOCKET client_socket);
+		static void new_connection_handler(fd_set reads);
+		static void run();
+		static void clear_set();
         void showConfig() const;
 };
