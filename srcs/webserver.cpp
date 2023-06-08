@@ -68,7 +68,7 @@ void Webserver::run()
 		    {
 		    	if (FD_ISSET(_client[i]._socket, &reads))
 		    	{
-		    		int r = recv(_client[i]._socket, _client[i]._request + _client[i]._received, MAX_REQUEST_SIZE - _client[i]._received, 0);
+		    		int r = recv(_client[i]._socket, _client[i]._request + _client[i]._received, MAX_REQUEST_SIZE, 0);
 		    		if (r < 1)
 		    		{
 		    			std::cout << "Unexpected disconnect from " << _client[i].get_client_address() << std::endl;
@@ -80,7 +80,7 @@ void Webserver::run()
 		    			_client[i]._request[_client[i]._received] = '\0';
 						_client[i]._req.parseRequest(_client[i]._request);
 		    			// std::cout << _client[i]._request << std::endl;
-						_client[i]._req.printElement();
+						// _client[i]._req.printElement();
 		    			// request handling
 		    		}
 		    		// add the client set to the writing set

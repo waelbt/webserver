@@ -12,11 +12,13 @@
 class Request
 {
     private:
-        RequestMap               _request;
-        static int               state;
+        RequestMap    _request;
+        int           _status;
+        static int    state;
 
         void parseUrl(std::string const &line);
         void getContentType(std::string const & content);
+        void badFormat();
     public:
         Request();
         Request(std::string const &request);

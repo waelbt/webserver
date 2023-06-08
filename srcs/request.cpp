@@ -24,11 +24,11 @@ RequestMap cnt;
 
 int Request::state = 0;
 
-Request::Request() : _request()
+Request::Request() : _request(), _status(200)
 {
 }
 
-Request::Request(std::string const &request) : _request()
+Request::Request(std::string const &request) : _request(), _status(200)
 {
     parseRequest(request);
 }
@@ -83,12 +83,56 @@ void Request::parseRequest(std::string const &request)
     while (std::getline(req, line) && line != "\r\n")
     {
         size_t separator = line.find(": ");
-        if (separator != std::string::npos)
+        if (separator != std::string::npos){
             _request.insert(std::make_pair(line.substr(0, separator),
                                                     line.substr(separator + 2)));
+        std::cout  << line  << std::endl;
+        }
     }
+    std::getline(req, line);
+    if (line != "\0")
+        _request.insert(std::make_pair("body", line));
+    badFormat();
+    std::cout << _status << std::endl;
 }
 
+struct invalidUrl
+{
+    bool operator()(const char& c)
+    {
+        static std::string Error(":/?#[]@!$&'()*+,=;");
+        return (Error.find(std::string(1, c)) != std::string::npos);
+    }
+};
+
+void Request::badFormat()
+{
+    // RequestMap::iterator it = _request.find("Transfer-Encoding");
+    // if (it != _request.end() && it->second != "chunked") {
+    //     std::cout << it->second  << std::endl;
+    //     _status = 501;
+    //     return;
+    // }
+    if (_request.find("Content-Length") == _request.end() && _request.find("Method")->second == "Post") {
+        _status = 400;
+        return;
+    }
+    // std::string url = _request.find("URL")->second;
+    std::string url = "just a test";
+    if ((std::find_if(url.begin(), url.end(), invalidUrl()) != url.end()))
+    {
+        _status = 400;
+        return;
+    }
+    if (_request.find("URL")->second.length() > 2048){
+        _status = 414;
+        return;
+    }
+    if (_request.find("body")->second.length() > 2048){
+        _status = 414;
+        return;
+    }
+}
 void Request::printElement()
 {
     int i = 0;
