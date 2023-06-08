@@ -13,10 +13,10 @@
 #include "includes/server.hpp"
 
 
-std::vector<Server> fill_servers(std::string content)
+std::map<SOCKET, Server*> fill_servers(std::string content)
 {
 	TokenVects 									data(SplitValues(content));
-	std::vector<Server> 						servers;
+	std::map<SOCKET, Server*> 						servers;
 	std::pair<TokenVectsIter, TokenVectsIter>	it(std::make_pair(data.begin(),  data.end()));
 
 	while (it.first < it.second)
@@ -25,7 +25,10 @@ std::vector<Server> fill_servers(std::string content)
 		{
 			string_trim(*(it.first));
 			if (it.first->first == "server")
-				servers.insert(servers.end(), Server(Configuration(it.first, it.second)));
+			{
+				Server  *tmp = new Server(Configuration(it.first, it.second));
+				servers[tmp->get_listen_sockets()] = tmp;
+			}
 			else
 				throw CustomeExceptionMsg(it.first->first + BlockErro);
 		}
@@ -54,13 +57,10 @@ int main(int ac, char **av)
 {
 	try
 	{
-		//map of servers each server had a key which is he's socket
 		std::string content(((ac != 2) ? OpenPath() : OpenPath(av[1])));
-		std::vector<Server> servers;
-
-		// Server::clear_set();
-		servers = fill_servers(content);
-		servers[0].run();
+		Webserver webserver(fill_servers(content));
+		
+		webserver.run();
 	}
 	catch(const std::exception& e)
 	{

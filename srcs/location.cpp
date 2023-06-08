@@ -28,6 +28,23 @@ Location::Location() : _pattren("/"), _limit_except(), _cgi(), _upload()
 {
 }
 
+
+Location::Location(const Location& other)
+{
+    *this = other;
+}
+
+
+Location& Location::operator=(const Location& other)
+{
+    _pattren = other._pattren;
+    _limit_except = other._limit_except;
+    _cgi = other._cgi;
+    _upload = other._upload;
+    _redirect = other._redirect;
+    return *this;
+}
+
 void Location::InitPattern(std::string value)
 {
     if (value != "")
