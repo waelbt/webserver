@@ -22,13 +22,11 @@ typedef struct sockaddr_storage s_sockaddr_storage;
 
 struct Client {
 	// attributes
-	Request _req;
 	SOCKET _server_socket;
 	s_sockaddr_storage _address;
 	socklen_t _address_length;
 	SOCKET _socket;
-	char _request[MAX_REQUEST_SIZE + 1];
-	int _received;
+	Request _req;
 
 	// methods
 	Client();

@@ -1,14 +1,14 @@
 #include "../includes/server.hpp"
 
 
-Client::Client() : _req(), _server_socket(), _address(), _address_length(sizeof(_address)), _received(0)
+Client::Client() : _server_socket(), _address(), _address_length(sizeof(_address)), _req()
 {
     
 }
 
-Client::Client(SOCKET server_socket) : _req(), _server_socket(server_socket), _address(), _address_length(sizeof(_address)), _received(0)
+Client::Client(SOCKET server_socket) : _server_socket(server_socket), _address(), _address_length(sizeof(_address)), _req()
 {
-    memset(_request, 0, sizeof(_request));
+    // memset(_request, 0, sizeof(_request));
     _socket = accept(_server_socket, (struct sockaddr*) &(_address), &(_address_length));
     if (_socket < 0)
         throw CustomeExceptionMsg("socket() failed. ("+  std::string(strerror(errno)) + ")");
@@ -28,7 +28,7 @@ Client& Client::operator=(const Client& other)
     _address_length = other._address_length;
     _socket = other._socket;
     // _request = other._request;
-    _received = other._received;
+    // _received = other._received;
     return *this;
 }
 
