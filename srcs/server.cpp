@@ -38,6 +38,7 @@ Server::Server(const Configuration& conf): _conf(conf), _client()
 
 void Server::setup_server_socket(std::string host, std::string port)
 {	
+	int yes;
 	s_addrinfo hints;
     s_addrinfo *bind_addr;
 
@@ -49,6 +50,8 @@ void Server::setup_server_socket(std::string host, std::string port)
 	_listen_sockets = socket(bind_addr->ai_family, bind_addr->ai_socktype, bind_addr->ai_protocol);
 	if (_listen_sockets < 0) {
 		freeaddrinfo(bind_addr); throw CustomeExceptionMsg("socket() failed. ("+  std::string(strerror(errno)) + ")"); }
+	if (setsockopt(_listen_sockets, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes)) == -1) {
+        freeaddrinfo(bind_addr);throw CustomeExceptionMsg("Failed to set SO_REUSEADDR option"); }
 	if (bind(_listen_sockets, bind_addr->ai_addr, bind_addr->ai_addrlen)) {
 		freeaddrinfo(bind_addr); throw CustomeExceptionMsg("bind() failed. ("+  std::string(strerror(errno)) + ")"); }
 	if (listen(_listen_sockets, MAX_PENDING_CNX) < 0) {

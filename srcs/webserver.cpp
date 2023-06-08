@@ -68,21 +68,24 @@ void Webserver::run()
 		    {
 		    	if (FD_ISSET(_client[i]._socket, &reads))
 		    	{
-		    		int r = recv(_client[i]._socket, _client[i]._request + _client[i]._received, MAX_REQUEST_SIZE, 0);
-		    		if (r < 1)
-		    		{
-		    			std::cout << "Unexpected disconnect from " << _client[i].get_client_address() << std::endl;
-		    			it->second->drop_client(i);
-		    		}
-		    		else
-		    		{
-		    			_client[i]._received += r;
-		    			_client[i]._request[_client[i]._received] = '\0';
-						_client[i]._req.parseRequest(_client[i]._request);
+					memset(_client[i]._request, 0, sizeof(_client[i]._request));
+		    		int r = recv(_client[i]._socket, _client[i]._request, MAX_REQUEST_SIZE, 0);
+					std::cout << _client[i]._request << std::endl;
+					std::cout << r << std::endl;
+		    		// if (r < 1)
+		    		// {
+		    		// 	std::cout << "Unexpected disconnect from " << _client[i].get_client_address() << std::endl;
+		    		// 	it->second->drop_client(i);
+		    		// }
+		    		// else
+		    		// {
+		    		// 	_client[i]._received += r;
+		    		// 	_client[i]._request[_client[i]._received] = '\0';
+					// 	_client[i]._req.parseRequest(_client[i]._request);
 		    			// std::cout << _client[i]._request << std::endl;
 						// _client[i]._req.printElement();
 		    			// request handling
-		    		}
+		    		// }
 		    		// add the client set to the writing set
 		    	}
 		    }
