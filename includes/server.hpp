@@ -12,6 +12,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
+#include "request.hpp"
 
 
 typedef int	SOCKET;
@@ -21,6 +22,7 @@ typedef struct sockaddr_storage s_sockaddr_storage;
 
 struct Client {
 	// attributes
+	Request _req;
 	SOCKET _server_socket;
 	s_sockaddr_storage _address;
 	socklen_t _address_length;
@@ -58,6 +60,7 @@ class Server
 
 		std::vector<Client>& get_clients();
 		SOCKET get_listen_sockets() const;
+		Configuration get_configuration() const;
 
 		void drop_client(size_t i);
 		void showConfig() const;

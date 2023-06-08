@@ -80,6 +80,11 @@ std::vector<Client>& Server::get_clients()
 	return _client;
 }
 
+Configuration Server::get_configuration() const
+{
+	return _conf;
+}
+
 void Server::drop_client(size_t i)
 {
 	if (i < _client.size())

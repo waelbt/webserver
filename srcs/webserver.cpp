@@ -78,7 +78,9 @@ void Webserver::run()
 		    		{
 		    			_client[i]._received += r;
 		    			_client[i]._request[_client[i]._received] = '\0';
-		    			std::cout << _client[i]._request << std::endl;
+						_client[i]._req.parseRequest(_client[i]._request);
+		    			// std::cout << _client[i]._request << std::endl;
+						_client[i]._req.printElement();
 		    			// request handling
 		    		}
 		    		// add the client set to the writing set
