@@ -80,7 +80,7 @@ class Webserver
 		Webserver(const ServerMap&  _servers);
 		Webserver(const Webserver&  other);
 		Webserver& operator=(const Webserver&  _servers);
-		fd_set wait_on_client();
+		std::pair<fd_set, fd_set> wait_on_client();
 		void run();
 		void stop();
 		~Webserver();
