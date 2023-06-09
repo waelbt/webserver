@@ -108,31 +108,21 @@ struct invalidUrl
 
 void Request::badFormat()
 {
-    RequestMap::iterator it = _request.find("Transfer-Encoding");
-    if (it != _request.end() && it->second != "chunked") {
+    RequestMap::iterator transferIt = _request.find("Transfer-Encoding");
+    RequestMap::iterator bodyIt = _request.find("body");
+    std::string url = _request.find("URL")->second;
+
+    if (transferIt != _request.end() && transferIt->second != "chunked")
         _status = 501;
-        return;
-    }
-    if (_request.find("Content-Length") == _request.end() && _request.find("Method")->second == "Post") {
+    else if (_request.find("Content-Length") == _request.end() && _request.find("Method")->second == "Post")
         _status = 400;
-        return;
-    }
-    // std::string url = _request.find("URL")->second;
-    std::string url = "just@ a test";
-    if ((std::find_if(url.begin(), url.end(), invalidUrl()) != url.end()))
-    {
+    else if ((std::find_if(url.begin(), url.end(), invalidUrl()) != url.end()))
         _status = 400;
-        return;
-    }
-    if (_request.find("URL")->second.length() > 2048){
+    else if (url.length() > 2048)
         _status = 414;
-        return;
-    }
-    it = _request.find("body");
-    if (it != _request.end() && it->second.length() > 2048){
+    else if (bodyIt != _request.end() && bodyIt->second.length() > 2048)
         _status = 413;
-        return;
-    }
+
 }
 void Request::printElement()
 {

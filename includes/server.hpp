@@ -26,7 +26,7 @@ struct Client {
 	s_sockaddr_storage _address;
 	socklen_t _address_length;
 	SOCKET _socket;
-	Request _req;
+	Request _request;
 
 	// methods
 	Client();

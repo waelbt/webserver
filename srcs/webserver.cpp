@@ -79,12 +79,17 @@ void Webserver::run()
 		    		else
 		    		{
 		    			request[r] = '\0';
-						_client[i]._req.parseRequest(request);
-						_client[i]._req.printElement();
+						_client[i]._request.parseRequest(request);
+						_client[i]._request.printElement();
+						// _client[i]._response.handleResponse(_client[i]._request);
 		    			// request handling
 		    		}
 		    		// add the client set to the writing set
 		    	}
+				// if (FD_ISSET(_client[i]._socket, &writes))
+				// {
+				// 	// send
+				// }
 		    }
         }
     }
