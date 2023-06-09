@@ -48,33 +48,26 @@ void Request::checkLocation()
     std::vector<Location> location = _conf.getLocations();
     std::vector<Location>::iterator it = location.begin();
     std::string url = _request.find("URL")->second;
-    std::string lower;
-    std::string upper;
 
     while(it++ != location.end())
     {
         std::string pattern = (*it).getPattren();
         if ((pattern == "/" && url != "/") || url.length() <  pattern.length())
             continue ;
-        std::string dir = url.substr(0, pattern.length());
-        std::cout << dir << "----------------" << pattern << std::endl;
-        if (pattern == dir && (dir[url.length() + 1] == '\0' || dir[url.length() + 1] == '/'))
+        std::string checker = url.substr(0, pattern.length());
+        if (pattern == checker && (url[pattern.length()] == '\0' || url[pattern.length()] == '/'))
         {
-            if (upper.empty())
-                upper = dir;
+            if (_path.empty())
+                _path = checker;
             else
-                lower = dir;
-            std::cout << "the upper is " << upper <<std::endl;
-            upper = upper.length() > lower.length() ? upper : lower;
+                _path = _path.length() > checker.length() ? _path : checker;
         }
     }
-    if (upper.empty())
+    if (_path.empty())
         _status = 404;
-    else
-        std::cout << upper << std::endl;
 }
 
-void Request::getContentType(std::string const & content)
+void Request::setContentType(std::string const & content)
 {
     if (!state)
     {
@@ -104,7 +97,7 @@ void Request::parseUrl(std::string const &line)
     size_t url = line.find("/");
     size_t protocol = line.find("HTTP");
     std::string contentType = line.substr(url, protocol - 5);
-    getContentType(contentType);
+    setContentType(contentType);
     _request.insert(std::make_pair("Method", line.substr(0, url - 1)));
     _request.insert(std::make_pair("URL", contentType));
     _request.insert(std::make_pair("Protocol", line.substr(protocol, line.length() - protocol - 1)));
@@ -164,12 +157,17 @@ void Request::printElement()
         std::cout << i << " " << it->first << ": " << it->second << std::endl;
 }
 
+RequestMap const & Request::getRequest() const
+{
+    return _request;
+}
+
 int const &   Request::getStatus() const
 {
     return _status;
 }
 
-RequestMap const & Request::getRequest() const
+std::string const &   Request::getPath() const
 {
-    return _request;
+    return _path;
 }

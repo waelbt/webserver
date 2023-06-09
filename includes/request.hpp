@@ -20,11 +20,12 @@ class Request
     private:
         RequestMap    _request;
         Configuration _conf;
+        std::string   _path;
         int           _status;
         static int    state;
 
         void parseUrl(std::string const &line);
-        void getContentType(std::string const & content);
+        void setContentType(std::string const & content);
         void badFormat();
         void checkLocation();
     public:
@@ -36,6 +37,7 @@ class Request
         RequestMap const      &getRequest() const;
         std::string const &   getType() const;
         int const &           getStatus() const;
+        std::string const &   getPath() const;
         void                  parseRequest(std::string const &request, Configuration const & conf);
         void                  printElement();
 		//getPath(
