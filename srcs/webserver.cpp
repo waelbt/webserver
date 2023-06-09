@@ -33,6 +33,7 @@ void  Webserver::fill_servers(std::string content)
 				try
 				{
 					Server  *tmp = new Server(Configuration(it.first, it.second));
+					tmp->showConfig();
 					_servers[tmp->get_listen_sockets()] = tmp;
 				}
 				catch(Server::ServerException& e)

@@ -14,16 +14,6 @@
 
 #include "../includes/server.hpp"
 
-
-s_cgi::s_cgi(std::string value)
-{
-    std::vector<std::string>  values(converter(value, TokenToString()));
-    std::vector<std::string>::iterator end = values.end();
-
-    _exec = std::vector<std::string>(values.begin(), --end);
-    _path = *end;
-}
-
 Location::Location() : _pattren("/"), _limit_except(), _cgi(), _upload()
 {
 }
@@ -63,7 +53,10 @@ void Location::InitLimitExcept(std::string value)
 
 void Location::InitCgi(std::string value)
 {
-    _cgi.insert(_cgi.end(), s_cgi(value));
+    std::vector<std::string>  values(converter(value, TokenToString()));
+    if (values.size() != 2)
+        throw CustomeExceptionMsg("invalid syntax for cgi (exec_file, path)");
+    _cgi[values[0]] = values[1];
 }
 
 void Location::InitUpload(std::string value)
@@ -115,7 +108,7 @@ std::vector<std::string> Location::getLimit_except() const
     return _limit_except;
 }
 
-std::vector<s_cgi> Location::getCgi() const
+std::map<std::string, std::string> Location::getCgi() const
 {
     return _cgi;
 }
@@ -135,6 +128,11 @@ void print_error_page(const std::pair<int, std::string>& pair)
     std::cout << "  error_page: "<< pair.first << "  " << pair.second << ";"<< std::endl;
 }
 
+void print_cgi(const std::pair<std::string, std::string>& pair)
+{
+    std::cout << "  cgi: "<< pair.first << "  " << pair.second << ";"<< std::endl;
+}
+
 std::ostream& operator<<(std::ostream& o, Location obj)
 {
     std::cout << "location  " << obj.getPattren()  << ": " << std::endl;
@@ -142,15 +140,16 @@ std::ostream& operator<<(std::ostream& o, Location obj)
     std::cout << "  index: ";
     print_vec(obj.getIndex(), "");
     std::cout << ";" << std::endl;
-    std::map<int, std::string> getMap = obj.getErrorPages();
-    std::for_each(getMap.begin(), getMap.end(), &print_error_page);
+    std::map<int, std::string> error_pages = obj.getErrorPages();
+    std::for_each(error_pages.begin(), error_pages.end(), &print_error_page);
     std::cout << "  client_max_body_size: " << obj.getClientMaxBodySize() << ";" << std::endl;
     std::cout << "  auto index: " << ((obj.getAutoIndex()) ? (std::cout << "true") :  (std::cout << "false")) << ";" << std::endl;
     std::cout << "  upload: " << obj.getUpload() << ";" << std::endl;
     std::cout << "  limit_except: ";
     print_vec(obj.getLimit_except() , "");
     std::cout << ";" << std::endl;
-    print_vec(obj.getCgi(), "  cgi:");
+    std::map<std::string, std::string> cgi = obj.getCgi();
+    std::for_each(cgi.begin(), cgi.end(), &print_cgi);
     std::cout << std::endl;
     print_vec(obj.getRedirect(), "  redirect:");
     return o;

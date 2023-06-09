@@ -86,11 +86,3 @@ std::vector<TokenPair> SplitValues(std::string value, bool (*func)(const char&))
     return res;
 }
 
-
-std::ostream& operator<<(std::ostream& o, s_cgi obj)
-{
-    for (std::vector<std::string>::iterator it = obj._exec.begin(); it != obj._exec.end(); it++)
-        std::cout << " " << *it;
-    std::cout << " " << obj._path << ";" <<std::endl;
-    return o;
-}

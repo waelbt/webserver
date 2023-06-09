@@ -108,14 +108,14 @@ std::vector<std::string> converter(const std::string& content, func function)
     return values;
 }
 
-struct s_cgi
-{
-	std::vector<std::string> _exec;
-	std::string _path;
+// struct s_cgi
+// {
+// 	std::vector<std::string> _exec;
+// 	std::string _path;
 
-	s_cgi(std::string value);
-	friend std::ostream& operator<<(std::ostream& o, s_cgi obj);
-};
+// 	s_cgi(std::string value);
+// 	friend std::ostream& operator<<(std::ostream& o, s_cgi obj);
+// };
 
 class CustomeExceptionMsg : public std::exception {
 	protected:
@@ -161,7 +161,7 @@ class Location : public CommonEntity
 	private:
 		std::string _pattren;
 		std::vector<std::string> _limit_except;
-		std::vector<s_cgi> _cgi;
+		std::map<std::string, std::string> _cgi;
 		std::string _upload;
 		std::vector<std::string> _redirect;
 	public:
@@ -176,7 +176,7 @@ class Location : public CommonEntity
 		void 						InitRedirect(std::string value);
 		std::string 				getPattren() const;
 		std::vector<std::string> 	getLimit_except() const;
-		std::vector<s_cgi> 			getCgi() const;
+		std::map<std::string, std::string> 			getCgi() const;
 		std::string 				getUpload() const;
 		std::vector<std::string> 	getRedirect() const;
 		~Location();
