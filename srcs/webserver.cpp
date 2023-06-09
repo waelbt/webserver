@@ -122,10 +122,11 @@ void Webserver::run()
 						// _client[i]._request.printElement();
 		    		}
 		    	}
-				// if (FD_ISSET(_client[i]._socket, &writes))
-				// {
-				// 	// send
-				// }
+				if (FD_ISSET(_client[i]._socket, &sets.second))
+				{
+					std::string res = _client[i]._response.serveResponse(_client[i]._request);
+					send(_client[i]._socket, res.c_str(), res.length(), 0);
+				}
 		    }
         }
     }
