@@ -5,6 +5,7 @@
 #include <sstream>
 #include <map>
 #include <utility>
+#include "configuration.hpp"
 
 #define RequestMap std::map<std::string, std::string>
 
@@ -18,6 +19,7 @@ class Request
 {
     private:
         RequestMap    _request;
+        Configuration _conf;
         int           _status;
         static int    state;
 
@@ -26,12 +28,12 @@ class Request
         void badFormat();
     public:
         Request();
-        Request(std::string const &request);
+        Request(std::string const &request, Configuration const & conf);
         ~Request();
         Request& operator=(const Request& other);
 
         RequestMap const      &getRequest() const;
         std::string const &   getType() const;
-        void                  parseRequest(std::string const &request);
+        void                  parseRequest(std::string const &request, Configuration const & conf);
         void                  printElement();
 };

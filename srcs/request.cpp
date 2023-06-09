@@ -26,17 +26,17 @@ int Request::state = 0;
 
 bool invalidUrl::operator()(const char& c)
 {
-    static std::string Error(":/?#[]@!$&'()*+,=;");
+    static std::string Error(":?#[]@!$&'()*+,=;");
     return (Error.find(std::string(1, c)) != std::string::npos);
 }
 
-Request::Request() : _request(), _status(200)
+Request::Request() : _request(), _conf(), _status(200)
 {
 }
 
-Request::Request(std::string const &request) : _request(), _status(200)
+Request::Request(std::string const &request, Configuration const & conf) : _request(), _conf(conf), _status(200)
 {
-    parseRequest(request);
+    parseRequest(request, conf);
 }
 
 Request::~Request()
@@ -89,8 +89,8 @@ void Request::badFormat()
         _status = 501;
     else if (_request.find("Content-Length") == _request.end() && _request.find("Method")->second == "Post")
         _status = 400;
-    else if ((std::find_if(url.begin(), url.end(), invalidUrl()) != url.end()))
-        _status = 400;
+    // else if ((std::find_if(url.begin(), url.end(), invalidUrl()) != url.end()))
+    //     _status = 400;
     else if (url.length() > 2048)
         _status = 414;
     else if (bodyIt != _request.end() && bodyIt->second.length() > 2048)
@@ -98,11 +98,12 @@ void Request::badFormat()
 
 }
 
-void Request::parseRequest(std::string const &request)
+void Request::parseRequest(std::string const &request, Configuration const & conf)
 {
     std::istringstream req(request);
     std::string line;
 
+    _conf = conf;
     std::getline(req, line);
     parseUrl(line);
     while (std::getline(req, line) && line != "\r\n")
