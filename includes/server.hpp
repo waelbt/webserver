@@ -55,7 +55,13 @@ class Server
 		Server& operator=(const Server& other);
 
 		void setup_server_socket(std::string host, std::string port);
-
+		class ServerException : public CustomeExceptionMsg
+		{
+			public:
+				ServerException();
+    			ServerException(const std::string& message);
+				virtual ~ServerException() throw();
+		};
 		std::vector<Client>& get_clients();
 		SOCKET get_listen_sockets() const;
 		Configuration get_configuration() const;
@@ -77,9 +83,10 @@ class Webserver
 		SOCKET _max_socket;
 	public:
 		Webserver();
-		Webserver(const ServerMap&  _servers);
+		Webserver(std::string content);
 		Webserver(const Webserver&  other);
 		Webserver& operator=(const Webserver&  _servers);
+		void fill_servers(std::string content);
 		std::pair<fd_set, fd_set> wait_on_client();
 		void run();
 		void stop();

@@ -19,7 +19,6 @@ Server::Server() : _conf(), _listen_sockets(), _client()
 Server::Server(const Configuration& conf): _conf(conf), _client()
 {
 	setup_server_socket(_conf.getHost(), _conf.getPort());
-
 }
 
 
@@ -41,22 +40,28 @@ void Server::setup_server_socket(std::string host, std::string port)
 	int yes;
 	s_addrinfo hints;
     s_addrinfo *bind_addr;
+	std::string error_message("getaddrinfo system call failed.");
 
     memset(&hints, 0, sizeof(hints));
     hints.ai_family = AF_INET;
     hints.ai_socktype = SOCK_STREAM;
     getaddrinfo(host.c_str(), port.c_str(), &hints, &bind_addr);
-
-	_listen_sockets = socket(bind_addr->ai_family, bind_addr->ai_socktype, bind_addr->ai_protocol);
-	if (_listen_sockets < 0) {
-		freeaddrinfo(bind_addr); throw CustomeExceptionMsg("socket() failed. ("+  std::string(strerror(errno)) + ")"); }
-	if (setsockopt(_listen_sockets, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes)) == -1) {
-        freeaddrinfo(bind_addr);throw CustomeExceptionMsg("Failed to set SO_REUSEADDR option"); }
-	if (bind(_listen_sockets, bind_addr->ai_addr, bind_addr->ai_addrlen)) {
-		freeaddrinfo(bind_addr); throw CustomeExceptionMsg("bind() failed. ("+  std::string(strerror(errno)) + ")"); }
-	if (listen(_listen_sockets, MAX_PENDING_CNX) < 0) {
-		freeaddrinfo(bind_addr); throw CustomeExceptionMsg("listen() failed. ("+  std::string(strerror(errno)) + ")"); }
+	if (bind_addr)
+	{
+		_listen_sockets = socket(bind_addr->ai_family, bind_addr->ai_socktype, bind_addr->ai_protocol);
+		if (_listen_sockets < 0)
+			error_message = "socket system call failed.";
+		if (setsockopt(_listen_sockets, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes)) == -1)
+			error_message = "setsockopt system call failed.";
+		if (bind(_listen_sockets, bind_addr->ai_addr, bind_addr->ai_addrlen))
+			error_message = "bind system call failed.";
+		if (listen(_listen_sockets, MAX_PENDING_CNX) < 0)
+			error_message = "listen system call failed.";
+		freeaddrinfo(bind_addr);
+		return ;
+	}
 	freeaddrinfo(bind_addr);
+	throw ServerException(error_message);
 }
 
 
@@ -96,6 +101,17 @@ void Server::drop_client(size_t i)
 		_client.erase(_client.begin() + i);
 	}
 }
+
+Server::ServerException::ServerException() : CustomeExceptionMsg()
+{}
+
+Server::ServerException::ServerException(const std::string& message) : CustomeExceptionMsg(message)
+{}
+
+Server::ServerException::~ServerException() throw()
+{}
+
+
 
 void Server::showConfig() const
 {

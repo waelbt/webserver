@@ -12,35 +12,6 @@
 
 #include "includes/server.hpp"
 
-
-std::map<SOCKET, Server*> fill_servers(std::string content)
-{
-	TokenVects 									data(SplitValues(content));
-	std::map<SOCKET, Server*> 						servers;
-	std::pair<TokenVectsIter, TokenVectsIter>	it(std::make_pair(data.begin(),  data.end()));
-
-	while (it.first < it.second)
-	{
-		if (it.first->second == BLOCK)
-		{
-			string_trim(*(it.first));
-			if (it.first->first == "server")
-			{
-				Server  *tmp = new Server(Configuration(it.first, it.second));
-				servers[tmp->get_listen_sockets()] = tmp;
-			}
-			else
-				throw CustomeExceptionMsg(it.first->first + BlockErro);
-		}
-		else if ((it.first->second != END))
-			throw CustomeExceptionMsg(it.first->first + BlockErro);
-		it.first++;
-	}
-	if (servers.empty())
-		throw CustomeExceptionMsg(EmptyFile);
-	return servers;
-}
-
 std::string OpenPath(const std::string& file_name = DefaultPath)
 {
 	std::string content;
@@ -58,7 +29,7 @@ int main(int ac, char **av)
 	try
 	{
 		std::string content(((ac != 2) ? OpenPath() : OpenPath(av[1])));
-		Webserver webserver(fill_servers(content));
+		Webserver webserver(content);
 		
 		webserver.run();
 	}

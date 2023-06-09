@@ -6,8 +6,9 @@ Webserver::Webserver()
 }
 
 
-Webserver::Webserver(const ServerMap&  servers) : _servers(servers), _max_socket()
+Webserver::Webserver(std::string content) : _servers(), _max_socket()
 {
+	fill_servers(content);
 	FD_ZERO(&_server_set);
 	for (ServerMap::iterator it = _servers.begin(); it != _servers.end(); it++)
 	{
@@ -15,6 +16,41 @@ Webserver::Webserver(const ServerMap&  servers) : _servers(servers), _max_socket
 		if (_max_socket < it->first)
 			_max_socket = it->first;
 	}
+}
+
+
+void  Webserver::fill_servers(std::string content)
+{
+	TokenVects 									data(SplitValues(content));
+	std::pair<TokenVectsIter, TokenVectsIter>	it(std::make_pair(data.begin(),  data.end()));
+
+	while (it.first < it.second)
+	{
+		if (it.first->second == BLOCK)
+		{
+			string_trim(*(it.first));
+			if (it.first->first == "server")
+			{
+				try
+				{
+					Server  *tmp = new Server(Configuration(it.first, it.second));
+					_servers[tmp->get_listen_sockets()] = tmp;
+				}
+				catch(Server::ServerException& e)
+				{
+					std::cout << "SERVER ("+  std::to_string(_servers.size() + 1) + ") EXCEPTION : " << e.what() << std::endl;
+					std::cout << "NOTE : the other servers will continue their work perfectly." << std::endl;
+				}
+			}
+			else
+				throw CustomeExceptionMsg(it.first->first + BlockErro);
+		}
+		else if ((it.first->second != END))
+			throw CustomeExceptionMsg(it.first->first + BlockErro);
+		it.first++;
+	}
+	if (_servers.empty())
+		throw CustomeExceptionMsg(EmptyFile);
 }
 
 
