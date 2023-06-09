@@ -115,7 +115,7 @@ void Webserver::run()
 		    		else
 		    		{
 		    			request[r] = '\0';
-						_client[i]._request.parseRequest(request, _servers.find(_client[i]._server_socket)->second->get_configuration());
+						_client[i]._request.parseRequest(request, it->second->get_configuration());
 						_client[i]._request.printElement();
 		    		}
 		    	}
