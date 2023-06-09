@@ -35,6 +35,7 @@ class Request
 
         RequestMap const      &getRequest() const;
         std::string const &   getType() const;
+        int const &           getStatus() const;
         void                  parseRequest(std::string const &request, Configuration const & conf);
         void                  printElement();
 };

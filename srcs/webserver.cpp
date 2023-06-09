@@ -119,7 +119,7 @@ void Webserver::run()
 		    		{
 		    			request[r] = '\0';
 						_client[i]._request.parseRequest(request, it->second->get_configuration());
-						_client[i]._request.printElement();
+						// _client[i]._request.printElement();
 		    		}
 		    	}
 				// if (FD_ISSET(_client[i]._socket, &writes))

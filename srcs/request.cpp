@@ -47,15 +47,31 @@ void Request::checkLocation()
 {
     std::vector<Location> location = _conf.getLocations();
     std::vector<Location>::iterator it = location.begin();
+    std::string url = _request.find("URL")->second;
+    std::string lower;
+    std::string upper;
 
-    while(it != location.end())
+    while(it++ != location.end())
     {
-        if ((*it).getPattren() == _request.find("URL")->second)
-            break;
-        it++;
+        std::string pattern = (*it).getPattren();
+        if ((pattern == "/" && url != "/") || url.length() <  pattern.length())
+            continue ;
+        std::string dir = url.substr(0, pattern.length());
+        std::cout << dir << "----------------" << pattern << std::endl;
+        if (pattern == dir && (dir[url.length() + 1] == '\0' || dir[url.length() + 1] == '/'))
+        {
+            if (upper.empty())
+                upper = dir;
+            else
+                lower = dir;
+            std::cout << "the upper is " << upper <<std::endl;
+            upper = upper.length() > lower.length() ? upper : lower;
+        }
     }
-    if (it == location.end())
+    if (upper.empty())
         _status = 404;
+    else
+        std::cout << upper << std::endl;
 }
 
 void Request::getContentType(std::string const & content)
@@ -110,7 +126,8 @@ void Request::badFormat()
         _status = 414;
     else if (bodyIt != _request.end() && bodyIt->second.length() > 2048)
         _status = 413;
-    checkLocation();
+    if (_status == 200)
+        checkLocation();
 }
 
 void Request::parseRequest(std::string const &request, Configuration const & conf)
@@ -145,6 +162,11 @@ void Request::printElement()
     for(std::map<std::string, std::string>::iterator it = _request.begin();
         it != _request.end(); it++, i++)
         std::cout << i << " " << it->first << ": " << it->second << std::endl;
+}
+
+int const &   Request::getStatus() const
+{
+    return _status;
 }
 
 RequestMap const & Request::getRequest() const
