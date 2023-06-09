@@ -13,6 +13,7 @@
 #include <string.h>
 #include <time.h>
 #include "request.hpp"
+#include "response.hpp"
 
 
 typedef int	SOCKET;
@@ -27,6 +28,7 @@ struct Client {
 	socklen_t _address_length;
 	SOCKET _socket;
 	Request _request;
+	Response _response;
 
 	// methods
 	Client();
