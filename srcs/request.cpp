@@ -43,6 +43,21 @@ Request::~Request()
 {
 }
 
+void Request::checkLocation()
+{
+    std::vector<Location> location = _conf.getLocations();
+    std::vector<Location>::iterator it = location.begin();
+
+    while(it != location.end())
+    {
+        if ((*it).getPattren() == _request.find("URL")->second)
+            break;
+        it++;
+    }
+    if (it == location.end())
+        _status = 404;
+}
+
 void Request::getContentType(std::string const & content)
 {
     if (!state)
@@ -95,7 +110,7 @@ void Request::badFormat()
         _status = 414;
     else if (bodyIt != _request.end() && bodyIt->second.length() > 2048)
         _status = 413;
-
+    checkLocation();
 }
 
 void Request::parseRequest(std::string const &request, Configuration const & conf)
@@ -119,7 +134,7 @@ void Request::parseRequest(std::string const &request, Configuration const & con
     std::getline(req, line);
     if (line != "\0")
         _request.insert(std::make_pair("body", line));
-    badFormat();
+    badFormat(); 
     std::cout << _status << std::endl;
 }
 

@@ -26,6 +26,7 @@ class Request
         void parseUrl(std::string const &line);
         void getContentType(std::string const & content);
         void badFormat();
+        void checkLocation();
     public:
         Request();
         Request(std::string const &request, Configuration const & conf);
