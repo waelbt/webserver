@@ -32,7 +32,7 @@ public:
 	Response &operator=(Response const &rhs);
 
 	std::string getBody() const;
-	std::string getStatus() const;
+	int getStatus() const;
 	std::map<std::string, std::string> getHeaders() const;
 
 	void setBody(std::string body);
@@ -55,7 +55,7 @@ public:
 
 private:
 	std::string _body;
-	std::string _status;
+	std::int _status;
 	std::map<std::string, std::string> _headers;
 };
 
