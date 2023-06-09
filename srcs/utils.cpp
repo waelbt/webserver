@@ -1,6 +1,5 @@
 #include "../includes/server.hpp"
 
-
 void PortValidator::operator()(int port) {
     if (port < 0 || port > 65535)
         throw CustomeExceptionMsg(InvalidPort);

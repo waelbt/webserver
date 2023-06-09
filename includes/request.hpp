@@ -9,6 +9,11 @@
 #define RequestMap std::map<std::string, std::string>
 
 
+struct invalidUrl
+{
+    bool operator()(const char& c);
+};
+
 class Request
 {
     private:

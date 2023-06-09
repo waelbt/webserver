@@ -24,6 +24,12 @@ RequestMap cnt;
 
 int Request::state = 0;
 
+bool invalidUrl::operator()(const char& c)
+{
+    static std::string Error(":/?#[]@!$&'()*+,=;");
+    return (Error.find(std::string(1, c)) != std::string::npos);
+}
+
 Request::Request() : _request(), _status(200)
 {
 }
@@ -73,6 +79,25 @@ void Request::parseUrl(std::string const &line)
     _request.insert(std::make_pair("Protocol", line.substr(protocol, line.length() - protocol - 1)));
 }
 
+void Request::badFormat()
+{
+    RequestMap::iterator transferIt = _request.find("Transfer-Encoding");
+    RequestMap::iterator bodyIt = _request.find("body");
+    std::string url = _request.find("URL")->second;
+
+    if (transferIt != _request.end() && transferIt->second != "chunked")
+        _status = 501;
+    else if (_request.find("Content-Length") == _request.end() && _request.find("Method")->second == "Post")
+        _status = 400;
+    else if ((std::find_if(url.begin(), url.end(), invalidUrl()) != url.end()))
+        _status = 400;
+    else if (url.length() > 2048)
+        _status = 414;
+    else if (bodyIt != _request.end() && bodyIt->second.length() > 2048)
+        _status = 413;
+
+}
+
 void Request::parseRequest(std::string const &request)
 {
     std::istringstream req(request);
@@ -97,33 +122,7 @@ void Request::parseRequest(std::string const &request)
     std::cout << _status << std::endl;
 }
 
-struct invalidUrl
-{
-    bool operator()(const char& c)
-    {
-        static std::string Error(":/?#[]@!$&'()*+,=;");
-        return (Error.find(std::string(1, c)) != std::string::npos);
-    }
-};
 
-void Request::badFormat()
-{
-    RequestMap::iterator transferIt = _request.find("Transfer-Encoding");
-    RequestMap::iterator bodyIt = _request.find("body");
-    std::string url = _request.find("URL")->second;
-
-    if (transferIt != _request.end() && transferIt->second != "chunked")
-        _status = 501;
-    else if (_request.find("Content-Length") == _request.end() && _request.find("Method")->second == "Post")
-        _status = 400;
-    else if ((std::find_if(url.begin(), url.end(), invalidUrl()) != url.end()))
-        _status = 400;
-    else if (url.length() > 2048)
-        _status = 414;
-    else if (bodyIt != _request.end() && bodyIt->second.length() > 2048)
-        _status = 413;
-
-}
 void Request::printElement()
 {
     int i = 0;
