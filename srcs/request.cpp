@@ -70,7 +70,7 @@ void Request::parseUrl(std::string const &line)
     getContentType(contentType);
     _request.insert(std::make_pair("Method", line.substr(0, url - 1)));
     _request.insert(std::make_pair("URL", contentType));
-    _request.insert(std::make_pair("Protocol", line.substr(protocol)));
+    _request.insert(std::make_pair("Protocol", line.substr(protocol, line.length() - protocol - 1)));
 }
 
 void Request::parseRequest(std::string const &request)
@@ -83,10 +83,11 @@ void Request::parseRequest(std::string const &request)
     while (std::getline(req, line) && line != "\r\n")
     {
         size_t separator = line.find(": ");
-        if (separator != std::string::npos){
+        if (separator != std::string::npos)
+        {
             _request.insert(std::make_pair(line.substr(0, separator),
-                                                    line.substr(separator + 2)));
-        std::cout  << line  << std::endl;
+                                                    line.substr(separator + 2, line.length() - separator - 3)));
+
         }
     }
     std::getline(req, line);
@@ -107,18 +108,17 @@ struct invalidUrl
 
 void Request::badFormat()
 {
-    // RequestMap::iterator it = _request.find("Transfer-Encoding");
-    // if (it != _request.end() && it->second != "chunked") {
-    //     std::cout << it->second  << std::endl;
-    //     _status = 501;
-    //     return;
-    // }
+    RequestMap::iterator it = _request.find("Transfer-Encoding");
+    if (it != _request.end() && it->second != "chunked") {
+        _status = 501;
+        return;
+    }
     if (_request.find("Content-Length") == _request.end() && _request.find("Method")->second == "Post") {
         _status = 400;
         return;
     }
     // std::string url = _request.find("URL")->second;
-    std::string url = "just a test";
+    std::string url = "just@ a test";
     if ((std::find_if(url.begin(), url.end(), invalidUrl()) != url.end()))
     {
         _status = 400;
@@ -128,8 +128,9 @@ void Request::badFormat()
         _status = 414;
         return;
     }
-    if (_request.find("body")->second.length() > 2048){
-        _status = 414;
+    it = _request.find("body");
+    if (it != _request.end() && it->second.length() > 2048){
+        _status = 413;
         return;
     }
 }
