@@ -1,10 +1,9 @@
 #include "../includes/server.hpp"
 
-Webserver::Webserver()
+Webserver::Webserver() : _servers(), _max_socket()
 {
 
 }
-
 
 Webserver::Webserver(std::string content) : _servers(), _max_socket()
 {
