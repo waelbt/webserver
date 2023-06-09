@@ -68,7 +68,15 @@ void CommonEntity::InitIndex(std::string value)
 
 void CommonEntity::InitErrorPage(std::string value)
 {
-    _error_pages.insert(_error_pages.end(), s_err_pages(value));
+    std::vector<std::string>  values(converter(value, TokenToString()));
+
+    if (value.size() < 2)
+        throw CustomeExceptionMsg("you should at least set a stat code associated with a error page");
+    std::string page = values[values.size() - 1];
+    for (size_t index = 0; index < (values.size() - 1); index++)
+    {
+        _error_pages[to_integer(values[index])] = page;
+    }
 }
 
 void CommonEntity::InitClienBodySize(std::string value)
@@ -91,7 +99,7 @@ std::vector<std::string>    CommonEntity::getIndex() const
     return this->_index;
 }
 
-std::vector<s_err_pages>    CommonEntity::getErrorPages() const
+std::map<int, std::string>    CommonEntity::getErrorPages() const
 {
     return this->_error_pages;
 }

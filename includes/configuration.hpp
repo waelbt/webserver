@@ -63,9 +63,7 @@ typedef	std::vector<StringPair>::iterator	ConfEntityIer;
 typedef std::vector<TokenPair>				TokenVects;
 typedef TokenVects::iterator	             TokenVectsIter;
 
-struct PortValidator {
-    void operator()(int port);
-};
+
 
 
 struct TokenToString {
@@ -119,15 +117,6 @@ struct s_cgi
 	friend std::ostream& operator<<(std::ostream& o, s_cgi obj);
 };
 
-struct s_err_pages
-{
-	std::vector<int> _status;
-	std::string _page;
-
-	s_err_pages(std::string value);
-	friend std::ostream& operator<<(std::ostream& o, s_err_pages obj);
-};
-
 class CustomeExceptionMsg : public std::exception {
 	protected:
     	std::string _message;
@@ -145,7 +134,7 @@ class CommonEntity
 	protected:
 		std::string											_root;
 		std::vector<std::string> 							_index;
-		std::vector<s_err_pages> 	 						_error_pages;
+		std::map<int, std::string> 	 						_error_pages;
 		size_t 												_client_max_body_size;
 		bool 												_AutoIndex;
 	public:
@@ -153,14 +142,14 @@ class CommonEntity
 		CommonEntity(TokenVectsIter begin, TokenVectsIter end);
 		CommonEntity(const CommonEntity& other);
 		CommonEntity& operator=(const CommonEntity& other);
-		void InitRoot(std::string value);
-		void InitIndex(std::string value);
-		void InitErrorPage(std::string value);
-		void InitClienBodySize(std::string value);
-		void InitAutoIndex(std::string value);
+		void 						InitRoot(std::string value);
+		void 						InitIndex(std::string value);
+		void 						InitErrorPage(std::string value);
+		void 						InitClienBodySize(std::string value);
+		void 						InitAutoIndex(std::string value);
 		std::string					getRoot() const;
 		std::vector<std::string> 	getIndex() const;
-		std::vector<s_err_pages> 	getErrorPages() const;
+		std::map<int, std::string>	getErrorPages() const;
 		size_t 						getClientMaxBodySize() const;
 		bool 						getAutoIndex() const;
 };
@@ -179,19 +168,19 @@ class Location : public CommonEntity
 		Location();
 		Location(const CommonEntity& base, TokenVectsIter& begin, TokenVectsIter& end);
 		Location(const Location& other);
-		Location& operator=(const Location& other);
-		void InitPattern(std::string value);
-		void InitLimitExcept(std::string value);
-		void InitCgi(std::string value);
-		void InitUpload(std::string value);
-		void InitRedirect(std::string value);
-		std::string getPattren() const;
-		std::vector<std::string> getLimit_except() const;
-		std::vector<s_cgi> getCgi() const;
-		std::string getUpload() const;
-		std::vector<std::string> getRedirect() const;
-		friend std::ostream& operator<<(std::ostream& o, Location obj);
+		Location& 					operator=(const Location& other);
+		void 						InitPattern(std::string value);
+		void 						InitLimitExcept(std::string value);
+		void 						InitCgi(std::string value);
+		void 						InitUpload(std::string value);
+		void 						InitRedirect(std::string value);
+		std::string 				getPattren() const;
+		std::vector<std::string> 	getLimit_except() const;
+		std::vector<s_cgi> 			getCgi() const;
+		std::string 				getUpload() const;
+		std::vector<std::string> 	getRedirect() const;
 		~Location();
+		friend std::ostream& operator<<(std::ostream& o, Location obj);
 };
 
 class Configuration

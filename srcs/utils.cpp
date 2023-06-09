@@ -1,10 +1,5 @@
 #include "../includes/server.hpp"
 
-void PortValidator::operator()(int port) {
-    if (port < 0 || port > 65535)
-        throw CustomeExceptionMsg(InvalidPort);
-}
-
 std::string TokenToString::operator()(TokenPair& pair)
 {
     return pair.first;
@@ -91,14 +86,6 @@ std::vector<TokenPair> SplitValues(std::string value, bool (*func)(const char&))
     return res;
 }
 
-std::ostream& operator<<(std::ostream& o, s_err_pages obj)
-{
-    for (std::vector<int>::iterator it = obj._status.begin(); it != obj._status.end(); it++)
-        std::cout << " " << *it;
-    std::cout << " " << obj._page << ";" << std::endl;
-    return o;
-}
-
 
 std::ostream& operator<<(std::ostream& o, s_cgi obj)
 {
@@ -106,14 +93,4 @@ std::ostream& operator<<(std::ostream& o, s_cgi obj)
         std::cout << " " << *it;
     std::cout << " " << obj._path << ";" <<std::endl;
     return o;
-}
-
-s_err_pages::s_err_pages(std::string value)
-{
-    std::vector<std::string>  values(converter(value, TokenToString()));
-    std::vector<std::string>::iterator end = values.end();
-
-    std::transform(values.begin(), --end, std::back_inserter(this->_status), to_integer);
-    std::for_each(_status.begin(), _status.end(), PortValidator());
-    _page = *end;
 }

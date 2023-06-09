@@ -90,8 +90,9 @@ void Configuration::InitHost(std::string value)
 void Configuration::InitPort(std::string value)
 {
     _port = value;
-    is_integer(_port);
-    // std::for_each(_ports.begin(), _ports.end(), is_integer);
+    long long check = to_integer(_port);
+     if (check < 0 || check > 65535)
+        throw CustomeExceptionMsg(InvalidPort);
 }
 
 void Configuration::InitServerName(std::string value)

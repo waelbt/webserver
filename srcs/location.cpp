@@ -37,11 +37,16 @@ Location::Location(const Location& other)
 
 Location& Location::operator=(const Location& other)
 {
-    _pattren = other._pattren;
-    _limit_except = other._limit_except;
-    _cgi = other._cgi;
-    _upload = other._upload;
-    _redirect = other._redirect;
+    this->_root = other._root;
+    this->_index = other._index;
+    this->_error_pages = other._error_pages;
+    this->_client_max_body_size = other._client_max_body_size;
+    this->_AutoIndex = other._AutoIndex;
+    this->_pattren = other._pattren;
+    this->_limit_except = other._limit_except;
+    this->_cgi = other._cgi;
+    this->_upload = other._upload;
+    this->_redirect = other._redirect;
     return *this;
 }
 
@@ -125,6 +130,11 @@ std::vector<std::string> Location::getRedirect() const
     return _redirect;
 }
 
+void print_error_page(const std::pair<int, std::string>& pair)
+{
+    std::cout << "  error_page: "<< pair.first << "  " << pair.second << ";"<< std::endl;
+}
+
 std::ostream& operator<<(std::ostream& o, Location obj)
 {
     std::cout << "location  " << obj.getPattren()  << ": " << std::endl;
@@ -132,7 +142,8 @@ std::ostream& operator<<(std::ostream& o, Location obj)
     std::cout << "  index: ";
     print_vec(obj.getIndex(), "");
     std::cout << ";" << std::endl;
-    print_vec(obj.getErrorPages(), "  error pages:");
+    std::map<int, std::string> getMap = obj.getErrorPages();
+    std::for_each(getMap.begin(), getMap.end(), &print_error_page);
     std::cout << "  client_max_body_size: " << obj.getClientMaxBodySize() << ";" << std::endl;
     std::cout << "  auto index: " << ((obj.getAutoIndex()) ? (std::cout << "true") :  (std::cout << "false")) << ";" << std::endl;
     std::cout << "  upload: " << obj.getUpload() << ";" << std::endl;
