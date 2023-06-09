@@ -38,4 +38,5 @@ class Request
         int const &           getStatus() const;
         void                  parseRequest(std::string const &request, Configuration const & conf);
         void                  printElement();
+		//getPath(
 };

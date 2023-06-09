@@ -36,11 +36,11 @@ public:
 	std::map<std::string, std::string> getHeaders() const;
 
 	void setBody(std::string body);
-	void setStatus(std::string status);
+	void setStatus(int status);
 	void setHeader(std::string key, std::string value);
 
 	void sendResponse(int clientSocket);
-	std::string serveResponse(Request &request);
+	std::string serveResponse(const Request &request);
 	std::string serveFile(std::string url);
 	// void redirect(std::string url, int clientSocket);
 	// void error(int clientSocket);
@@ -52,10 +52,11 @@ public:
 	// void clear();
 	// std::string chunkedEncoding(std::string body);
 	std::string toString() const;
+	std::string intToString(int num) const;
 
 private:
 	std::string _body;
-	std::int _status;
+	int _status;
 	std::map<std::string, std::string> _headers;
 };
 
