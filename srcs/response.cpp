@@ -2,7 +2,7 @@
 
 std::map<int, std::string> _httpResponses;
 
-Response::Response() : _body("") 
+Response::Response()
 {
 	_httpResponses[200] = "OK";
 	_httpResponses[201] = "Created";
@@ -35,13 +35,21 @@ Response &Response::operator=(Response const &rhs)
 	return *this;
 }
 
+std::string Response::intToString(int num) const
+{
+    std::ostringstream oss;
+    oss << num;
+    return oss.str();
+}
+
+
 std::string Response::getBody() const { return this->_body; }
 
 void Response::setBody(std::string body) { this->_body = body; }
 
-std::string Response::getStatus() const { return this->_status; }
+int Response::getStatus() const { return this->_status; }
 
-void Response::setStatus(std::string status) { this->_status = status; }
+void Response::setStatus(int status) { this->_status = status; }
 
 std::map<std::string, std::string> Response::getHeaders() const { return this->_headers; }
 
@@ -50,7 +58,7 @@ void Response::setHeader(std::string key, std::string value) { this->_headers[ke
 std::string Response::toString() const
 {
 	std::stringstream ss;
-	ss << "HTTP/1.1 " << this->_status << " " << _httpResponses[this->_status] << "\r\n";
+	ss << "HTTP/1.1 " << this->intToString(this->_status) << " " << _httpResponses[this->_status] << "\r\n";
 	for (std::map<std::string, std::string>::const_iterator it = this->_headers.begin(); it != this->_headers.end(); ++it)
 	{
 		ss << it->first << ": " << it->second << "\r\n";
@@ -68,17 +76,18 @@ void Response::sendResponse(int clientSocket)
 	send(clientSocket, response.c_str(), response.length(), 0);
 }
 
-std::string Response::serveResponse(int clientSocket, Request &request)
+std::string Response::serveResponse(const Request &request)
 {
 	this->setStatus(request.getStatus());
 	if (this->_status  == 200)
 	{
-		std::string path = request.getPath();
-		this->setHeader("Content-Type", request.getContentType());
+		std::map<std::string, std::string> headers = request.getRequest();
+		std::string path = "static/index.html";
+		this->setHeader("Content-Type", headers["Content-Type"]);
 		this->serveFile(path);
-	}
+	}	
 	else
-		this->serveFile("static/error/" + this->_status + ".html");
+		this->serveFile("static/error/" + this->intToString(this->_status) + ".html");
 	return this->toString();
 }
 
@@ -98,8 +107,8 @@ std::string Response::serveFile(std::string url)
 		file.close();
 		this->setBody(body);
 		if (this->_status != 200)
-			this->setHeaders("Content-Type", "text/html");
-		this->setHeaders("Content-Length", std::to_string(body.length()));
+			this->setHeader("Content-Type", "text/html");
+		this->setHeader("Content-Length", std::to_string(body.length()));
 	}
 	else
 	{
@@ -107,4 +116,5 @@ std::string Response::serveFile(std::string url)
 		this->setStatus(404);
 		this->serveFile("static/error/404.html");
 	}
+	return this->toString();
 }
