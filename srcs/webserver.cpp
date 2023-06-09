@@ -80,15 +80,8 @@ void Webserver::run()
 		    		else
 		    		{
 		    			request[r] = '\0';
-<<<<<<< HEAD
 						_client[i]._request.parseRequest(request);
 						_client[i]._request.printElement();
-						// _client[i]._response.handleResponse(_client[i]._request);
-		    			// request handling
-=======
-						_client[i]._req.parseRequest(request);
-						_client[i]._req.printElement();
->>>>>>> 17a49ead4c5b622a57cc72a1195b4c360506fab8
 		    		}
 		    	}
 				// if (FD_ISSET(_client[i]._socket, &writes))

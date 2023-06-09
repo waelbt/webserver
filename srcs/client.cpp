@@ -1,12 +1,12 @@
 #include "../includes/server.hpp"
 
 
-Client::Client() : _server_socket(), _address(), _address_length(sizeof(_address)), _req()
+Client::Client() : _server_socket(), _address(), _address_length(sizeof(_address)), _request()
 {
     
 }
 
-Client::Client(SOCKET server_socket) : _server_socket(server_socket), _address(), _address_length(sizeof(_address)), _req()
+Client::Client(SOCKET server_socket) : _server_socket(server_socket), _address(), _address_length(sizeof(_address)), _request()
 {
     // memset(_request, 0, sizeof(_request));
     _socket = accept(_server_socket, (struct sockaddr*) &(_address), &(_address_length));
