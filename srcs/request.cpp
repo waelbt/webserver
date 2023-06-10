@@ -47,6 +47,7 @@ void Request::checkLocation()
 {
     std::vector<Location> location = _conf.getLocations();
     std::vector<Location>::iterator it = location.begin();
+    std::vector<Location>::iterator pathIt;
     std::string url = _request.find("URL")->second;
 
     while(it++ != location.end())
@@ -58,13 +59,24 @@ void Request::checkLocation()
         if (pattern == checker && (url[pattern.length()] == '\0' || url[pattern.length()] == '/'))
         {
             if (_path.empty())
+            {
                 _path = checker;
+                pathIt = it;
+            }
             else
-                _path = _path.length() > checker.length() ? _path : checker;
+            {
+                if (_path.length() < checker.length())
+                {
+                    _path = checker;
+                    pathIt = it;
+                }
+            }
         }
     }
     if (_path.empty())
         _status = 404;
+    else
+        _path = (*pathIt).getRoot();
 }
 
 void Request::setContentType(std::string const & content)
@@ -72,7 +84,7 @@ void Request::setContentType(std::string const & content)
     if (!state)
     {
         for (int i = 0; i < 76; i++)
-            cnt.insert(std::make_pair(mimeType[i], contentType[i]));
+            cnt[mimeType[i]] = contentType[i];
         state = 1;
     }
     size_t dot;
@@ -84,12 +96,12 @@ void Request::setContentType(std::string const & content)
             goto dotfound;
         }
     }
-    _request.insert(std::make_pair("Content-Type", "application/octet-stream"));
+    _request["Content-Type"] = "text/plain";
     return ;
     dotfound:
     std::string extention = content.substr(dot);
     RequestMap::iterator it = cnt.find(extention);
-    _request.insert(std::make_pair("Content-Type", it->second));
+    _request["Content-Type"] =  it->second;
 }
 
 void Request::parseUrl(std::string const &line)
@@ -98,9 +110,9 @@ void Request::parseUrl(std::string const &line)
     size_t protocol = line.find("HTTP");
     std::string contentType = line.substr(url, protocol - 5);
     setContentType(contentType);
-    _request.insert(std::make_pair("Method", line.substr(0, url - 1)));
-    _request.insert(std::make_pair("URL", contentType));
-    _request.insert(std::make_pair("Protocol", line.substr(protocol, line.length() - protocol - 1)));
+    _request["Method"] = line.substr(0 , url - 1);
+    _request["URL"] = contentType;
+    _request["Protocol"] = line.substr(protocol, line.length() - protocol - 1);
 }
 
 void Request::badFormat()
@@ -135,15 +147,11 @@ void Request::parseRequest(std::string const &request, Configuration const & con
     {
         size_t separator = line.find(": ");
         if (separator != std::string::npos)
-        {
-            _request.insert(std::make_pair(line.substr(0, separator),
-                                                    line.substr(separator + 2, line.length() - separator - 3)));
-
-        }
+            _request[line.substr(0, separator)] = line.substr(separator + 2, line.length() - separator - 3);
     }
     std::getline(req, line);
     if (line != "\0")
-        _request.insert(std::make_pair("body", line));
+        _request["body"] = line;
     badFormat(); 
     std::cout << _status << std::endl;
 }
