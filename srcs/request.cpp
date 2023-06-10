@@ -47,11 +47,13 @@ void Request::checkMethod()
 {
     std::string method = _request.find("Method")->second;
     std::vector<std::string> limitExcept = _location.getLimit_except();
+    std::string url = _request["URL"];
+    std::string pattern = _location.getPattren();
 
     for(std::vector<std::string>::iterator it = limitExcept.begin(); it != limitExcept.end(); it++)
     {
         if ((*it) == method)
-            _path = _location.getRoot();
+            _path = "/" + _location.getRoot() + url.substr(pattern.length());
     }
     if (_path.empty())
         _status = 405;
@@ -62,7 +64,7 @@ void Request::checkLocation()
     std::vector<Location> location = _conf.getLocations();
     std::vector<Location>::iterator it = location.begin();
     std::string upper;
-    std::string url = _request.find("URL")->second;
+    std::string url = _request["URL"];
 
     for(;it != location.end();it++)
     {
