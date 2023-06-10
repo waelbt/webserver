@@ -64,7 +64,7 @@ void Request::checkLocation()
     std::string upper;
     std::string url = _request.find("URL")->second;
 
-    while(it++ != location.end())
+    for(;it != location.end();it++)
     {
         std::string pattern = (*it).getPattren();
         if ((pattern == "/" && url != "/") || url.length() <  pattern.length())
