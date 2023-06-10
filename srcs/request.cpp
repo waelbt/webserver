@@ -79,7 +79,7 @@ void Request::checkLocation()
             }
             else
             {
-                if (upper.length() < lower.length())
+                if (lower.length() < upper.length())
                 {
                     upper = lower;
                     _location = *it;
