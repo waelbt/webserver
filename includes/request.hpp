@@ -20,6 +20,7 @@ class Request
     private:
         RequestMap    _request;
         Configuration _conf;
+        Location      _location;
         std::string   _path;
         int           _status;
         static int    state;
@@ -28,6 +29,7 @@ class Request
         void setContentType(std::string const & content);
         void badFormat();
         void checkLocation();
+        void checkMethod();
     public:
         Request();
         Request(std::string const &request, Configuration const & conf);
@@ -40,5 +42,4 @@ class Request
         std::string const &   getPath() const;
         void                  parseRequest(std::string const &request, Configuration const & conf);
         void                  printElement();
-		//getPath(
 };

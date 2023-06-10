@@ -43,11 +43,25 @@ Request::~Request()
 {
 }
 
+void Request::checkMethod()
+{
+    std::string method = _request.find("Method")->second;
+    std::vector<std::string> limitExcept = _location.getLimit_except();
+
+    for(std::vector<std::string>::iterator it = limitExcept.begin(); it != limitExcept.end(); it++)
+    {
+        if ((*it) == method)
+            _path = _location.getRoot();
+    }
+    if (_path.empty())
+        _status = 405;
+}
+
 void Request::checkLocation()
 {
     std::vector<Location> location = _conf.getLocations();
     std::vector<Location>::iterator it = location.begin();
-    std::vector<Location>::iterator pathIt;
+    std::string upper;
     std::string url = _request.find("URL")->second;
 
     while(it++ != location.end())
@@ -55,28 +69,28 @@ void Request::checkLocation()
         std::string pattern = (*it).getPattren();
         if ((pattern == "/" && url != "/") || url.length() <  pattern.length())
             continue ;
-        std::string checker = url.substr(0, pattern.length());
-        if (pattern == checker && (url[pattern.length()] == '\0' || url[pattern.length()] == '/'))
+        std::string lower = url.substr(0, pattern.length());
+        if (pattern == lower && (url[pattern.length()] == '\0' || url[pattern.length()] == '/'))
         {
-            if (_path.empty())
+            if (upper.empty())
             {
-                _path = checker;
-                pathIt = it;
+                upper = lower;
+                _location = *it;
             }
             else
             {
-                if (_path.length() < checker.length())
+                if (upper.length() < lower.length())
                 {
-                    _path = checker;
-                    pathIt = it;
+                    upper = lower;
+                    _location = *it;
                 }
             }
         }
     }
-    if (_path.empty())
+    if (upper.empty())
         _status = 404;
     else
-        _path = (*pathIt).getRoot();
+        checkMethod();
 }
 
 void Request::setContentType(std::string const & content)
