@@ -33,7 +33,6 @@ void  Webserver::fill_servers(std::string content)
 				try
 				{
 					Server  *tmp = new Server(Configuration(it.first, it.second));
-					tmp->showConfig();
 					_servers[tmp->get_listen_sockets()] = tmp;
 				}
 				catch(Server::ServerException& e)
@@ -85,7 +84,6 @@ std::pair<fd_set, fd_set> Webserver::wait_on_client()
                _max_socket = clients[size]._socket;
 	    }
     }
-	// i should set the timeout parameter 
 	if (select(_max_socket + 1, &sets.first, &sets.second, 0, &tv) < 0)
 		throw CustomeExceptionMsg("select() failed. ("+  std::string(strerror(errno)) + ")");
 	return sets;
@@ -94,7 +92,6 @@ std::pair<fd_set, fd_set> Webserver::wait_on_client()
 void Webserver::run()
 {
     std::pair<fd_set, fd_set> sets;
-    // fd_set write;
 
     while (1)
     {
@@ -120,13 +117,14 @@ void Webserver::run()
 		    		{
 		    			request[r] = '\0';
 						_client[i]._request.parseRequest(request, it->second->get_configuration());
-						// _client[i]._request.printElement();
 		    		}
 		    	}
 				if (FD_ISSET(_client[i]._socket, &sets.second))
 				{
 					std::string res = _client[i]._response.serveResponse(_client[i]._request);
 					send(_client[i]._socket, res.c_str(), res.length(), 0);
+					// FD_CLR(_client[i]._socket, &sets.second);
+   					// it->second->drop_client(i);
 				}
 		    }
         }
