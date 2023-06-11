@@ -15,6 +15,7 @@
 
 CommonEntity::CommonEntity() : _root(), _index(), _error_pages(), _client_max_body_size(), _AutoIndex()
 {
+    default_error_pages(_error_pages);
 }
 
 CommonEntity::CommonEntity(const CommonEntity& other)
@@ -29,7 +30,7 @@ CommonEntity::CommonEntity(TokenVectsIter begin, TokenVectsIter end): _root(), _
     std::vector<TokenPair> directive;
     std::string *key;
 
-
+    default_error_pages(_error_pages);
     while (++begin < end)
     {
         if (begin->second == END_BLOCK || begin->second == BLOCK)

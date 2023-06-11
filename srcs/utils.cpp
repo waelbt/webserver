@@ -86,3 +86,14 @@ std::vector<TokenPair> SplitValues(std::string value, bool (*func)(const char&))
     return res;
 }
 
+
+void default_error_pages(std::map<int, std::string>& error_pages)
+{
+    error_pages[400] = "./static/error/400.html";
+    error_pages[403] = "./static/error/403.html";
+    error_pages[404] = "./static/error/404.html";
+    error_pages[405] = "./static/error/405.html";
+    error_pages[413] = "./static/error/413.html";
+    error_pages[414] = "./static/error/414.html";
+    error_pages[501] = "./static/error/501.html";
+}
