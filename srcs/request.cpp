@@ -53,20 +53,33 @@ void Request::checkMethod()
     for(std::vector<std::string>::iterator it = limitExcept.begin(); it != limitExcept.end(); it++)
     {
         if ((*it) == method)
-            _path = "/" + _location.getRoot() + url.substr(pattern.length());
+        {
+            if(url.length() != pattern.length())
+                _path = _location.getRoot() + "/" + url.substr(pattern.length());
+            else
+            {
+                std::vector<std::string> index = _location.getIndex();
+                if (index.empty())
+                    _status = 404;
+                else
+                    _path = _location.getRoot() + "/" + index[0];
+            }
+        }
     }
-    if (_path.empty())
+    if (_path.empty() && _status != 404)
         _status = 405;
+    if (!_path.empty())
+        std::cout << "path is ----->" << _path << std::endl;
 }
 
 void Request::checkLocation()
 {
-    std::vector<Location> location = _conf.getLocations();
-    std::vector<Location>::iterator it = location.begin();
+    std::vector<Location> locations = _conf.getLocations();
+    std::vector<Location>::iterator it = locations.begin();
     std::string upper;
     std::string url = _request["URL"];
 
-    for(;it != location.end();it++)
+    for(;it != locations.end();it++)
     {
         std::string pattern = (*it).getPattren();
         if ((pattern == "/" && url != "/") || url.length() <  pattern.length())
@@ -90,7 +103,19 @@ void Request::checkLocation()
         }
     }
     if (upper.empty())
+    {
+        it = locations.begin();
+        for(;it != locations.end();it++)
+        {
+            if ((*it).getPattren() == "/")
+            {
+                _location = *it;
+                checkMethod();
+                return;
+            }
+        }
         _status = 404;
+    }
     else
         checkMethod();
 }
