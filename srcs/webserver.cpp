@@ -112,6 +112,7 @@ void Webserver::run()
 		    			std::cout << "Unexpected disconnect from " << _client[i].get_client_address() << std::endl;
 						FD_CLR(_client[i]._socket, &sets.first);
 		    			it->second->drop_client(i);
+						continue;
 		    		}
 		    		else
 		    		{
@@ -123,8 +124,8 @@ void Webserver::run()
 				{
 					std::string res = _client[i]._response.serveResponse(_client[i]._request);
 					send(_client[i]._socket, res.c_str(), res.length(), 0);
-					// FD_CLR(_client[i]._socket, &sets.second);
-   					// it->second->drop_client(i);
+					FD_CLR(_client[i]._socket, &sets.second);
+   					it->second->drop_client(i);
 				}
 		    }
         }

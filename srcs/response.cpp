@@ -82,7 +82,7 @@ std::string Response::serveResponse(const Request &request)
 	if (this->_status  == 200)
 	{
 		std::map<std::string, std::string> headers = request.getRequest();
-		std::string path = "static/index.html";
+		std::string path = request.getPath();
 		this->setHeader("Content-Type", headers["Content-Type"]);
 		this->serveFile(path);
 	}	
