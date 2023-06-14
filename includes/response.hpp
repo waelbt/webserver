@@ -41,10 +41,13 @@ public:
 
 	void post(const Request &request);
 	
+	void get(const Request &request);
+
 	void sendResponse(int clientSocket);
-	std::string serveResponse(const Request &request);
-	std::string serveFile(std::string url);
-	// void redirect(std::string url, int clientSocket);
+	void serveResponse(const Request &request);
+	void serveFile(std::string url, std::map<int, std::string> &errorPages);
+	void serveDirectory(std::string url, std::map<int, std::string> &errorPages);
+	void redirect(std::string url);
 	// void error(int clientSocket);
 	// void serveDirectory(std::string url, int clientSocket);
 	// void serveCgi(const std::string &url, int clientSocket);
@@ -55,6 +58,9 @@ public:
 	// std::string chunkedEncoding(std::string body);
 	std::string toString() const;
 	std::string intToString(int num) const;
+	std::string getPathType(std::string url);
+	bool is_file(const char *path);
+	bool is_directory(const char *path);
 
 private:
 	std::string _body;
