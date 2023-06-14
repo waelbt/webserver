@@ -43,10 +43,10 @@ Request::~Request()
 {
 }
 
-void Request::setBody(std::string const &body)
-{
+// void Request::setBody(std::string const &body)
+// {
 
-}
+// }
   
 void Request::checkMethod()
 {
