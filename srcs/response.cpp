@@ -76,22 +76,21 @@ void Response::sendResponse(int clientSocket)
 	send(clientSocket, response.c_str(), response.length(), 0);
 }
 
-std::string Response::serveResponse(const Request &request)
-{
-	this->setStatus(request.getStatus());
-	if (this->_status  == 200)
-	{
-		std::map<std::string, std::string> headers = request.getRequest();
-		std::string path = request.getPath();
-		this->setHeader("Content-Type", headers["Content-Type"]);
-		this->serveFile(path);
-	}	
-	else
-		this->serveFile("static/error/" + this->intToString(this->_status) + ".html");
-	return this->toString();
-}
+// void Response::serveResponse(const Request &request)
+// {
+// 	this->setStatus(request.getStatus());
+// 	if (this->_status  == 200)
+// 	{
+// 		std::map<std::string, std::string> headers = request.getRequest();
+// 		std::string path = request.getPath();
+// 		this->setHeader("Content-Type", headers["Content-Type"]);
+// 		this->serveFile(path);
+// 	}	
+// 	else
+// 		this->serveFile("static/error/" + this->intToString(this->_status) + ".html");
+// }
 
-std::string Response::serveFile(std::string url)
+void Response::serveFile(std::string url, std::map<int, std::string> &errorPages)
 {
 	std::string filename = url;
 	std::ifstream file(filename.c_str());
@@ -114,7 +113,100 @@ std::string Response::serveFile(std::string url)
 	{
 		std::cout << "Error opening file: " << filename << std::endl;
 		this->setStatus(404);
-		this->serveFile("static/error/404.html");
+		std::ifstream file(errorPages[this->_status].c_str());
+		if (errorPages.find(this->_status) != errorPages.end() && errorPages[this->_status] != "" && file.is_open())
+			this->serveFile(errorPages[this->_status], errorPages);
+		else
+			this->serveFile("static/error/" + this->intToString(this->_status) + ".html", errorPages);
 	}
-	return this->toString();
+}
+
+void Response::serveDirectory(std::string directoryPath, std::map<int, std::string> &errorPages)
+{
+	// Open the directory
+	DIR *dir = opendir(directoryPath.c_str());
+	if (dir == NULL)
+	{
+		std::cout << "Error opening directory" << std::endl;
+		this->serveFile(errorPages[this->_status], errorPages);
+	}
+
+	std::string directoryContent;
+
+	struct dirent *entry;
+	while ((entry = readdir(dir)) != NULL)
+	{
+		std::string entryName = entry->d_name;
+		directoryContent += "<li><a href=\"" + entryName + "\">" + entryName + "</a></li>";
+	}
+
+	closedir(dir);
+
+	std::string responseBody = "<html><body><h1>Directory Listing</h1><ul>" + directoryContent + "</ul></body></html>";
+
+	this->setHeader("Content-Type", "text/html");
+	this->setHeader("Content-Length", std::to_string(responseBody.length()));
+	this->setBody(responseBody);
+}
+
+void Response::get(const Request &request)
+{
+	Location const & location = request.getLocation();
+	std::map<int, std::string> error_pages = location.getErrorPages();
+	std::map<std::string, std::string> headers = request.getRequest();
+	std::string path = request.getPath();
+
+	this->setStatus(request.getStatus());
+
+	std::string pathType = this->getPathType(path);
+
+	if (this->_status == 200 && pathType != "error")
+	{
+		if (pathType == "file")
+		{
+			this->setHeader("Content-Type", headers["Content-Type"]);
+			this->serveFile(path, error_pages);
+		}
+		else if (pathType == "directory")
+		{
+			if (headers["URL"][headers["URL"].length() - 1] != '/')
+				this->setHeader("Location", headers["URL"] + "/");
+			else
+				this->serveDirectory(path, error_pages);
+		}
+	}
+	else
+		this->serveFile(error_pages[this->_status], error_pages);
+}
+
+bool Response::is_file(const char *path)
+{
+	struct stat buf;
+	stat(path, &buf);
+	return S_ISREG(buf.st_mode);
+}
+
+bool Response::is_directory(const char *path)
+{
+	struct stat buf;
+	stat(path, &buf);
+	return S_ISDIR(buf.st_mode);
+}
+
+std::string Response::getPathType(std::string path)
+{
+	if (this->is_file(path.c_str()))
+		return "file";
+	else if (this->is_directory(path.c_str()))
+		return "directory";
+	else
+		return "error";
+}
+
+void Response::redirect(std::string uri)
+{
+	this->setHeader("Location", uri);
+	this->setHeader("Content-Type", "text/html");
+	this->setHeader("Content-Length", "0");
+	this->setBody("");
 }
