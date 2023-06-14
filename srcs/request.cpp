@@ -43,10 +43,17 @@ Request::~Request()
 {
 }
 
-// void Request::setBody(std::string const &body)
-// {
+void Request::setBody(std::string const &body)
+{
+    std::istringstream req(body);
+    std::string line;
 
-// }
+    std::getline(req, line);
+    if (line != "\0")
+        _request["body"] = line;
+    badFormat(); 
+    std::cout << std::endl;
+}
   
 void Request::checkMethod()
 {
@@ -155,10 +162,10 @@ void Request::parseUrl(std::string const &line)
 {
     size_t url = line.find("/");
     size_t protocol = line.find("HTTP");
-    std::string contentType = line.substr(url, protocol - 5);
-    setContentType(contentType);
+    std::string content = line.substr(url, protocol - 5);
+    setContentType(content);
     _request["Method"] = line.substr(0 , url - 1);
-    _request["URL"] = contentType;
+    _request["URL"] = content;
     _request["Protocol"] = line.substr(protocol, line.length() - protocol - 1);
 }
 
@@ -184,9 +191,11 @@ void Request::badFormat()
 
 void Request::parseRequest(std::string const &request, Configuration const & conf)
 {
+    std::string line(request);
     std::istringstream req(request);
-    std::string line;
 
+    if (!_request.empty())
+        goto setbody;
     _conf = conf;
     std::getline(req, line);
     parseUrl(line);
@@ -195,12 +204,10 @@ void Request::parseRequest(std::string const &request, Configuration const & con
         size_t separator = line.find(": ");
         if (separator != std::string::npos)
             _request[line.substr(0, separator)] = line.substr(separator + 2, line.length() - separator - 3);
+        std::cout << line << std::endl;
     }
-    std::getline(req, line);
-    if (line != "\0")
-        _request["body"] = line;
-    badFormat(); 
-    std::cout << _status << std::endl;
+    setbody:
+    setBody(line);
 }
 
 

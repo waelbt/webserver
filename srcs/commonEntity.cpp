@@ -13,7 +13,7 @@
 #include "../includes/server.hpp"
 
 
-CommonEntity::CommonEntity() : _root(), _index(), _error_pages(), _client_max_body_size(), _AutoIndex()
+CommonEntity::CommonEntity() : _root(), _index(), _error_pages(), _client_max_body_size(), _AutoIndex(false)
 {
     default_error_pages(_error_pages);
 }
@@ -23,7 +23,7 @@ CommonEntity::CommonEntity(const CommonEntity& other)
     *this = other;
 }
 
-CommonEntity::CommonEntity(TokenVectsIter begin, TokenVectsIter end): _root(), _index(), _error_pages(), _client_max_body_size(), _AutoIndex()
+CommonEntity::CommonEntity(TokenVectsIter begin, TokenVectsIter end): _root(), _index(), _error_pages(), _client_max_body_size(), _AutoIndex(false)
 {
     CommonEntity::methods MemberInit[5] = {&CommonEntity::InitRoot, &CommonEntity::InitIndex, &CommonEntity::InitErrorPage, &CommonEntity::InitClienBodySize, &CommonEntity::InitAutoIndex};
     static std::string keywords[6] = {"root", "index", "error_page", "client_body_size", "AutoIndex", InvalidSeverKey};
@@ -73,9 +73,7 @@ void CommonEntity::InitErrorPage(std::string value)
         throw CustomeExceptionMsg("you should at least set a stat code associated with a error page");
     std::string page = values[values.size() - 1];
     for (size_t index = 0; index < (values.size() - 1); index++)
-    {
         _error_pages[to_integer(values[index])] = page;
-    }
 }
 
 void CommonEntity::InitClienBodySize(std::string value)
@@ -85,6 +83,8 @@ void CommonEntity::InitClienBodySize(std::string value)
 
 void CommonEntity::InitAutoIndex(std::string value)
 {
+    if (value != "off" && value != "on")
+        throw CustomeExceptionMsg("auto index should be `on` of `off`");
     (value == "on") ? _AutoIndex = true : _AutoIndex = false;
 }
 
