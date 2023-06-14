@@ -22,7 +22,7 @@ std::string contentType[76] = {"audio/aac", "application/x-abiword", "applicatio
 
 RequestMap cnt;
 
-int Request::state = 0;
+int Request::contentState = 0;
 
 bool invalidUrl::operator()(const char& c)
 {
@@ -30,11 +30,11 @@ bool invalidUrl::operator()(const char& c)
     return (Error.find(std::string(1, c)) != std::string::npos);
 }
 
-Request::Request() : _request(), _conf(), _status(200)
+Request::Request() : _request(), _conf(), _location(), _path(), _chunkState(UNDONE), _status(200)
 {
 }
 
-Request::Request(std::string const &request, Configuration const & conf) : _request(), _conf(conf), _status(200)
+Request::Request(std::string const &request, Configuration const & conf) : _request(), _conf(conf), _location(), _path(), _chunkState(UNDONE), _status(200)
 {
     parseRequest(request, conf);
 }
@@ -43,6 +43,11 @@ Request::~Request()
 {
 }
 
+void Request::setBody(std::string const &body)
+{
+
+}
+  
 void Request::checkMethod()
 {
     std::string method = _request.find("Method")->second;
@@ -123,11 +128,11 @@ void Request::checkLocation()
 
 void Request::setContentType(std::string const & content)
 {
-    if (!state)
+    if (!contentState)
     {
         for (int i = 0; i < 76; i++)
             cnt[mimeType[i]] = contentType[i];
-        state = 1;
+        contentState = 1;
     }
     size_t dot;
     for (int i = content.length() - 1; i >= 0; i--)
@@ -220,4 +225,9 @@ int const &   Request::getStatus() const
 std::string const &   Request::getPath() const
 {
     return _path;
+}
+
+Location const &  Request::getLocation() const
+{
+    return _location;
 }

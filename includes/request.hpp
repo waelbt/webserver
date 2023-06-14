@@ -15,6 +15,12 @@ struct invalidUrl
     bool operator()(const char& c);
 };
 
+enum ChunkState
+{
+    DONE,
+    UNDONE,
+};
+
 class Request
 {
     private:
@@ -22,14 +28,16 @@ class Request
         Configuration _conf;
         Location      _location;
         std::string   _path;
+        ChunkState    _chunkState;
         int           _status;
-        static int    state;
+        static int    contentState;
 
         void parseUrl(std::string const &line);
         void setContentType(std::string const & content);
         void badFormat();
         void checkLocation();
         void checkMethod();
+        void setBody(std::string const &body);
     public:
         Request();
         Request(std::string const &request, Configuration const & conf);
@@ -40,6 +48,7 @@ class Request
         std::string const &   getType() const;
         int const &           getStatus() const;
         std::string const &   getPath() const;
+        Location const &      getLocation() const;
         void                  parseRequest(std::string const &request, Configuration const & conf);
         void                  printElement();
 };
