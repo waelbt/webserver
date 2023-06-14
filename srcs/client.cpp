@@ -8,10 +8,10 @@ Client::Client() : _server_socket(), _address(), _address_length(sizeof(_address
 
 Client::Client(SOCKET server_socket) : _server_socket(server_socket), _address(), _address_length(sizeof(_address)), _request(), _response()
 {
-    // memset(_request, 0, sizeof(_request));
     _socket = accept(_server_socket, (struct sockaddr*) &(_address), &(_address_length));
     if (_socket < 0)
         throw CustomeExceptionMsg("socket() failed. ("+  std::string(strerror(errno)) + ")");
+    Server::setnonblocking(_socket);
     std::cout << "New connection from " << get_client_address() << std::endl;
 }
 

@@ -49,8 +49,8 @@ void Server::setup_server_socket(std::string host, std::string port)
 		_listen_sockets = socket(bind_addr->ai_family, bind_addr->ai_socktype, bind_addr->ai_protocol);
 		if (_listen_sockets < 0)
 			error_message = "socket system call failed.";
-		if (setsockopt(_listen_sockets, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes)) == -1)
-			error_message = "setsockopt system call failed.";
+		setsockopt(_listen_sockets, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes));
+		setnonblocking(_listen_sockets);
 		if (bind(_listen_sockets, bind_addr->ai_addr, bind_addr->ai_addrlen))
 			error_message = "bind system call failed.";
 		if (listen(_listen_sockets, MAX_PENDING_CNX) < 0)
