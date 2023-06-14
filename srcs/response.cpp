@@ -126,19 +126,22 @@ void Response::serveDirectory(std::string directoryPath, std::map<int, std::stri
 {
 	std::cout << "Serving directory: " << directoryPath << std::endl;
 	std::vector<std::string> indexes = location.getIndex();
+	std::cout << "Indexes: " << std::endl;
+	for (std::vector<std::string>::iterator it = indexes.begin(); it != indexes.end(); ++it)
+		std::cout << *it << std::endl;
 	if (!indexes.empty())
 	{
 		size_t i = 0;
 		for (std::vector<std::string>::iterator it = indexes.begin(); it != indexes.end(); ++it)
 		{
-			i++;
-			std::string index = directoryPath + *it;
+			std::string index = directoryPath + "/" + *it;
 			std::ifstream file(index.c_str());
 			if (file.is_open())
 			{
 				this->serveFile(index, errorPages);
-				break;
+				return;
 			}
+			i++;
 		}
 		if (i == indexes.size())
 		{
@@ -217,6 +220,7 @@ std::string Response::getPathType(std::string path)
 void Response::redirect(std::string uri)
 {
 	std::cout << "redirect made" << std::endl;
+	this->setStatus(301);
 	this->setHeader("Location", uri);
 }
 
