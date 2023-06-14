@@ -1,22 +1,24 @@
 #include "../includes/server.hpp"
 
-Webserver::Webserver() : _servers(), _max_socket()
+fd_set Webserver::_socketset;
+SOCKET Webserver::_max_socket = 0;
+
+Webserver::Webserver() : _servers()
 {
 
 }
 
-Webserver::Webserver(std::string content) : _servers(), _max_socket()
+Webserver::Webserver(std::string content) : _servers()
 {
 	fill_servers(content);
-	FD_ZERO(&_server_set);
-	for (ServerMap::iterator it = _servers.begin(); it != _servers.end(); it++)
-	{
-		FD_SET(it->first, &_server_set);
-		if (_max_socket < it->first)
-			_max_socket = it->first;
-	}
 }
 
+void Webserver::add_socket(SOCKET socket)
+{
+	FD_SET(socket, &_socketset);
+	if (_max_socket < socket)
+		_max_socket = socket;
+}
 
 void  Webserver::fill_servers(std::string content)
 {
@@ -61,7 +63,7 @@ Webserver::Webserver(const Webserver&  other)
 Webserver& Webserver::operator=(const Webserver&  other)
 {
 	_servers = other._servers;
-	_server_set = other._server_set;
+	_socketset = other._socketset;
 	_max_socket = other._max_socket;
 	return *this;
 }
@@ -70,44 +72,38 @@ Webserver& Webserver::operator=(const Webserver&  other)
 fd_set Webserver::wait_on_client()
 {
 	struct timeval timeout;
-	fd_set reads(_server_set);
+	fd_set reads(_socketset);
 	
 	timeout.tv_sec = 1;
 	timeout.tv_usec = 0;
-    for (ServerMap::iterator it = _servers.begin(); it != _servers.end(); it++)
-    {
-        std::vector<Client> clients = it->second->get_clients();
-	    for (size_t size = 0; size < clients.size(); size++)
-	    {
-	    	FD_SET(clients[size]._socket, &reads);
-	    	if (clients[size]._socket > _max_socket)
-               _max_socket = clients[size]._socket;
-	    }
-    }
+
 	if (select(_max_socket + 1, &reads, 0, 0, &timeout) < 0)
 		throw CustomeExceptionMsg("select() failed. ("+  std::string(strerror(errno)) + ")");
 	return reads;
 }
 
+void  Webserver::clear_set()
+{
+	FD_ZERO(&_socketset);
+}
+
 void Webserver::run()
 {
-    fd_set reads;
+    fd_set tmpset;
 	fd_set writes;
 
 	FD_ZERO(&writes);
 	while (1)
     {
-        reads = wait_on_client();
+        tmpset = wait_on_client();
         for (ServerMap::iterator it = _servers.begin(); it != _servers.end(); it++)
         {
             std::vector<Client>& _client = it->second->get_clients();
-    	    if (FD_ISSET(it->first, &reads))
-			{
+    	    if (FD_ISSET(it->first, &tmpset))
 		    	_client.insert(_client.end(), Client(it->first));
-			}
 		    for (size_t i = 0; i < _client.size(); i++)
 		    {
-		    	if (FD_ISSET(_client[i]._socket, &reads))
+		    	if (FD_ISSET(_client[i]._socket, &tmpset))
 		    	{
 					char request[MAX_REQUEST_SIZE + 1] = {0};
 		    		int r = recv(_client[i]._socket, request, MAX_REQUEST_SIZE, MSG_DONTWAIT);
@@ -123,7 +119,7 @@ void Webserver::run()
 						_client[i]._request.parseRequest(request, it->second->get_configuration());
 						if (true)
 						{
-							FD_CLR(_client[i]._socket, &reads);
+							FD_CLR(_client[i]._socket, &_socketset);
 							FD_SET(_client[i]._socket, &writes);
 						}
 					}
@@ -131,7 +127,6 @@ void Webserver::run()
 				if (FD_ISSET(_client[i]._socket, &writes))
 				{
 					_client[i]._response.get(_client[i]._request);
-					//
 					send(_client[i]._socket, _client[i]._response.toString().c_str(), _client[i]._response.toString().length(), 0);
 					FD_CLR(_client[i]._socket, &writes);
 					it->second->drop_client(i);
@@ -145,9 +140,7 @@ void Webserver::run()
 void Webserver::stop()
 {
 	for (ServerMap::iterator it = _servers.begin(); it != _servers.end(); it++)
-	{
 		close(it->first);
-	}
 }
 
 Webserver::~Webserver()

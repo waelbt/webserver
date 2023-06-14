@@ -11,6 +11,7 @@ Client::Client(SOCKET server_socket) : _server_socket(server_socket), _address()
     _socket = accept(_server_socket, (struct sockaddr*) &(_address), &(_address_length));
     if (_socket < 0)
         throw CustomeExceptionMsg("socket() failed. ("+  std::string(strerror(errno)) + ")");
+    Webserver::add_socket(_socket);
     Server::setnonblocking(_socket);
     std::cout << "New connection from " << get_client_address() << std::endl;
 }

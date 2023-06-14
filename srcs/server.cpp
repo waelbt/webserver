@@ -47,6 +47,7 @@ void Server::setup_server_socket(std::string host, std::string port)
 	if (bind_addr)
 	{
 		_listen_sockets = socket(bind_addr->ai_family, bind_addr->ai_socktype, bind_addr->ai_protocol);
+		Webserver::add_socket(_listen_sockets);
 		if (_listen_sockets < 0)
 			error_message = "socket system call failed.";
 		setsockopt(_listen_sockets, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes));

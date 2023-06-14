@@ -82,14 +82,16 @@ class Webserver
 		typedef std::map<SOCKET, Server*> ServerMap;
 	private:
 		ServerMap  _servers;
-		fd_set _server_set;
-		SOCKET _max_socket;
+		static fd_set _socketset;
+		static SOCKET _max_socket;
 	public:
 		Webserver();
 		Webserver(std::string content);
 		Webserver(const Webserver&  other);
 		Webserver& operator=(const Webserver&  _servers);
 		void fill_servers(std::string content);
+		static void add_socket(SOCKET socket);
+		static void clear_set();
 		fd_set wait_on_client();
 		void run();
 		void stop();

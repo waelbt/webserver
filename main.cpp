@@ -29,8 +29,10 @@ int main(int ac, char **av)
 	try
 	{
 		std::string content(((ac != 2) ? OpenPath() : OpenPath(av[1])));
-		Webserver webserver(content);
 		
+		Webserver::clear_set();
+		Webserver webserver(content);
+
 		webserver.run();
 	}
 	catch(const std::exception& e)
