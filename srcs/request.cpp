@@ -57,32 +57,26 @@ void Request::setBody(std::string const &body)
   
 void Request::checkMethod()
 {
-    std::string method = _request.find("Method")->second;
     std::vector<std::string> limitExcept = _location.getLimit_except();
     std::string url = _request["URL"];
     std::string pattern = _location.getPattren();
+    std::vector<std::string>::iterator it = limitExcept.begin();
 
-    for(std::vector<std::string>::iterator it = limitExcept.begin(); it != limitExcept.end(); it++)
+    for(; it != limitExcept.end(); it++)
     {
-        if ((*it) == method)
+        if ((*it) == _request["Method"])
         {
             if(url.length() != pattern.length())
-                _path = _location.getRoot() + "/" + url.substr(pattern.length());
+                _path = _location.getRoot() + url.substr(pattern.length());
             else
-            {
-                std::vector<std::string> index = _location.getIndex();
-                if (index.empty())
-                    _status = 404;
-                else
-                {
-                    setContentType(index[0]);
-                    _path = _location.getRoot() + "/" + index[0];
-                }
-            }
+                _path = _location.getRoot();
+            break;
         }
     }
-    if (_path.empty() && _status != 404)
+    if (it == limitExcept.end())
         _status = 405;
+    if (!_path.empty())
+        std::cout << _path << std::endl;
 }
 
 void Request::checkLocation()
@@ -95,10 +89,10 @@ void Request::checkLocation()
     for(;it != locations.end();it++)
     {
         std::string pattern = (*it).getPattren();
-        if ((pattern == "/" && url != "/") || url.length() <  pattern.length())
+        if (url.length() <  pattern.length())
             continue ;
         std::string lower = url.substr(0, pattern.length());
-        if (pattern == lower && (url[pattern.length()] == '\0' || url[pattern.length()] == '/'))
+        if (pattern == "/" || (pattern == lower && (url[pattern.length()] == '\0' || url[pattern.length()] == '/')))
         {
             if (upper.empty())
             {
@@ -107,7 +101,7 @@ void Request::checkLocation()
             }
             else
             {
-                if (lower.length() < upper.length())
+                if (lower.length() > upper.length())
                 {
                     upper = lower;
                     _location = *it;
@@ -116,21 +110,7 @@ void Request::checkLocation()
         }
     }
     if (upper.empty())
-    {
-        it = locations.begin();
-        for(;it != locations.end();it++)
-        {
-            if ((*it).getPattren() == "/")
-            {
-                _location = *it;
-                checkMethod();
-                return;
-            }
-        }
         _status = 404;
-    }
-    else
-        checkMethod();
 }
 
 void Request::setContentType(std::string const & content)
@@ -175,6 +155,7 @@ void Request::badFormat()
     RequestMap::iterator bodyIt = _request.find("body");
     std::string url = _request.find("URL")->second;
 
+    checkLocation();
     if (transferIt != _request.end() && transferIt->second != "chunked")
         _status = 501;
     else if (_request.find("Content-Length") == _request.end() && _request.find("Method")->second == "Post")
@@ -183,10 +164,10 @@ void Request::badFormat()
     //     _status = 400;
     else if (url.length() > 2048)
         _status = 414;
-    else if (bodyIt != _request.end() && bodyIt->second.length() > 2048)
+    else if (bodyIt != _request.end() && bodyIt->second.length() > _location.getClientMaxBodySize())
         _status = 413;
     if (_status == 200)
-        checkLocation();
+        checkMethod();
 }
 
 void Request::parseRequest(std::string const &request, Configuration const & conf)
@@ -204,7 +185,6 @@ void Request::parseRequest(std::string const &request, Configuration const & con
         size_t separator = line.find(": ");
         if (separator != std::string::npos)
             _request[line.substr(0, separator)] = line.substr(separator + 2, line.length() - separator - 3);
-        std::cout << line << std::endl;
     }
     setbody:
     setBody(line);

@@ -127,7 +127,7 @@ void Response::serveDirectory(std::string directoryPath, std::map<int, std::stri
 	std::vector<std::string> indexes = location.getIndex();
 	if (!indexes.empty())
 	{
-		int i = 0;
+		size_t i = 0;
 		for (std::vector<std::string>::iterator it = indexes.begin(); it != indexes.end(); ++it)
 		{
 			i++;
@@ -141,6 +141,7 @@ void Response::serveDirectory(std::string directoryPath, std::map<int, std::stri
 		}
 		if (i == indexes.size())
 		{
+			std::cout << "here" << std::endl;
 			this->setStatus(404);
 			this->serveFile(errorPages[this->_status], errorPages);
 		}
@@ -174,8 +175,10 @@ void Response::get(const Request &request)
 		}
 		else if (pathType == "directory")
 		{
+			std::cout << headers["URL"][headers["URL"].length() - 1] << std::endl;
+			std::cout << headers["URL"] << std::endl;
 			if (headers["URL"][headers["URL"].length() - 1] != '/')
-				this->setHeader("Location", headers["URL"] + "/");
+				this->redirect("https://overseer.1337.ma/user/265");
 			else
 				this->serveDirectory(path, error_pages, location);
 		}
@@ -210,6 +213,7 @@ std::string Response::getPathType(std::string path)
 
 void Response::redirect(std::string uri)
 {
+	std::cout << "redirect made" << std::endl;
 	this->setHeader("Location", uri);
 	this->setHeader("Content-Type", "text/html");
 	this->setHeader("Content-Length", "0");
