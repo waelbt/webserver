@@ -90,7 +90,7 @@ class Webserver
 		Webserver(const Webserver&  other);
 		Webserver& operator=(const Webserver&  _servers);
 		void fill_servers(std::string content);
-		std::pair<fd_set, fd_set> wait_on_client();
+		fd_set wait_on_client();
 		void run();
 		void stop();
 		~Webserver();

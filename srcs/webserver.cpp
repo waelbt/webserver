@@ -67,51 +67,54 @@ Webserver& Webserver::operator=(const Webserver&  other)
 }
 
 
-std::pair<fd_set, fd_set> Webserver::wait_on_client()
+fd_set Webserver::wait_on_client()
 {
 	struct timeval timeout;
-	std::pair<fd_set, fd_set> sets(_server_set, _server_set);
+	fd_set reads(_server_set);
 	
 	timeout.tv_sec = 1;
 	timeout.tv_usec = 0;
-    for (ServerMap::iterator it = _servers.begin(); it != _servers.end(); it++)
-    {
-        std::vector<Client> clients = it->second->get_clients();
-	    for (size_t size = 0; size < clients.size(); size++)
-	    {
-	    	FD_SET(clients[size]._socket, &sets.first);
-			FD_SET(clients[size]._socket, &sets.second);
-	    	if (clients[size]._socket > _max_socket)
-               _max_socket = clients[size]._socket;
-	    }
-    }
-	if (select(_max_socket + 1, &sets.first, &sets.second, 0, &timeout) < 0)
+    // for (ServerMap::iterator it = _servers.begin(); it != _servers.end(); it++)
+    // {
+    //     std::vector<Client> clients = it->second->get_clients();
+	//     for (size_t size = 0; size < clients.size(); size++)
+	//     {
+	//     	FD_SET(clients[size]._socket, &reads);
+	//     	if (clients[size]._socket > _max_socket)
+    //            _max_socket = clients[size]._socket;
+	//     }
+    // }
+	if (select(_max_socket + 1, &reads, 0, 0, &timeout) < 0)
 		throw CustomeExceptionMsg("select() failed. ("+  std::string(strerror(errno)) + ")");
-	return sets;
+	return reads;
 }
 
 void Webserver::run()
 {
-    std::pair<fd_set, fd_set> sets;
+    fd_set reads;
+	fd_set writes;
 
-    while (1)
+	FD_ZERO(&writes);
+	while (1)
     {
-        sets = wait_on_client();
+        reads = wait_on_client();
         for (ServerMap::iterator it = _servers.begin(); it != _servers.end(); it++)
         {
             std::vector<Client>& _client = it->second->get_clients();
-    	    if (FD_ISSET(it->first, &sets.first))
+    	    if (FD_ISSET(it->first, &reads))
+			{
 		    	_client.insert(_client.end(), Client(it->first));
+				FD_SET(_client[_client.size() - 1]._socket, &reads);
+			}
 		    for (size_t i = 0; i < _client.size(); i++)
 		    {
-		    	if (FD_ISSET(_client[i]._socket, &sets.first))
+		    	if (FD_ISSET(_client[i]._socket, &reads))
 		    	{
 					char request[MAX_REQUEST_SIZE + 1] = {0};
 		    		int r = recv(_client[i]._socket, request, MAX_REQUEST_SIZE, MSG_DONTWAIT);
 		    		if (r < 1)
 		    		{
 		    			std::cout << "Unexpected disconnect from " << _client[i].get_client_address() << std::endl;
-						FD_CLR(_client[i]._socket, &sets.first);
 		    			it->second->drop_client(i);
 						continue;
 		    		}
@@ -119,14 +122,20 @@ void Webserver::run()
 		    		{
 		    			request[r] = '\0';
 						_client[i]._request.parseRequest(request, it->second->get_configuration());
-		    		}
+						if (true)
+						{
+							FD_CLR(_client[i]._socket, &reads);
+							FD_SET(_client[i]._socket, &writes);
+						}
+					}
 		    	}
-				if (FD_ISSET(_client[i]._socket, &sets.second))
+				if (FD_ISSET(_client[i]._socket, &writes))
 				{
 					_client[i]._response.get(_client[i]._request);
+					//
 					send(_client[i]._socket, _client[i]._response.toString().c_str(), _client[i]._response.toString().length(), 0);
-					FD_CLR(_client[i]._socket, &sets.second);
-   					it->second->drop_client(i);
+					FD_CLR(_client[i]._socket, &writes);
+					it->second->drop_client(i);
 				}
 		    }
         }

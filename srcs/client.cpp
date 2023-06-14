@@ -28,7 +28,7 @@ Client& Client::operator=(const Client& other)
     _address_length = other._address_length;
     _socket = other._socket;
 	_response = other._response;
-    _request = other._request;
+    // _request = other._request;
     // _received = other._received;
     return *this;
 }

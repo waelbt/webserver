@@ -30,11 +30,11 @@ bool invalidUrl::operator()(const char& c)
     return (Error.find(std::string(1, c)) != std::string::npos);
 }
 
-Request::Request() : _request(), _conf(), _location(), _path("www"), _chunkState(UNDONE), _status(200)
+Request::Request() : _request(), _conf(), _location(), _path(), _chunkState(UNDONE), _status(200)
 {
 }
 
-Request::Request(std::string const &request, Configuration const & conf) : _request(), _conf(conf), _location(), _path("www"), _chunkState(UNDONE), _status(200)
+Request::Request(std::string const &request, Configuration const & conf) : _request(), _conf(conf), _location(), _path(), _chunkState(UNDONE), _status(200)
 {
     parseRequest(request, conf);
 }
