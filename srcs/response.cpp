@@ -126,9 +126,6 @@ void Response::serveDirectory(std::string directoryPath, std::map<int, std::stri
 {
 	std::cout << "Serving directory: " << directoryPath << std::endl;
 	std::vector<std::string> indexes = location.getIndex();
-	std::cout << "Indexes: " << std::endl;
-	for (std::vector<std::string>::iterator it = indexes.begin(); it != indexes.end(); ++it)
-		std::cout << *it << std::endl;
 	if (!indexes.empty())
 	{
 		size_t i = 0;

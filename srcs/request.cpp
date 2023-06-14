@@ -157,7 +157,7 @@ void Request::parseUrl(std::string const &line)
 void Request::badFormat()
 {
     RequestMap::iterator transferIt = _request.find("Transfer-Encoding");
-    RequestMap::iterator bodyIt = _request.find("body");
+    // RequestMap::iterator bodyIt = _request.find("body");
     std::string url = _request.find("URL")->second;
 
     checkLocation();
