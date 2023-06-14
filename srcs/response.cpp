@@ -121,32 +121,37 @@ void Response::serveFile(std::string url, std::map<int, std::string> &errorPages
 	}
 }
 
-void Response::serveDirectory(std::string directoryPath, std::map<int, std::string> &errorPages)
+void Response::serveDirectory(std::string directoryPath, std::map<int, std::string> &errorPages, Location const & location)
 {
-	// Open the directory
-	DIR *dir = opendir(directoryPath.c_str());
-	if (dir == NULL)
+	std::cout << "Serving directory: " << directoryPath << std::endl;
+	std::vector<std::string> indexes = location.getIndex();
+	if (!indexes.empty())
 	{
-		std::cout << "Error opening directory" << std::endl;
+		int i = 0;
+		for (std::vector<std::string>::iterator it = indexes.begin(); it != indexes.end(); ++it)
+		{
+			i++;
+			std::string index = directoryPath + *it;
+			std::ifstream file(index.c_str());
+			if (file.is_open())
+			{
+				this->serveFile(index, errorPages);
+				break;
+			}
+		}
+		if (i == indexes.size())
+		{
+			this->setStatus(404);
+			this->serveFile(errorPages[this->_status], errorPages);
+		}
+	}
+	else if (location.getAutoIndex() == false)
+	{
+		this->setStatus(403);
 		this->serveFile(errorPages[this->_status], errorPages);
 	}
-
-	std::string directoryContent;
-
-	struct dirent *entry;
-	while ((entry = readdir(dir)) != NULL)
-	{
-		std::string entryName = entry->d_name;
-		directoryContent += "<li><a href=\"" + entryName + "\">" + entryName + "</a></li>";
-	}
-
-	closedir(dir);
-
-	std::string responseBody = "<html><body><h1>Directory Listing</h1><ul>" + directoryContent + "</ul></body></html>";
-
-	this->setHeader("Content-Type", "text/html");
-	this->setHeader("Content-Length", std::to_string(responseBody.length()));
-	this->setBody(responseBody);
+	else
+		this->serveDirectoryAutoIndex(directoryPath, errorPages);
 }
 
 void Response::get(const Request &request)
@@ -172,7 +177,7 @@ void Response::get(const Request &request)
 			if (headers["URL"][headers["URL"].length() - 1] != '/')
 				this->setHeader("Location", headers["URL"] + "/");
 			else
-				this->serveDirectory(path, error_pages);
+				this->serveDirectory(path, error_pages, location);
 		}
 	}
 	else
@@ -209,4 +214,34 @@ void Response::redirect(std::string uri)
 	this->setHeader("Content-Type", "text/html");
 	this->setHeader("Content-Length", "0");
 	this->setBody("");
+}
+
+void Response::serveDirectoryAutoIndex(std::string url, std::map<int, std::string> &errorPages)
+{
+	std::cout << "Serving directory: " << url << std::endl;
+	// Open the directory
+	DIR *dir = opendir(url.c_str());
+	if (dir == NULL)
+	{
+		std::cout << "Error opening directory" << std::endl;
+		this->setStatus(403);
+		this->serveFile(errorPages[this->_status], errorPages);
+	}
+
+	std::string directoryContent;
+
+	struct dirent *entry;
+	while ((entry = readdir(dir)) != NULL)
+	{
+		std::string entryName = entry->d_name;
+		directoryContent += "<li><a href=\"" + entryName + "\">" + entryName + "</a></li>";
+	}
+
+	closedir(dir);
+
+	std::string responseBody = "<html><body><h1>Directory Listing</h1><ul>" + directoryContent + "</ul></body></html>";
+
+	this->setHeader("Content-Type", "text/html");
+	this->setHeader("Content-Length", std::to_string(responseBody.length()));
+	this->setBody(responseBody);
 }

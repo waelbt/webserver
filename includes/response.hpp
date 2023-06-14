@@ -46,7 +46,8 @@ public:
 	void sendResponse(int clientSocket);
 	void serveResponse(const Request &request);
 	void serveFile(std::string url, std::map<int, std::string> &errorPages);
-	void serveDirectory(std::string url, std::map<int, std::string> &errorPages);
+	void serveDirectory(std::string url, std::map<int, std::string> &errorPages, Location const &location);
+	void serveDirectoryAutoIndex(std::string url, std::map<int, std::string> &errorPages);
 	void redirect(std::string url);
 	// void error(int clientSocket);
 	// void serveDirectory(std::string url, int clientSocket);
