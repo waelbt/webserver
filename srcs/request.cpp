@@ -71,8 +71,6 @@ void Request::checkMethod()
     }
     if (_path.empty() && _status != 404)
         _status = 405;
-    if (!_path.empty())
-        std::cout << "path is ----->" << _path << "---" << _request["Content-Type"] << std::endl;
 }
 
 void Request::checkLocation()

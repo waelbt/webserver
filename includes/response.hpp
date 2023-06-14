@@ -39,6 +39,8 @@ public:
 	void setStatus(int status);
 	void setHeader(std::string key, std::string value);
 
+	void post(const Request &request);
+	
 	void sendResponse(int clientSocket);
 	std::string serveResponse(const Request &request);
 	std::string serveFile(std::string url);
