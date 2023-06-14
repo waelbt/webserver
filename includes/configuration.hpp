@@ -80,7 +80,7 @@ long long						to_integer(const std::string& string);
 TokenPair 						selectToken(StrIter& begin, const StrIter& end, int& level, bool (*func)(const char&));
 std::string 					token_to_string(TokenPair& pair);
 std::vector<TokenPair> 			SplitValues(std::string value, bool (*func)(const char&) = is_symbol);
-
+void 							default_error_pages(std::map<int, std::string>& error_pages);
 template <typename T>
 void print_vec( const std::vector<T>& vec, std::string name)
 {
