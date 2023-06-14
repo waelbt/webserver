@@ -123,7 +123,7 @@ void Webserver::run()
 				if (FD_ISSET(_client[i]._socket, &sets.second))
 				{
 					_client[i]._response.get(_client[i]._request);
-					send(_client[i]._socket, _client[i]._response.toString().c_str(), _client[i]._response.toString().length(), 0);
+					send(_client[i]._socket, _client[i]._response.toString().c_str(), _client[i]._response.getBody().length(), 0);
 					FD_CLR(_client[i]._socket, &sets.second);
    					it->second->drop_client(i);
 				}
