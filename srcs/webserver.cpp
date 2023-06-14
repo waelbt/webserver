@@ -66,13 +66,14 @@ Webserver& Webserver::operator=(const Webserver&  other)
 	return *this;
 }
 
+
 std::pair<fd_set, fd_set> Webserver::wait_on_client()
 {
-	struct timeval tv;
+	// struct timeval tv;
 	std::pair<fd_set, fd_set> sets(_server_set, _server_set);
 	
-	tv.tv_sec = 0;
-	tv.tv_usec = 0;
+	// tv.tv_sec = 0;
+	// tv.tv_usec = 0;
     for (ServerMap::iterator it = _servers.begin(); it != _servers.end(); it++)
     {
         std::vector<Client> clients = it->second->get_clients();
@@ -84,7 +85,7 @@ std::pair<fd_set, fd_set> Webserver::wait_on_client()
                _max_socket = clients[size]._socket;
 	    }
     }
-	if (select(_max_socket + 1, &sets.first, &sets.second, 0, &tv) < 0)
+	if (select(_max_socket + 1, &sets.first, &sets.second, 0, 0) < 0)
 		throw CustomeExceptionMsg("select() failed. ("+  std::string(strerror(errno)) + ")");
 	return sets;
 }

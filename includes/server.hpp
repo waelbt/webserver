@@ -68,6 +68,7 @@ class Server
 		SOCKET get_listen_sockets() const;
 		Configuration get_configuration() const;
 
+		void setnonblocking(int sock);
 		void drop_client(size_t i);
 		void showConfig() const;
 
