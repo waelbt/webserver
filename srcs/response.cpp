@@ -94,6 +94,7 @@ void Response::serveFile(std::string url, std::map<int, std::string> &errorPages
 {
 	std::string filename = url;
 	std::ifstream file(filename.c_str());
+	std::cout << "Serving file: " << filename << std::endl;
 	if (file.is_open())
 	{
 		std::cout << "Serving file: " << filename << std::endl;
@@ -161,11 +162,12 @@ void Response::get(const Request &request)
 	std::map<int, std::string> error_pages = location.getErrorPages();
 	std::map<std::string, std::string> headers = request.getRequest();
 	std::string path = request.getPath();
-
+	std::cout << "Path: " << path << std::endl;
 	this->setStatus(request.getStatus());
 
 	std::string pathType = this->getPathType(path);
 
+	std::cout << "pathType: " << pathType << std::endl;
 	if (this->_status == 200 && pathType != "error")
 	{
 		if (pathType == "file")
@@ -178,7 +180,7 @@ void Response::get(const Request &request)
 			std::cout << headers["URL"][headers["URL"].length() - 1] << std::endl;
 			std::cout << headers["URL"] << std::endl;
 			if (headers["URL"][headers["URL"].length() - 1] != '/')
-				this->redirect("https://overseer.1337.ma/user/265");
+				this->redirect(headers["URL"] + "/");
 			else
 				this->serveDirectory(path, error_pages, location);
 		}
@@ -203,6 +205,7 @@ bool Response::is_directory(const char *path)
 
 std::string Response::getPathType(std::string path)
 {
+	std::cout << "path: " << path << std::endl;
 	if (this->is_file(path.c_str()))
 		return "file";
 	else if (this->is_directory(path.c_str()))
@@ -215,9 +218,6 @@ void Response::redirect(std::string uri)
 {
 	std::cout << "redirect made" << std::endl;
 	this->setHeader("Location", uri);
-	this->setHeader("Content-Type", "text/html");
-	this->setHeader("Content-Length", "0");
-	this->setBody("");
 }
 
 void Response::serveDirectoryAutoIndex(std::string url, std::map<int, std::string> &errorPages)
