@@ -63,8 +63,6 @@ void CommonEntity::InitRoot(std::string value)
 void CommonEntity::InitIndex(std::string value)
 {
     _index = converter(value, TokenToString());
-    if (_index.empty())
-        throw CustomeExceptionMsg(EmptyDirective);
 }
 
 void CommonEntity::InitErrorPage(std::string value)
