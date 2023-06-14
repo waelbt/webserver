@@ -51,7 +51,7 @@ void Request::setBody(std::string const &body)
     std::getline(req, line);
     if (line != "\0")
         _request["body"] = line;
-    badFormat(); 
+    badFormat();
     std::cout << std::endl;
 }
   
@@ -67,7 +67,12 @@ void Request::checkMethod()
         if ((*it) == _request["Method"])
         {
             if(url.length() != pattern.length())
-                _path = _location.getRoot() + url.substr(pattern.length());
+            {
+                if (pattern == "/")
+                    _path = _location.getRoot() + url;
+                else
+                    _path = _location.getRoot() + url.substr(pattern.length());
+            }
             else
                 _path = _location.getRoot();
             break;
@@ -164,8 +169,8 @@ void Request::badFormat()
     //     _status = 400;
     else if (url.length() > 2048)
         _status = 414;
-    else if (bodyIt != _request.end() && bodyIt->second.length() > _location.getClientMaxBodySize())
-        _status = 413;
+    // else if (bodyIt != _request.end() && bodyIt->second.length() > _location.getClientMaxBodySize())
+    //     _status = 413;
     if (_status == 200)
         checkMethod();
 }
@@ -180,7 +185,7 @@ void Request::parseRequest(std::string const &request, Configuration const & con
     _conf = conf;
     std::getline(req, line);
     parseUrl(line);
-    while (std::getline(req, line) && line != "\r\n")
+    while (std::getline(req, line) && line != "\r\n\r\n")
     {
         size_t separator = line.find(": ");
         if (separator != std::string::npos)
