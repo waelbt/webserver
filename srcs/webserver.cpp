@@ -67,18 +67,6 @@ Webserver& Webserver::operator=(const Webserver&  other)
 }
 
 
-void setnonblocking(int sock)
-{
-	int opts;
-
-	opts = fcntl(sock,F_GETFL);
-	(opts < 0) ? throw Server::ServerException("fcntl failed to retrieve the current socket status flags") : (NULL);
-	opts = (opts | O_NONBLOCK);
-	(fcntl(sock,F_SETFL,opts) < 0) ? \
-	throw Server::ServerException("fcntl failed to set set the modified file status flags back to the socket") : (NULL);
-	return;
-}
-
 std::pair<fd_set, fd_set> Webserver::wait_on_client()
 {
 	// struct timeval tv;

@@ -22,18 +22,16 @@ Server::Server(const Configuration& conf): _conf(conf), _client()
 }
 
 
-// s_addrinfo* Server::get_s_addrinfo(std::string host, std::string port)
-// {
-//     s_addrinfo hints;
-//     s_addrinfo *bind_address;
+void Server::setnonblocking(int sock)
+{
+	int opts;
 
-//     memset(&hints, 0, sizeof(hints));
-//     hints.ai_family = AF_INET;
-//     hints.ai_socktype = SOCK_STREAM;
-// 	// passive flag
-//     getaddrinfo(host.c_str(), port.c_str(), &hints, &bind_address);
-//     return bind_address;
-// }
+	opts = fcntl(sock,F_GETFL);
+	(opts < 0) ? throw ServerException("fcntl failed to retrieve the current socket status flags") : (NULL);
+	opts = (opts | O_NONBLOCK);
+	(fcntl(sock,F_SETFL,opts) < 0) ? \
+	throw ServerException("fcntl failed to set set the modified file status flags back to the socket") : (NULL);
+}
 
 void Server::setup_server_socket(std::string host, std::string port)
 {	
