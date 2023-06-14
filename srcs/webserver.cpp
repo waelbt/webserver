@@ -74,16 +74,16 @@ fd_set Webserver::wait_on_client()
 	
 	timeout.tv_sec = 1;
 	timeout.tv_usec = 0;
-    // for (ServerMap::iterator it = _servers.begin(); it != _servers.end(); it++)
-    // {
-    //     std::vector<Client> clients = it->second->get_clients();
-	//     for (size_t size = 0; size < clients.size(); size++)
-	//     {
-	//     	FD_SET(clients[size]._socket, &reads);
-	//     	if (clients[size]._socket > _max_socket)
-    //            _max_socket = clients[size]._socket;
-	//     }
-    // }
+    for (ServerMap::iterator it = _servers.begin(); it != _servers.end(); it++)
+    {
+        std::vector<Client> clients = it->second->get_clients();
+	    for (size_t size = 0; size < clients.size(); size++)
+	    {
+	    	FD_SET(clients[size]._socket, &reads);
+	    	if (clients[size]._socket > _max_socket)
+               _max_socket = clients[size]._socket;
+	    }
+    }
 	if (select(_max_socket + 1, &reads, 0, 0, &timeout) < 0)
 		throw CustomeExceptionMsg("select() failed. ("+  std::string(strerror(errno)) + ")");
 	return reads;
@@ -104,7 +104,6 @@ void Webserver::run()
     	    if (FD_ISSET(it->first, &reads))
 			{
 		    	_client.insert(_client.end(), Client(it->first));
-				FD_SET(_client[_client.size() - 1]._socket, &reads);
 			}
 		    for (size_t i = 0; i < _client.size(); i++)
 		    {
