@@ -77,11 +77,7 @@ fd_set Webserver::wait_on_client()
 
 	timeout.tv_sec = 1;
 	timeout.tv_usec = 0;
-	// for (SOCKET fd = 0; fd <= Webserver::_max_socket; fd++) {
-	// 	if (FD_ISSET(fd, &Webserver::_socketset) || FD_ISSET(fd, &Webserver::_writeset))
-	// 		std::cout << " " << fd;
-	// }
-	// std::cout << std::endl;
+
 	if (select(_max_socket + 1, &reads, 0, 0, &timeout) < 0)
 		throw CustomeExceptionMsg("select() failed. ("+  std::string(strerror(errno)) + ")");
 	return reads;
@@ -95,6 +91,31 @@ void  Webserver::clear_set()
 	}
 	FD_ZERO(&_socketset);
 	FD_ZERO(&_writeset);
+}
+
+int Webserver::fetch_request (Client *client, const Configuration& conf)
+{
+	char request[MAX_REQUEST_SIZE + 1] = {0};
+	int r;
+
+	r = recv(client->_socket, request, MAX_REQUEST_SIZE, MSG_DONTWAIT);
+	if (r < 1)
+	{
+		std::cout << "Unexpected disconnect from " << client->get_client_address() << std::endl;
+		FD_CLR(client->_socket, &_socketset);
+		return 0;
+	}
+	else
+	{
+		request[r] = '\0';
+		client->_request.parseRequest(request, conf);
+		if (client->_request.getChunkedState() == DONE)
+		{
+			FD_CLR(client->_socket, &_socketset);
+			FD_SET(client->_socket, &_writeset);
+		}
+	}
+	return 1;
 }
 
 void Webserver::run()
@@ -113,37 +134,26 @@ void Webserver::run()
 		    {
 		    	if (FD_ISSET(_client[i]->_socket, &tmpset))
 		    	{
-					char request[MAX_REQUEST_SIZE + 1] = {0};
-		    		int r = recv(_client[i]->_socket, request, MAX_REQUEST_SIZE, MSG_DONTWAIT);
-		    		if (r < 1)
-		    		{
-		    			std::cout << "Unexpected disconnect from " << _client[i]->get_client_address() << std::endl;
-						FD_CLR(_client[i]->_socket, &_socketset);
-		    			it->second->drop_client(i);
-						continue;
-		    		}
-		    		else
-		    		{
-		    			request[r] = '\0';
-						_client[i]->_request.parseRequest(request, it->second->get_configuration());
-						if (_client[i]->_request.getChunkedState() == DONE)
-						{
-							FD_CLR(_client[i]->_socket, &_socketset);
-							FD_SET(_client[i]->_socket, &_writeset);
-						}
-					}
-		    	}
+					if (!fetch_request(_client[i], it->second->get_configuration())) {
+						it->second->drop_client(i); continue ; }
+				}
 				if (FD_ISSET(_client[i]->_socket, &_writeset))
 				{
-					_client[i]->_response.get(_client[i]->_request);
-					send(_client[i]->_socket, _client[i]->_response.toString().c_str(), _client[i]->_response.toString().length(), 0);
-					FD_CLR(_client[i]->_socket, &_writeset);
-					it->second->drop_client(i);
+					if(send_response(_client[i]))
+						it->second->drop_client(i);
 				}
 		    }
         }
     }
 	this->stop();
+}
+
+int Webserver::send_response (Client *client)
+{
+	client->_response.get(client->_request);
+	send(client->_socket, client->_response.toString().c_str(), client->_response.toString().length(), 0);
+	FD_CLR(client->_socket, &_writeset);
+	return 1;
 }
 
 void Webserver::stop()
