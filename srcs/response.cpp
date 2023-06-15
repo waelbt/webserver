@@ -37,11 +37,10 @@ Response &Response::operator=(Response const &rhs)
 
 std::string Response::intToString(int num) const
 {
-    std::ostringstream oss;
-    oss << num;
-    return oss.str();
+	std::ostringstream oss;
+	oss << num;
+	return oss.str();
 }
-
 
 std::string Response::getBody() const { return this->_body; }
 
@@ -90,7 +89,7 @@ void Response::serveFile(std::string url, std::map<int, std::string> &errorPages
 		this->serveStaticFile(url, errorPages);
 }
 
-void Response::serveDirectory(std::string directoryPath, std::map<int, std::string> &errorPages, Location const & location)
+void Response::serveDirectory(std::string directoryPath, std::map<int, std::string> &errorPages, Location const &location)
 {
 	std::cout << "Serving directory: " << directoryPath << std::endl;
 	std::vector<std::string> indexes = location.getIndex();
@@ -101,7 +100,7 @@ void Response::serveDirectory(std::string directoryPath, std::map<int, std::stri
 		{
 			std::string index = directoryPath + "/" + *it;
 			std::ifstream file(index.c_str());
-			if (this->getPathType(index) == "file")
+			if (this->isFileExists(index))
 			{
 				this->serveStaticFile(index, errorPages);
 				return;
@@ -112,13 +111,13 @@ void Response::serveDirectory(std::string directoryPath, std::map<int, std::stri
 		{
 			std::cout << "here" << std::endl;
 			this->setStatus(404);
-			this->serveStaticFile(errorPages[this->_status], errorPages);
+			this->serveErrorPage(errorPages);
 		}
 	}
 	else if (location.getAutoIndex() == false)
 	{
 		this->setStatus(403);
-		this->serveStaticFile(errorPages[this->_status], errorPages);
+		this->serveErrorPage(errorPages);
 	}
 	else
 		this->serveDirectoryAutoIndex(directoryPath, errorPages);
@@ -126,8 +125,8 @@ void Response::serveDirectory(std::string directoryPath, std::map<int, std::stri
 
 void Response::get(const Request &request)
 {
-	Location const & location = request.getLocation();
-	std::map<int, std::string> error_pages = location.getErrorPages();
+	Location const &location = request.getLocation();
+	std::map<int, std::string> errorPages = location.getErrorPages();
 	std::map<std::string, std::string> headers = request.getRequest();
 	std::string path = request.getPath();
 	std::cout << "Path: " << path << std::endl;
@@ -136,25 +135,28 @@ void Response::get(const Request &request)
 	std::string pathType = this->getPathType(path);
 
 	std::cout << "pathType: " << pathType << std::endl;
-	if (this->_status == 200 && pathType != "error")
+	if (this->_status == 200)
 	{
 		if (pathType == "file")
 		{
 			this->setHeader("Content-Type", headers["Content-Type"]);
-			this->serveStaticFile(path, error_pages);
+			this->serveStaticFile(path, errorPages);
 		}
 		else if (pathType == "directory")
 		{
-			std::cout << headers["URL"][headers["URL"].length() - 1] << std::endl;
-			std::cout << headers["URL"] << std::endl;
 			if (headers["URL"][headers["URL"].length() - 1] != '/')
 				this->redirect(headers["URL"] + "/");
 			else
-				this->serveDirectory(path, error_pages, location);
+				this->serveDirectory(path, errorPages, location);
+		}
+		else
+		{
+			this->setStatus(404);
+			this->serveErrorPage(errorPages);
 		}
 	}
 	else
-		this->serveStaticFile(error_pages[this->_status], error_pages);
+		this->serveErrorPage(errorPages);
 }
 
 bool Response::is_file(const char *path)
@@ -197,7 +199,7 @@ void Response::serveDirectoryAutoIndex(std::string url, std::map<int, std::strin
 	{
 		std::cout << "Error opening directory" << std::endl;
 		this->setStatus(403);
-		this->serveStaticFile(errorPages[this->_status], errorPages);
+		this->serveErrorPage(errorPages);
 	}
 
 	std::string directoryContent;
@@ -234,11 +236,7 @@ void Response::serveStaticFile(std::string url, std::map<int, std::string> &erro
 	{
 		std::cout << "Error opening file" << std::endl;
 		this->setStatus(403);
-		std::ifstream file(errorPages[this->_status].c_str());
-		if (errorPages.find(this->_status) != errorPages.end() && errorPages[this->_status] != "" && file.is_open())
-			this->serveStaticFile(errorPages[this->_status], errorPages);
-		else
-			this->serveStaticFile("static/error/" + this->intToString(this->_status) + ".html", errorPages);
+		this->serveErrorPage(errorPages);
 	}
 }
 
@@ -254,7 +252,7 @@ bool Response::endWith(std::string const &value, std::string const &ending)
 	return true;
 }
 
-char** Response::getENV(const Request &request)
+char **Response::getENV(const Request &request)
 {
 	std::map<std::string, std::string> env;
 	std::map<std::string, std::string> headers = request.getRequest();
@@ -271,7 +269,7 @@ char** Response::getENV(const Request &request)
 	env["SCRIPT_NAME"] = headers["SCRIPT_FILENAME"];
 
 	// from map to char**
-	char **envp = new char*[env.size() + 1];
+	char **envp = new char *[env.size() + 1];
 	int i = 0;
 	for (std::map<std::string, std::string>::iterator it = env.begin(); it != env.end(); ++it)
 	{
@@ -286,7 +284,31 @@ char** Response::getENV(const Request &request)
 void Response::serveCGI(std::string url, const Request &request)
 {
 	char **envp = this->getENV(request);
-	(void)url;
-	(void)envp;
+	Location location = request.getLocation();
+	std::string cgiPath = url;
 
+	(void)cgiPath;
+	(void)envp;
+	std::map<std::string, std::string> cgi = location.getCgi();
+	for (std::map<std::string, std::string>::iterator it = cgi.begin(); it != cgi.end(); ++it)
+	{
+		std::string cgiKey = it->first;
+		std::string cgiValue = it->second;
+		std::cout << "cgiKey: " << cgiKey << std::endl;
+		std::cout << "cgiValue: " << cgiValue << std::endl;
+	}
+}
+
+bool Response::isFileExists(const std::string &name)
+{
+	struct stat buffer;
+	return (stat(name.c_str(), &buffer) == 0);
+}
+
+void Response::serveErrorPage(std::map<int, std::string> &errorPages)
+{
+	if (errorPages.find(this->_status) != errorPages.end() && errorPages[this->_status] != "" && this->isFileExists(errorPages[this->_status]))
+		this->serveStaticFile(errorPages[this->_status], errorPages);
+	else
+		this->serveStaticFile("static/error/" + this->intToString(this->_status) + ".html", errorPages);
 }

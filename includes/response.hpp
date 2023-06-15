@@ -46,6 +46,7 @@ public:
 	void serveResponse(const Request &request);
 	void serveFile(std::string url, std::map<int, std::string> &errorPages, Request const &request);
 	void serveStaticFile(std::string url, std::map<int, std::string> &errorPages);
+	void serveErrorPage(std::map<int, std::string> &errorPages);
 	void serveDirectory(std::string url, std::map<int, std::string> &errorPages, Location const &location);
 	void serveDirectoryAutoIndex(std::string url, std::map<int, std::string> &errorPages);
 	void redirect(std::string url);
@@ -65,8 +66,10 @@ public:
 	bool is_file(const char *path);
 	bool is_directory(const char *path);
 	bool endWith(std::string const &value, std::string const &ending);
+	bool isFileExists(const std::string &name);
 
-		private : std::string _body;
+private : 
+	std::string _body;
 	int _status;
 	std::map<std::string, std::string> _headers;
 };
