@@ -82,7 +82,7 @@ SOCKET Server::get_listen_sockets() const
 	return _listen_sockets;
 }
 
-std::vector<Client>& Server::get_clients()
+std::vector<Client *>& Server::get_clients()
 {
 	return _client;
 }
@@ -96,10 +96,17 @@ void Server::drop_client(size_t i)
 {
 	if (i < _client.size())
 	{
-		close(_client[i]._socket);
+		close(_client[i]->_socket);
 		_client.erase(_client.begin() + i);
 	}
 }
+
+void Server::clear_clients()
+{
+	for (size_t i = 0; i < _client.size(); i++)
+		delete _client[i];
+}
+
 
 Server::ServerException::ServerException() : CustomeExceptionMsg()
 {}
@@ -119,5 +126,6 @@ void Server::showConfig() const
 
 Server::~Server()
 {
- 	// close(_listen_sockets);
+	clear_clients();
+ 	close(_listen_sockets);
 }

@@ -27,18 +27,18 @@ std::string OpenPath(const std::string& file_name = DefaultPath)
 	return content;
 }
 
-// void signalHandler(int signal)
-// {
-//    if (signal == SIGINT || signal == SIGTSTP)
-//    {
-//     	Webserver::clear_set();
-// 		std::exit(0);
-//    }
-// }
+void signalHandler(int signal)
+{
+   if (signal == SIGINT || signal == SIGTSTP)
+   {
+    	Webserver::clear_set();
+		std::exit(0);
+   }
+}
 
 int main(int ac, char **av)
 {
-	// std::signal(SIGINT, signalHandler);
+	std::signal(SIGINT, signalHandler);
 	try
 	{
 		std::string content(((ac != 2) ? OpenPath() : OpenPath(av[1])));

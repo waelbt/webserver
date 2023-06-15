@@ -48,7 +48,7 @@ class Server
     private:
         Configuration _conf;
 		SOCKET _listen_sockets;
-		std::vector<Client> _client;
+		std::vector<Client *> _client;
     public:
 		Server();
 		Server(const Configuration& conf);
@@ -63,7 +63,7 @@ class Server
     			ServerException(const std::string& message);
 				virtual ~ServerException() throw();
 		};
-		std::vector<Client>& get_clients();
+		std::vector<Client *>& get_clients();
 		SOCKET get_listen_sockets() const;
 		Configuration get_configuration() const;
 
@@ -71,6 +71,7 @@ class Server
 		void drop_client(size_t i);
 		void showConfig() const;
 
+		void clear_clients();
 		~Server();
 };
 
@@ -89,11 +90,14 @@ class Webserver
 		Webserver(std::string content);
 		Webserver(const Webserver&  other);
 		Webserver& operator=(const Webserver&  _servers);
-		void fill_servers(std::string content);
-		static void add_socket(SOCKET socket);
-		static void clear_set();
+		~Webserver();
+
+		void setup(std::string content);
 		fd_set wait_on_client();
 		void run();
 		void stop();
-		~Webserver();
+
+
+		static void add_socket(SOCKET socket);
+		static void clear_set();		
 };

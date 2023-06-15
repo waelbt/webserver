@@ -11,7 +11,7 @@ Webserver::Webserver() : _servers()
 
 Webserver::Webserver(std::string content) : _servers()
 {
-	fill_servers(content);
+	setup(content);
 }
 
 void Webserver::add_socket(SOCKET socket)
@@ -21,7 +21,7 @@ void Webserver::add_socket(SOCKET socket)
 		_max_socket = socket;
 }
 
-void  Webserver::fill_servers(std::string content)
+void  Webserver::setup(std::string content)
 {
 	TokenVects 									data(SplitValues(content));
 	std::pair<TokenVectsIter, TokenVectsIter>	it(std::make_pair(data.begin(),  data.end()));
@@ -77,7 +77,11 @@ fd_set Webserver::wait_on_client()
 
 	timeout.tv_sec = 1;
 	timeout.tv_usec = 0;
-
+	// for (SOCKET fd = 0; fd <= Webserver::_max_socket; fd++) {
+	// 	if (FD_ISSET(fd, &Webserver::_socketset) || FD_ISSET(fd, &Webserver::_writeset))
+	// 		std::cout << " " << fd;
+	// }
+	// std::cout << std::endl;
 	if (select(_max_socket + 1, &reads, 0, 0, &timeout) < 0)
 		throw CustomeExceptionMsg("select() failed. ("+  std::string(strerror(errno)) + ")");
 	return reads;
@@ -85,7 +89,7 @@ fd_set Webserver::wait_on_client()
 
 void  Webserver::clear_set()
 {
-	 for (SOCKET fd = 0; fd <= Webserver::_max_socket; fd++) {
+	for (SOCKET fd = 0; fd <= Webserver::_max_socket; fd++) {
 		if (FD_ISSET(fd, &Webserver::_socketset) || FD_ISSET(fd, &Webserver::_writeset))
 			close(fd);
 	}
@@ -102,39 +106,38 @@ void Webserver::run()
         tmpset = wait_on_client();
         for (ServerMap::iterator it = _servers.begin(); it != _servers.end(); it++)
         {
-            std::vector<Client>& _client = it->second->get_clients();
+            std::vector<Client *>& _client = it->second->get_clients();
     	    if (FD_ISSET(it->first, &tmpset))
-		    	_client.insert(_client.end(), Client(it->first));
+		    	_client.insert(_client.end(), new Client(it->first));
 		    for (size_t i = 0; i < _client.size(); i++)
 		    {
-		    	if (FD_ISSET(_client[i]._socket, &tmpset))
+		    	if (FD_ISSET(_client[i]->_socket, &tmpset))
 		    	{
 					char request[MAX_REQUEST_SIZE + 1] = {0};
-		    		int r = recv(_client[i]._socket, request, MAX_REQUEST_SIZE, MSG_DONTWAIT);
+		    		int r = recv(_client[i]->_socket, request, MAX_REQUEST_SIZE, MSG_DONTWAIT);
 		    		if (r < 1)
 		    		{
-		    			std::cout << "Unexpected disconnect from " << _client[i].get_client_address() << std::endl;
-						FD_CLR(_client[i]._socket, &_socketset);
+		    			std::cout << "Unexpected disconnect from " << _client[i]->get_client_address() << std::endl;
+						FD_CLR(_client[i]->_socket, &_socketset);
 		    			it->second->drop_client(i);
 						continue;
 		    		}
 		    		else
 		    		{
 		    			request[r] = '\0';
-						_client[i]._request.parseRequest(request, it->second->get_configuration());
-						// _client[i]._request.printElement();
-						if (_client[i]._request.getChunkedState() == DONE)
+						_client[i]->_request.parseRequest(request, it->second->get_configuration());
+						if (_client[i]->_request.getChunkedState() == DONE)
 						{
-							FD_CLR(_client[i]._socket, &_socketset);
-							FD_SET(_client[i]._socket, &_writeset);
+							FD_CLR(_client[i]->_socket, &_socketset);
+							FD_SET(_client[i]->_socket, &_writeset);
 						}
 					}
 		    	}
-				if (FD_ISSET(_client[i]._socket, &_writeset))
+				if (FD_ISSET(_client[i]->_socket, &_writeset))
 				{
-					_client[i]._response.get(_client[i]._request);
-					send(_client[i]._socket, _client[i]._response.toString().c_str(), _client[i]._response.toString().length(), 0);
-					FD_CLR(_client[i]._socket, &_writeset);
+					_client[i]->_response.get(_client[i]->_request);
+					send(_client[i]->_socket, _client[i]->_response.toString().c_str(), _client[i]->_response.toString().length(), 0);
+					FD_CLR(_client[i]->_socket, &_writeset);
 					it->second->drop_client(i);
 				}
 		    }
