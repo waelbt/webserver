@@ -32,6 +32,7 @@ Location& Location::operator=(const Location& other)
     this->_cgi = other._cgi;
     this->_upload = other._upload;
     this->_redirect = other._redirect;
+    this->_root = other._root;
     return *this;
 }
 

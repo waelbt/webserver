@@ -212,7 +212,6 @@ void Request::parseRequest(std::string const &request, Configuration const & con
 {
     std::string line;
     std::istringstream req(request);
-    std::cout << request << std::endl;
     if (!_request.empty())
         goto setbody;
     _conf = conf;
