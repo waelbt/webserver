@@ -1,7 +1,7 @@
 #include "../includes/server.hpp"
 
 fd_set Webserver::_socketset;
-//fd_set Webserver::writes;
+fd_set Webserver::_writeset;
 SOCKET Webserver::_max_socket = 0;
 
 Webserver::Webserver() : _servers()
@@ -85,15 +85,18 @@ fd_set Webserver::wait_on_client()
 
 void  Webserver::clear_set()
 {
+	 for (SOCKET fd = 0; fd <= Webserver::_max_socket; fd++) {
+		if (FD_ISSET(fd, &Webserver::_socketset) || FD_ISSET(fd, &Webserver::_writeset))
+			close(fd);
+	}
 	FD_ZERO(&_socketset);
+	FD_ZERO(&_writeset);
 }
 
 void Webserver::run()
 {
-	fd_set writes;
     fd_set tmpset;
 
-	FD_ZERO(&writes);
 	while (1)
     {
         tmpset = wait_on_client();
@@ -123,15 +126,15 @@ void Webserver::run()
 						if (_client[i]._request.getChunkedState() == DONE)
 						{
 							FD_CLR(_client[i]._socket, &_socketset);
-							FD_SET(_client[i]._socket, &writes);
+							FD_SET(_client[i]._socket, &_writeset);
 						}
 					}
 		    	}
-				if (FD_ISSET(_client[i]._socket, &writes))
+				if (FD_ISSET(_client[i]._socket, &_writeset))
 				{
 					_client[i]._response.get(_client[i]._request);
 					send(_client[i]._socket, _client[i]._response.toString().c_str(), _client[i]._response.toString().length(), 0);
-					FD_CLR(_client[i]._socket, &writes);
+					FD_CLR(_client[i]._socket, &_writeset);
 					it->second->drop_client(i);
 				}
 		    }
@@ -145,6 +148,7 @@ void Webserver::stop()
 	for (ServerMap::iterator it = _servers.begin(); it != _servers.end(); it++)
 		close(it->first);
 }
+
 
 Webserver::~Webserver()
 {

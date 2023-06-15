@@ -27,24 +27,21 @@ std::string OpenPath(const std::string& file_name = DefaultPath)
 	return content;
 }
 
-//void signalHandler(int signal)
-//{
-//    if (signal == SIGINT)
+// void signalHandler(int signal)
+// {
+//    if (signal == SIGINT || signal == SIGTSTP)
 //    {
-//        for (SOCKET fd = 0; fd <=  Webserver::_max_socket; fd++) {
-//			if (FD_ISSET(fd, &Webserver::_socketset) || FD_ISSET(fd, &Webserver::writes))
-//				close(fd);
-//		}
-//        std::exit(0);
+//     	Webserver::clear_set();
+// 		std::exit(0);
 //    }
-//}
+// }
 
 int main(int ac, char **av)
 {
+	// std::signal(SIGINT, signalHandler);
 	try
 	{
 		std::string content(((ac != 2) ? OpenPath() : OpenPath(av[1])));
-		//std::signal(SIGINT, signalHandler);
 
 		Webserver::clear_set();
 		Webserver webserver(content);

@@ -79,11 +79,11 @@ class Webserver
 {
 	public:
 		typedef std::map<SOCKET, Server*> ServerMap;
-		static SOCKET _max_socket;
-		static fd_set _socketset;
-		//static fd_set writes;
 	private:
 		ServerMap  _servers;
+		static fd_set _writeset;
+		static fd_set _socketset;
+		static SOCKET _max_socket;
 	public:
 		Webserver();
 		Webserver(std::string content);
