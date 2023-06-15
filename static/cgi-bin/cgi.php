@@ -1,7 +1,7 @@
 #!/usr/bin/php
 <?php
 // Send the HTTP headers
-echo "Status: 200 OK\n";
+echo "Status: 200\r\n";
 echo "Content-type: text/html\r\n\r\n";
 
 

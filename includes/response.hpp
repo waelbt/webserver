@@ -51,6 +51,9 @@ public:
 	void serveDirectoryAutoIndex(std::string url, std::map<int, std::string> &errorPages);
 	void redirect(std::string url);
 	char **getENV(const Request &request);
+	void addHTTPToEnvForCGI(std::map<std::string, std::string> &env, std::map<std::string, std::string> &headers);
+	void executeCGI(std::string cgiPath, std::string binary, char **envp, std::map<int, std::string> &errorPages);
+	void parseResponseHeader(std::string responseHeader);
 	void serveCGI(std::string url, const Request &request);
 	// void error(int clientSocket);
 	// void serveDirectory(std::string url, int clientSocket);
@@ -63,10 +66,13 @@ public:
 	std::string toString() const;
 	std::string intToString(int num) const;
 	std::string getPathType(std::string url);
+	std::string toUpperCase(std::string str);
+	std::string getExtention(std::string url);
 	bool is_file(const char *path);
 	bool is_directory(const char *path);
 	bool endWith(std::string const &value, std::string const &ending);
 	bool isFileExists(const std::string &name);
+	std::vector<std::string> split(const std::string &s, std::string delim);
 
 private : 
 	std::string _body;

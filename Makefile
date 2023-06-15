@@ -7,7 +7,7 @@ SRCS	= $(addsuffix .cpp, $(addprefix srcs/, $(PARSING))) \
 
 OBJ		= ${SRCS:.cpp=.o}
 
-CPPFLAGS = -Wall -Wextra -Werror -std=c++98 -g -fsanitize=address
+CPPFLAGS = -Wall -Wextra -Werror -std=c++98 #-g -fsanitize=address
 
 CXX = c++
 

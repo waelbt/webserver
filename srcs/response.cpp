@@ -140,7 +140,7 @@ void Response::get(const Request &request)
 		if (pathType == "file")
 		{
 			this->setHeader("Content-Type", headers["Content-Type"]);
-			this->serveStaticFile(path, errorPages);
+			this->serveFile(path, errorPages, request);
 		}
 		else if (pathType == "directory")
 		{
@@ -264,10 +264,9 @@ char **Response::getENV(const Request &request)
 	env["QUERY_STRING"] = headers["Query"];
 	env["REDIRECT_STATUS"] = "200";
 	env["SERVER_SOFTWARE"] = "webserv";
-	env["HTTP_COOKIE"] = headers["Cookie"];
-	env["HTTP_HOST"] = headers["Host"];
-	env["SCRIPT_NAME"] = headers["SCRIPT_FILENAME"];
+	env["PATH"] = "static/cgi-bin/cgi.php";
 
+	this->addHTTPToEnvForCGI(env, headers);
 	// from map to char**
 	char **envp = new char *[env.size() + 1];
 	int i = 0;
@@ -276,27 +275,160 @@ char **Response::getENV(const Request &request)
 		std::string envVar = it->first + "=" + it->second;
 		envp[i] = new char[envVar.length() + 1];
 		strcpy(envp[i], envVar.c_str());
+
 		i++;
 	}
+	envp[i] = NULL;
 	return envp;
+}
+
+void Response::addHTTPToEnvForCGI(std::map<std::string, std::string> &env, std::map<std::string, std::string> &headers)
+{
+	for (std::map<std::string, std::string>::iterator it = headers.begin(); it != headers.end(); ++it)
+	{
+		std::string upperKey = this->toUpperCase(it->first);
+		if (env.find(upperKey) == env.end())
+		{
+			std::string envVar = "HTTP_" + upperKey;
+			env[envVar] = it->second;
+		}
+	}
 }
 
 void Response::serveCGI(std::string url, const Request &request)
 {
-	char **envp = this->getENV(request);
-	Location location = request.getLocation();
-	std::string cgiPath = url;
+	std::cout << "Serving CGI: " << url << std::endl;
 
-	(void)cgiPath;
-	(void)envp;
+	std::string cgiPath = url;
+	Location const &location = request.getLocation();
+	std::map<int, std::string> errorPages = location.getErrorPages();
+	std::string extension = this->getExtention(cgiPath);
 	std::map<std::string, std::string> cgi = location.getCgi();
-	for (std::map<std::string, std::string>::iterator it = cgi.begin(); it != cgi.end(); ++it)
+	std::string binary = cgi[extension];
+	char **envp = this->getENV(request);
+
+	this->executeCGI(cgiPath, binary, envp, errorPages);
+}
+
+void Response::executeCGI(std::string cgiPath, std::string binary, char **envp, std::map<int, std::string> &errorPages)
+{
+	std::cout << "Executing CGI" << std::endl;
+
+	int fd[2];
+	int status;
+	if (pipe(fd) == -1)
 	{
-		std::string cgiKey = it->first;
-		std::string cgiValue = it->second;
-		std::cout << "cgiKey: " << cgiKey << std::endl;
-		std::cout << "cgiValue: " << cgiValue << std::endl;
+		std::cout << "Error creating pipe" << std::endl;
+		exit(1);
 	}
+	pid_t pid = fork();
+	if (pid == -1)
+	{
+		std::cout << "Error forking" << std::endl;
+		exit(1);
+	}
+	else if (pid == 0)
+	{
+		std::fstream file;
+		std::cout << "Child process" << std::endl;
+		file.open("log.txt", std::ios::out | std::ios::app);
+		close(fd[0]);
+		dup2(fd[1], 1);
+		close(fd[1]);
+		char *argv[] = {const_cast<char *>(binary.c_str()), const_cast<char *>(cgiPath.c_str()), NULL};
+		file << "Binary: " << binary << std::endl;
+		file << "CGI Path: " << cgiPath << std::endl;
+		status = execve(const_cast<char *>(binary.c_str()), argv, envp);
+		file << "Status: " << status << std::endl;
+		file << "Error: " << errno << std::endl;
+		std::cout << "Status: " << status << std::endl;
+		if (status == -1)
+		{
+			std::cout << "Error executing CGI" << std::endl;
+			exit(1);
+		}
+	}
+	else
+	{
+		close(fd[1]);
+		waitpid(pid, &status, WNOHANG);
+		std::cout << "Child exited with status: " << WIFEXITED(status) << " " << WEXITSTATUS(status) << std::endl;
+		if (WIFEXITED(status))
+		{
+			std::cout << "Child exited with status: " << WEXITSTATUS(status) << std::endl;
+			char buffer[1024];
+			std::string responseHeader = "";
+			std::string responseBody = "";
+
+			while (read(fd[0], buffer, 1024) > 0)
+			{
+				std::string line = buffer;
+				std::cout << "line: " << line << std::endl;
+			}
+
+			this->setBody(responseBody);
+			std::cout << "responseBody" << responseBody << std::endl;
+			this->parseResponseHeader(responseHeader);
+			// this->setHeader("Content-Length", std::to_string(responseBody.length()));
+		}
+		else
+		{
+			std::cout << "Error executing CGI" << std::endl;
+			this->setStatus(500);
+			this->serveErrorPage(errorPages);
+		}
+	}
+}
+
+void Response::parseResponseHeader(std::string responseHeader)
+{
+	std::vector<std::string> lines = this->split(responseHeader, "\r\n");
+	std::vector<std::string> firstLine = this->split(lines[0], ": ");
+	// this->setProtocol(firstLine[0]);
+	this->setStatus(atoi(firstLine[1].c_str()));
+	for (int i = 1; i < (int)lines.size(); i++)
+	{
+		std::vector<std::string> header = this->split(lines[i], ": ");
+		this->setHeader(header[0], header[1]);
+	}
+}
+
+std::vector<std::string> Response::split(const std::string &s, std::string delimiter)
+{
+	std::vector<std::string> parts;
+	std::string::size_type start = 0;
+	std::string::size_type end = s.find(delimiter);
+
+	while (end != std::string::npos)
+	{
+		parts.push_back(s.substr(start, end - start));
+		start = end + delimiter.length();
+		end = s.find(delimiter, start);
+	}
+
+	parts.push_back(s.substr(start));
+
+	return parts;
+}
+
+std::string Response::getExtention(std::string url)
+{
+	std::string extention = "";
+	for (int i = url.length() - 1; i >= 0; i--)
+	{
+		extention = url[i] + extention;
+		if (url[i] == '.')
+			return extention;
+	}
+	return extention;
+}
+
+std::string Response::toUpperCase(std::string str)
+{
+	std::string upperStr = "";
+	for (int i = 0; i < (int)str.length(); i++)
+		upperStr += toupper(str[i]);
+	return upperStr;
 }
 
 bool Response::isFileExists(const std::string &name)
