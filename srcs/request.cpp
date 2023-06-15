@@ -32,6 +32,8 @@ bool invalidUrl::operator()(const char& c)
 
 size_t hexaToDecimal(std::string const &str)
 {
+    if (str.empty())
+        return (0);
     std::string hexa = "0123456789abcdef";
     size_t decimal = 0;
     size_t power = str.length() - 1;
@@ -73,15 +75,17 @@ void Request::setBody(std::istringstream &req)
     if (line != "\0")
     {
         size_t chunkSize = hexaToDecimal(line.substr(0, line.length() - 1));
+        std::cout << "chunkSize  ->" << chunkSize << std::endl;
+        std::ofstream body("body.txt", std::ios::app);
         again:
-        while (std::getline(req, line) && chunkSize > _request["body"].length())
-            _request["body"] += (line) ;
-        std::cout << "the body ----->" << _request["body"] << std::endl;
-        std::cout << "the body size ----->" << _request["body"].length() << std::endl;
-        if (chunkSize > _request["body"].length())
+        std::getline(req, line, '\r');
+        body << line;
+        std::cout << "the line size ----->" << line.length() << std::endl;
+        if (chunkSize > line.length())
             return ;
         std::getline(req, line);
         chunkSize = hexaToDecimal(line);
+        std::cout << "second chunk is -->" << chunkSize << std::endl;
         if (chunkSize)
             goto again;
     }
