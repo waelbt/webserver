@@ -30,6 +30,17 @@ bool invalidUrl::operator()(const char& c)
     return (Error.find(std::string(1, c)) != std::string::npos);
 }
 
+size_t hexaToDecimal(std::string const &str)
+{
+    std::string hexa = "0123456789abcdef";
+    size_t decimal = 0;
+    size_t power = str.length() - 1;
+
+    for (size_t i = 0; i < str.length();i++, power--)
+        decimal += (hexa.find(str[i]) * pow(16, power));
+    return decimal;
+}
+
 Request::Request() : _request(), _conf(), _location(), _path(), _chunkState(UNDONE), _status(200)
 {
 }
@@ -39,6 +50,17 @@ Request::Request(std::string const &request, Configuration const & conf) : _requ
     parseRequest(request, conf);
 }
 
+Request& Request::operator=(const Request& other)
+{
+    _request = other._request;
+    _conf = other._conf;
+    _location = other._location;
+    _path = other._path;
+    _chunkState = other._chunkState;
+    _status = other._status;
+
+    return *this;
+}
 Request::~Request()
 {
 }
@@ -48,15 +70,19 @@ void Request::setBody(std::istringstream &req)
     std::string line;
 
     std::getline(req, line);
-    // std::cout << "after getline ----->" << line << std::endl;
-    std::getline(req, line);
-    // std::cout << "after after getline ----->" << line << std::endl;
     if (line != "\0")
+    {
+        size_t chunkSize = hexaToDecimal(line);
+        std::getline(req, line);
         _request["body"] = line;
+        if (chunkSize > _request["body"].length())
+            return ;
+    }
+    _chunkState = DONE;
     badFormat();
     std::cout << std::endl;
 }
-  
+
 void Request::checkMethod()
 {
     std::vector<std::string> limitExcept = _location.getLimit_except();
@@ -223,4 +249,9 @@ std::string const &   Request::getPath() const
 Location const &  Request::getLocation() const
 {
     return _location;
+}
+
+ChunkState const &   Request::getChunkedState() const
+{
+    return _chunkState;
 }

@@ -5,6 +5,7 @@
 #include <sstream>
 #include <map>
 #include <utility>
+#include <math.h>
 #include "configuration.hpp"
 
 #define RequestMap std::map<std::string, std::string>
@@ -49,6 +50,7 @@ class Request
         int const &           getStatus() const;
         std::string const &   getPath() const;
         Location const &      getLocation() const;
+        ChunkState const &    getChunkedState() const;
         void                  parseRequest(std::string const &request, Configuration const & conf);
         void                  printElement();
 };

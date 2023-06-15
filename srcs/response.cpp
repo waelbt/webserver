@@ -85,7 +85,7 @@ void Response::sendResponse(int clientSocket)
 // 		std::string path = request.getPath();
 // 		this->setHeader("Content-Type", headers["Content-Type"]);
 // 		this->serveFile(path);
-// 	}	
+// 	}
 // 	else
 // 		this->serveFile("static/error/" + this->intToString(this->_status) + ".html");
 // }
@@ -108,7 +108,7 @@ void Response::serveFile(std::string url, std::map<int, std::string> &errorPages
 		this->setBody(body);
 		if (this->_status != 200)
 			this->setHeader("Content-Type", "text/html");
-		this->setHeader("Content-Length", std::to_string(body.length()));
+		this->setHeader("Content-Length", to_string(body.length()));
 	}
 	else
 	{
@@ -247,7 +247,7 @@ void Response::serveDirectoryAutoIndex(std::string url, std::map<int, std::strin
 	std::string responseBody = "<html><body><h1>Directory Listing</h1><ul>" + directoryContent + "</ul></body></html>";
 
 	this->setHeader("Content-Type", "text/html");
-	this->setHeader("Content-Length", std::to_string(responseBody.length()));
+	this->setHeader("Content-Length", to_string(responseBody.length()));
 	this->setBody(responseBody);
 }
 
