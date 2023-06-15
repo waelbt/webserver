@@ -97,6 +97,8 @@ class Webserver
 		void run();
 		void stop();
 
+		int fetch_request (Client *client, const Configuration& conf);
+		int send_response (Client *client);
 
 		static void add_socket(SOCKET socket);
 		static void clear_set();		
