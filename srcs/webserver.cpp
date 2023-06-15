@@ -119,7 +119,7 @@ void Webserver::run()
 		    		{
 		    			request[r] = '\0';
 						_client[i]._request.parseRequest(request, it->second->get_configuration());
-						if (true)
+						if (_client[i]._request.getChunkedState() == DONE)
 						{
 							FD_CLR(_client[i]._socket, &_socketset);
 							FD_SET(_client[i]._socket, &writes);
