@@ -36,7 +36,7 @@ size_t toHexa(std::string const &str)
     size_t decimal = 0;
     size_t power = str.length() - 1;
 
-    for (int i = 0; i < str.length();i++, power--)
+    for (size_t i = 0; i < str.length();i++, power--)
         decimal += (hexa.find(str[i]) * pow(16, power));
     return decimal;
 }
@@ -78,7 +78,7 @@ void Request::setBody(std::istringstream &req)
     badFormat();
     std::cout << std::endl;
 }
-  
+
 void Request::checkMethod()
 {
     std::vector<std::string> limitExcept = _location.getLimit_except();

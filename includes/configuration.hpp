@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   server.hpp                                         :+:      :+:    :+:   */
+/*   configuration.hpp                                  :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: waboutzo <waboutzo@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/23 16:35:07 by waboutzo          #+#    #+#             */
-/*   Updated: 2023/05/27 17:07:05 by waboutzo         ###   ########.fr       */
+/*   Updated: 2023/06/15 15:28:49 by waboutzo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -70,6 +70,17 @@ struct TokenToString {
 	std::string  operator()(TokenPair& pair);
 };
 
+template <typename T>
+std::string to_string(T num)
+{
+	std::stringstream ss;
+
+	ss << num;
+
+	//std::cout << "to_string log" << std::endl;
+	return ss.str();
+}
+
 bool							is_space(const char& c);
 bool							is_symbol(const char& c);
 bool							is_semicolon(const char& c);
@@ -90,7 +101,7 @@ void print_vec( const std::vector<T>& vec, std::string name)
     {
         std::cout << name;
         std::cout << " " << *it;
-    }    
+    }
 }
 
 
