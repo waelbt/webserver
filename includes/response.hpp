@@ -40,7 +40,7 @@ public:
 	void setHeader(std::string key, std::string value);
 
 	void post(const Request &request);
-	void del(const Request &request)
+	void del(const Request &request);
 	void get(const Request &request);
 
 	void serveResponse(const Request &request);
