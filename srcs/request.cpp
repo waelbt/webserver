@@ -48,9 +48,9 @@ void Request::setBody(std::istringstream &req)
     std::string line;
 
     std::getline(req, line);
-    std::cout << "after getline ----->" << line << std::endl;
+    // std::cout << "after getline ----->" << line << std::endl;
     std::getline(req, line);
-    std::cout << "after after getline ----->" << line << std::endl;
+    // std::cout << "after after getline ----->" << line << std::endl;
     if (line != "\0")
         _request["body"] = line;
     badFormat();
@@ -66,6 +66,7 @@ void Request::checkMethod()
 
     for(; it != limitExcept.end(); it++)
     {
+        std::cout << "|" << (*it) << "|" << std::endl;
         if ((*it) == _request["Method"])
         {
             if(url.length() != pattern.length())
