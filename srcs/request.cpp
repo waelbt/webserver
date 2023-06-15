@@ -43,12 +43,14 @@ Request::~Request()
 {
 }
 
-void Request::setBody(std::string const &body)
+void Request::setBody(std::istringstream &req)
 {
-    std::istringstream req(body);
     std::string line;
 
     std::getline(req, line);
+    std::cout << "after getline ----->" << line << std::endl;
+    std::getline(req, line);
+    std::cout << "after after getline ----->" << line << std::endl;
     if (line != "\0")
         _request["body"] = line;
     badFormat();
@@ -80,8 +82,6 @@ void Request::checkMethod()
     }
     if (it == limitExcept.end())
         _status = 405;
-    if (!_path.empty())
-        std::cout << _path << std::endl;
 }
 
 void Request::checkLocation()
@@ -157,7 +157,7 @@ void Request::parseUrl(std::string const &line)
 void Request::badFormat()
 {
     RequestMap::iterator transferIt = _request.find("Transfer-Encoding");
-    // RequestMap::iterator bodyIt = _request.find("body");
+    RequestMap::iterator bodyIt = _request.find("body");
     std::string url = _request.find("URL")->second;
 
     checkLocation();
@@ -169,15 +169,15 @@ void Request::badFormat()
     //     _status = 400;
     else if (url.length() > 2048)
         _status = 414;
-    // else if (bodyIt != _request.end() && bodyIt->second.length() > _location.getClientMaxBodySize())
-    //     _status = 413;
+    else if (bodyIt != _request.end() && bodyIt->second.length() > 2048)
+        _status = 413;
     if (_status == 200)
         checkMethod();
 }
 
 void Request::parseRequest(std::string const &request, Configuration const & conf)
 {
-    std::string line(request);
+    std::string line;
     std::istringstream req(request);
 
     if (!_request.empty())
@@ -185,14 +185,14 @@ void Request::parseRequest(std::string const &request, Configuration const & con
     _conf = conf;
     std::getline(req, line);
     parseUrl(line);
-    while (std::getline(req, line) && line != "\r\n\r\n")
+    while (std::getline(req, line) && line != "\r")
     {
         size_t separator = line.find(": ");
         if (separator != std::string::npos)
             _request[line.substr(0, separator)] = line.substr(separator + 2, line.length() - separator - 3);
     }
     setbody:
-    setBody(line);
+    setBody(req);
 }
 
 

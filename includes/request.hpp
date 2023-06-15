@@ -37,7 +37,7 @@ class Request
         void badFormat();
         void checkLocation();
         void checkMethod();
-        void setBody(std::string const &body);
+        void setBody(std::istringstream &req);
     public:
         Request();
         Request(std::string const &request, Configuration const & conf);
