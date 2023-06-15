@@ -72,11 +72,18 @@ void Request::setBody(std::istringstream &req)
     std::getline(req, line);
     if (line != "\0")
     {
-        size_t chunkSize = hexaToDecimal(line);
-        std::getline(req, line);
-        _request["body"] = line;
+        size_t chunkSize = hexaToDecimal(line.substr(0, line.length() - 1));
+        again:
+        while (std::getline(req, line) && chunkSize > _request["body"].length())
+            _request["body"] += (line) ;
+        std::cout << "the body ----->" << _request["body"] << std::endl;
+        std::cout << "the body size ----->" << _request["body"].length() << std::endl;
         if (chunkSize > _request["body"].length())
             return ;
+        std::getline(req, line);
+        chunkSize = hexaToDecimal(line);
+        if (chunkSize)
+            goto again;
     }
     _chunkState = DONE;
     badFormat();
@@ -92,7 +99,6 @@ void Request::checkMethod()
 
     for(; it != limitExcept.end(); it++)
     {
-        std::cout << "|" << (*it) << "|" << std::endl;
         if ((*it) == _request["Method"])
         {
             if(url.length() != pattern.length())
@@ -206,7 +212,7 @@ void Request::parseRequest(std::string const &request, Configuration const & con
 {
     std::string line;
     std::istringstream req(request);
-
+    std::cout << request << std::endl;
     if (!_request.empty())
         goto setbody;
     _conf = conf;
