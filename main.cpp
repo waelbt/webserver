@@ -12,6 +12,9 @@
 
 #include "includes/server.hpp"
 
+#include <iostream>
+#include <csignal>
+
 std::string OpenPath(const std::string& file_name = DefaultPath)
 {
 	std::string content;
@@ -24,11 +27,24 @@ std::string OpenPath(const std::string& file_name = DefaultPath)
 	return content;
 }
 
+void signalHandler(int signal)
+{
+    if (signal == SIGINT)
+    {
+        for (SOCKET fd = 0; fd <=  Webserver::_max_socket; fd++) {
+			if (FD_ISSET(fd, &Webserver::_socketset) || FD_ISSET(fd, &Webserver::writes))
+				close(fd);
+		}
+        std::exit(0);
+    }
+}
+
 int main(int ac, char **av)
 {
 	try
 	{
 		std::string content(((ac != 2) ? OpenPath() : OpenPath(av[1])));
+		std::signal(SIGINT, signalHandler);
 		
 		Webserver::clear_set();
 		Webserver webserver(content);

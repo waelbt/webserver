@@ -20,7 +20,6 @@ typedef int	SOCKET;
 typedef struct addrinfo s_addrinfo;
 typedef struct sockaddr_storage s_sockaddr_storage;
 
-
 struct Client {
 	// attributes
 	SOCKET _server_socket;
@@ -80,10 +79,11 @@ class Webserver
 {
 	public:
 		typedef std::map<SOCKET, Server*> ServerMap;
+		static SOCKET _max_socket;
+		static fd_set _socketset;
+		static fd_set writes;
 	private:
 		ServerMap  _servers;
-		static fd_set _socketset;
-		static SOCKET _max_socket;
 	public:
 		Webserver();
 		Webserver(std::string content);
