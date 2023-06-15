@@ -27,12 +27,12 @@ Location::Location(const Location& other) : CommonEntity(other)
 
 Location& Location::operator=(const Location& other)
 {
+    this->CommonEntity::operator=(other);
     this->_pattren = other._pattren;
     this->_limit_except = other._limit_except;
     this->_cgi = other._cgi;
     this->_upload = other._upload;
     this->_redirect = other._redirect;
-    this->_root = other._root;
     return *this;
 }
 
