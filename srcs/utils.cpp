@@ -2,6 +2,7 @@
 
 std::string TokenToString::operator()(TokenPair& pair)
 {
+    string_trim(pair);
     return pair.first;
 }
 
