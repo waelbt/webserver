@@ -251,38 +251,38 @@ void Response::serveDirectoryAutoIndex(std::string url, std::map<int, std::strin
 	this->setBody(responseBody);
 }
 
-char** Response::getENV(const Request &request, Location const &location)
-{
-	std::map<std::string, std::string> env;
-	std::map<std::string, std::string> headers = request.getRequest();
+// char** Response::getENV(const Request &request, Location const &location)
+// {
+// 	std::map<std::string, std::string> env;
+// 	std::map<std::string, std::string> headers = request.getRequest();
 
-	env["CONTENT_TYPE"] = headers["Content-Type"];
-	env["CONTENT_LENGTH"] = headers["Content-Length"];
-	env["REQUEST_METHOD"] = headers["Method"];
-	env["REQUEST_URI"] = headers["URL"];
-	env["QUERY_STRING"] = headers["Query"];
-	env["REDIRECT_STATUS"] = "200";
-	env["SERVER_SOFTWARE"] = "webserv";
-	env["HTTP_COOKIE"] = headers["Cookie"];
-	env["HTTP_HOST"] = headers["Host"];
-	env["SCRIPT_NAME"] = headers["SCRIPT_FILENAME"];
+// 	env["CONTENT_TYPE"] = headers["Content-Type"];
+// 	env["CONTENT_LENGTH"] = headers["Content-Length"];
+// 	env["REQUEST_METHOD"] = headers["Method"];
+// 	env["REQUEST_URI"] = headers["URL"];
+// 	env["QUERY_STRING"] = headers["Query"];
+// 	env["REDIRECT_STATUS"] = "200";
+// 	env["SERVER_SOFTWARE"] = "webserv";
+// 	env["HTTP_COOKIE"] = headers["Cookie"];
+// 	env["HTTP_HOST"] = headers["Host"];
+// 	env["SCRIPT_NAME"] = headers["SCRIPT_FILENAME"];
 
-	// from map to char**
-	char **envp = new char*[env.size() + 1];
-	int i = 0;
-	for (std::map<std::string, std::string>::iterator it = env.begin(); it != env.end(); ++it)
-	{
-		std::string envVar = it->first + "=" + it->second;
-		envp[i] = new char[envVar.length() + 1];
-		strcpy(envp[i], envVar.c_str());
-		i++;
-	}
-	return envp;
-}
+// 	// from map to char**
+// 	char **envp = new char*[env.size() + 1];
+// 	int i = 0;
+// 	for (std::map<std::string, std::string>::iterator it = env.begin(); it != env.end(); ++it)
+// 	{
+// 		std::string envVar = it->first + "=" + it->second;
+// 		envp[i] = new char[envVar.length() + 1];
+// 		strcpy(envp[i], envVar.c_str());
+// 		i++;
+// 	}
+// 	return envp;
+// }
 
-void Response::serveCGI(const Request &request, Location const &location)
-{
-	char **envp = this->getENV(request, location);
+// void Response::serveCGI(const Request &request, Location const &location)
+// {
+// 	char **envp = this->getENV(request, location);
 	
-	
-}
+
+// }
