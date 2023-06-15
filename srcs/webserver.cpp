@@ -1,8 +1,8 @@
 #include "../includes/server.hpp"
 
 fd_set Webserver::_socketset;
+fd_set Webserver::writes;
 SOCKET Webserver::_max_socket = 0;
-
 Webserver::Webserver() : _servers()
 {
 
@@ -90,7 +90,6 @@ void  Webserver::clear_set()
 void Webserver::run()
 {
     fd_set tmpset;
-	fd_set writes;
 
 	FD_ZERO(&writes);
 	while (1)
