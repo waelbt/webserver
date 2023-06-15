@@ -30,6 +30,17 @@ bool invalidUrl::operator()(const char& c)
     return (Error.find(std::string(1, c)) != std::string::npos);
 }
 
+size_t toHexa(std::string const &str)
+{
+    std::string hexa = "0123456789abcdef";
+    size_t decimal = 0;
+    size_t power = str.length() - 1;
+
+    for (int i = 0; i < str.length();i++, power--)
+        decimal += (hexa.find(str[i]) * pow(16, power));
+    return decimal;
+}
+
 Request::Request() : _request(), _conf(), _location(), _path(), _chunkState(UNDONE), _status(200)
 {
 }
@@ -39,6 +50,17 @@ Request::Request(std::string const &request, Configuration const & conf) : _requ
     parseRequest(request, conf);
 }
 
+Request& Request::operator=(const Request& other)
+{
+    _request = other._request;
+    _conf = other._conf;
+    _location = other._location;
+    _path = other._path;
+    _chunkState = other._chunkState;
+    _status = other._status;
+
+    return *this;
+}
 Request::~Request()
 {
 }

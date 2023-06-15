@@ -5,6 +5,7 @@
 #include <sstream>
 #include <map>
 #include <utility>
+#include <math.h>
 #include "configuration.hpp"
 
 #define RequestMap std::map<std::string, std::string>
