@@ -19,7 +19,7 @@ Location::Location() : _pattren("/"), _limit_except(), _cgi(), _upload()
 }
 
 
-Location::Location(const Location& other)
+Location::Location(const Location& other) : CommonEntity(other)
 {
     *this = other;
 }
@@ -27,11 +27,6 @@ Location::Location(const Location& other)
 
 Location& Location::operator=(const Location& other)
 {
-    this->_root = other._root;
-    this->_index = other._index;
-    this->_error_pages = other._error_pages;
-    this->_client_max_body_size = other._client_max_body_size;
-    this->_AutoIndex = other._AutoIndex;
     this->_pattren = other._pattren;
     this->_limit_except = other._limit_except;
     this->_cgi = other._cgi;

@@ -82,7 +82,7 @@ void Request::setBody(std::istringstream &req)
     badFormat();
     std::cout << std::endl;
 }
-  
+
 void Request::checkMethod()
 {
     std::vector<std::string> limitExcept = _location.getLimit_except();

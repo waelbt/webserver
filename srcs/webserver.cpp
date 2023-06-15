@@ -1,8 +1,8 @@
 #include "../includes/server.hpp"
 
 fd_set Webserver::_socketset;
+fd_set Webserver::writes;
 SOCKET Webserver::_max_socket = 0;
-
 Webserver::Webserver() : _servers()
 {
 
@@ -39,7 +39,7 @@ void  Webserver::fill_servers(std::string content)
 				}
 				catch(Server::ServerException& e)
 				{
-					std::cout << "SERVER ("+  std::to_string(_servers.size() + 1) + ") EXCEPTION : " << e.what() << std::endl;
+					std::cout << "SERVER ("+  to_string(_servers.size() + 1) + ") EXCEPTION : " << e.what() << std::endl;
 					std::cout << "NOTE : the other servers will continue their work perfectly." << std::endl;
 				}
 			}
@@ -73,7 +73,7 @@ fd_set Webserver::wait_on_client()
 {
 	struct timeval timeout;
 	fd_set reads(_socketset);
-	
+
 	timeout.tv_sec = 1;
 	timeout.tv_usec = 0;
 
@@ -90,7 +90,6 @@ void  Webserver::clear_set()
 void Webserver::run()
 {
     fd_set tmpset;
-	fd_set writes;
 
 	FD_ZERO(&writes);
 	while (1)
