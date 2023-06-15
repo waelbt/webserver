@@ -43,12 +43,14 @@ public:
 	
 	void get(const Request &request);
 
-	void sendResponse(int clientSocket);
 	void serveResponse(const Request &request);
-	void serveFile(std::string url, std::map<int, std::string> &errorPages);
+	void serveFile(std::string url, std::map<int, std::string> &errorPages, Request const &request);
+	void serveStaticFile(std::string url, std::map<int, std::string> &errorPages);
 	void serveDirectory(std::string url, std::map<int, std::string> &errorPages, Location const &location);
 	void serveDirectoryAutoIndex(std::string url, std::map<int, std::string> &errorPages);
 	void redirect(std::string url);
+	char **getENV(const Request &request);
+	void serveCGI(std::string url, const Request &request);
 	// void error(int clientSocket);
 	// void serveDirectory(std::string url, int clientSocket);
 	// void serveCgi(const std::string &url, int clientSocket);
@@ -62,9 +64,9 @@ public:
 	std::string getPathType(std::string url);
 	bool is_file(const char *path);
 	bool is_directory(const char *path);
+	bool endWith(std::string const &value, std::string const &ending);
 
-private:
-	std::string _body;
+		private : std::string _body;
 	int _status;
 	std::map<std::string, std::string> _headers;
 };

@@ -68,14 +68,6 @@ std::string Response::toString() const
 	return ss.str();
 }
 
-void Response::sendResponse(int clientSocket)
-{
-	std::string response = this->toString();
-	std::cout << "Response: " << std::endl
-			  << response << std::endl;
-	send(clientSocket, response.c_str(), response.length(), 0);
-}
-
 // void Response::serveResponse(const Request &request)
 // {
 // 	this->setStatus(request.getStatus());
@@ -90,36 +82,12 @@ void Response::sendResponse(int clientSocket)
 // 		this->serveFile("static/error/" + this->intToString(this->_status) + ".html");
 // }
 
-void Response::serveFile(std::string url, std::map<int, std::string> &errorPages)
+void Response::serveFile(std::string url, std::map<int, std::string> &errorPages, Request const &request)
 {
-	std::string filename = url;
-	std::ifstream file(filename.c_str());
-	std::cout << "Serving file: " << filename << std::endl;
-	if (file.is_open())
-	{
-		std::cout << "Serving file: " << filename << std::endl;
-		std::string line;
-		std::string body;
-		while (getline(file, line))
-		{
-			body += line + "\n";
-		}
-		file.close();
-		this->setBody(body);
-		if (this->_status != 200)
-			this->setHeader("Content-Type", "text/html");
-		this->setHeader("Content-Length", to_string(body.length()));
-	}
+	if (this->endWith(url, ".py") || this->endWith(url, ".php"))
+		this->serveCGI(url, request);
 	else
-	{
-		std::cout << "Error opening file: " << filename << std::endl;
-		this->setStatus(404);
-		std::ifstream file(errorPages[this->_status].c_str());
-		if (errorPages.find(this->_status) != errorPages.end() && errorPages[this->_status] != "" && file.is_open())
-			this->serveFile(errorPages[this->_status], errorPages);
-		else
-			this->serveFile("static/error/" + this->intToString(this->_status) + ".html", errorPages);
-	}
+		this->serveStaticFile(url, errorPages);
 }
 
 void Response::serveDirectory(std::string directoryPath, std::map<int, std::string> &errorPages, Location const & location)
@@ -133,9 +101,9 @@ void Response::serveDirectory(std::string directoryPath, std::map<int, std::stri
 		{
 			std::string index = directoryPath + "/" + *it;
 			std::ifstream file(index.c_str());
-			if (file.is_open())
+			if (this->getPathType(index) == "file")
 			{
-				this->serveFile(index, errorPages);
+				this->serveStaticFile(index, errorPages);
 				return;
 			}
 			i++;
@@ -144,13 +112,13 @@ void Response::serveDirectory(std::string directoryPath, std::map<int, std::stri
 		{
 			std::cout << "here" << std::endl;
 			this->setStatus(404);
-			this->serveFile(errorPages[this->_status], errorPages);
+			this->serveStaticFile(errorPages[this->_status], errorPages);
 		}
 	}
 	else if (location.getAutoIndex() == false)
 	{
 		this->setStatus(403);
-		this->serveFile(errorPages[this->_status], errorPages);
+		this->serveStaticFile(errorPages[this->_status], errorPages);
 	}
 	else
 		this->serveDirectoryAutoIndex(directoryPath, errorPages);
@@ -173,7 +141,7 @@ void Response::get(const Request &request)
 		if (pathType == "file")
 		{
 			this->setHeader("Content-Type", headers["Content-Type"]);
-			this->serveFile(path, error_pages);
+			this->serveStaticFile(path, error_pages);
 		}
 		else if (pathType == "directory")
 		{
@@ -186,7 +154,7 @@ void Response::get(const Request &request)
 		}
 	}
 	else
-		this->serveFile(error_pages[this->_status], error_pages);
+		this->serveStaticFile(error_pages[this->_status], error_pages);
 }
 
 bool Response::is_file(const char *path)
@@ -205,7 +173,6 @@ bool Response::is_directory(const char *path)
 
 std::string Response::getPathType(std::string path)
 {
-	std::cout << "path: " << path << std::endl;
 	if (this->is_file(path.c_str()))
 		return "file";
 	else if (this->is_directory(path.c_str()))
@@ -230,7 +197,7 @@ void Response::serveDirectoryAutoIndex(std::string url, std::map<int, std::strin
 	{
 		std::cout << "Error opening directory" << std::endl;
 		this->setStatus(403);
-		this->serveFile(errorPages[this->_status], errorPages);
+		this->serveStaticFile(errorPages[this->_status], errorPages);
 	}
 
 	std::string directoryContent;
@@ -251,38 +218,75 @@ void Response::serveDirectoryAutoIndex(std::string url, std::map<int, std::strin
 	this->setBody(responseBody);
 }
 
-// char** Response::getENV(const Request &request, Location const &location)
-// {
-// 	std::map<std::string, std::string> env;
-// 	std::map<std::string, std::string> headers = request.getRequest();
+void Response::serveStaticFile(std::string url, std::map<int, std::string> &errorPages)
+{
+	std::cout << "Serving static file: " << url << std::endl;
+	std::ifstream file(url.c_str());
+	if (file.is_open())
+	{
+		std::string responseBody((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+		if (this->_status != 200)
+			this->setHeader("Content-Type", "text/html");
+		this->setHeader("Content-Length", to_string(responseBody.length()));
+		this->setBody(responseBody);
+	}
+	else
+	{
+		std::cout << "Error opening file" << std::endl;
+		this->setStatus(403);
+		std::ifstream file(errorPages[this->_status].c_str());
+		if (errorPages.find(this->_status) != errorPages.end() && errorPages[this->_status] != "" && file.is_open())
+			this->serveStaticFile(errorPages[this->_status], errorPages);
+		else
+			this->serveStaticFile("static/error/" + this->intToString(this->_status) + ".html", errorPages);
+	}
+}
 
-// 	env["CONTENT_TYPE"] = headers["Content-Type"];
-// 	env["CONTENT_LENGTH"] = headers["Content-Length"];
-// 	env["REQUEST_METHOD"] = headers["Method"];
-// 	env["REQUEST_URI"] = headers["URL"];
-// 	env["QUERY_STRING"] = headers["Query"];
-// 	env["REDIRECT_STATUS"] = "200";
-// 	env["SERVER_SOFTWARE"] = "webserv";
-// 	env["HTTP_COOKIE"] = headers["Cookie"];
-// 	env["HTTP_HOST"] = headers["Host"];
-// 	env["SCRIPT_NAME"] = headers["SCRIPT_FILENAME"];
+bool Response::endWith(std::string const &value, std::string const &ending)
+{
+	if (ending.size() > value.size())
+		return false;
+	for (int i = 0; i < (int)ending.size(); i++)
+	{
+		if (ending[ending.size() - i - 1] != value[value.size() - i - 1])
+			return false;
+	}
+	return true;
+}
 
-// 	// from map to char**
-// 	char **envp = new char*[env.size() + 1];
-// 	int i = 0;
-// 	for (std::map<std::string, std::string>::iterator it = env.begin(); it != env.end(); ++it)
-// 	{
-// 		std::string envVar = it->first + "=" + it->second;
-// 		envp[i] = new char[envVar.length() + 1];
-// 		strcpy(envp[i], envVar.c_str());
-// 		i++;
-// 	}
-// 	return envp;
-// }
+char** Response::getENV(const Request &request)
+{
+	std::map<std::string, std::string> env;
+	std::map<std::string, std::string> headers = request.getRequest();
 
-// void Response::serveCGI(const Request &request, Location const &location)
-// {
-// 	char **envp = this->getENV(request, location);
-	
+	env["CONTENT_TYPE"] = headers["Content-Type"];
+	env["CONTENT_LENGTH"] = headers["Content-Length"];
+	env["REQUEST_METHOD"] = headers["Method"];
+	env["REQUEST_URI"] = headers["URL"];
+	env["QUERY_STRING"] = headers["Query"];
+	env["REDIRECT_STATUS"] = "200";
+	env["SERVER_SOFTWARE"] = "webserv";
+	env["HTTP_COOKIE"] = headers["Cookie"];
+	env["HTTP_HOST"] = headers["Host"];
+	env["SCRIPT_NAME"] = headers["SCRIPT_FILENAME"];
 
-// }
+	// from map to char**
+	char **envp = new char*[env.size() + 1];
+	int i = 0;
+	for (std::map<std::string, std::string>::iterator it = env.begin(); it != env.end(); ++it)
+	{
+		std::string envVar = it->first + "=" + it->second;
+		envp[i] = new char[envVar.length() + 1];
+		strcpy(envp[i], envVar.c_str());
+		i++;
+	}
+	return envp;
+}
+
+void Response::serveCGI(std::string url, const Request &request)
+{
+	char **envp = this->getENV(request);
+	(void)url;
+	(void)envp;
+
+}
