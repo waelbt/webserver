@@ -6,7 +6,7 @@
 /*   By: waboutzo <waboutzo@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/15 15:38:53 by waboutzo          #+#    #+#             */
-/*   Updated: 2023/05/27 19:06:51 by waboutzo         ###   ########.fr       */
+/*   Updated: 2023/06/15 15:46:38 by waboutzo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,25 +27,25 @@ std::string OpenPath(const std::string& file_name = DefaultPath)
 	return content;
 }
 
-void signalHandler(int signal)
-{
-    if (signal == SIGINT)
-    {
-        for (SOCKET fd = 0; fd <=  Webserver::_max_socket; fd++) {
-			if (FD_ISSET(fd, &Webserver::_socketset) || FD_ISSET(fd, &Webserver::writes))
-				close(fd);
-		}
-        std::exit(0);
-    }
-}
+//void signalHandler(int signal)
+//{
+//    if (signal == SIGINT)
+//    {
+//        for (SOCKET fd = 0; fd <=  Webserver::_max_socket; fd++) {
+//			if (FD_ISSET(fd, &Webserver::_socketset) || FD_ISSET(fd, &Webserver::writes))
+//				close(fd);
+//		}
+//        std::exit(0);
+//    }
+//}
 
 int main(int ac, char **av)
 {
 	try
 	{
 		std::string content(((ac != 2) ? OpenPath() : OpenPath(av[1])));
-		std::signal(SIGINT, signalHandler);
-		
+		//std::signal(SIGINT, signalHandler);
+
 		Webserver::clear_set();
 		Webserver webserver(content);
 

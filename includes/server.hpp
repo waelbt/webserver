@@ -81,7 +81,7 @@ class Webserver
 		typedef std::map<SOCKET, Server*> ServerMap;
 		static SOCKET _max_socket;
 		static fd_set _socketset;
-		static fd_set writes;
+		//static fd_set writes;
 	private:
 		ServerMap  _servers;
 	public:
