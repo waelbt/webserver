@@ -110,6 +110,7 @@ void Webserver::run()
 		    		if (r < 1)
 		    		{
 		    			std::cout << "Unexpected disconnect from " << _client[i].get_client_address() << std::endl;
+						FD_CLR(_client[i]._socket, &_socketset);
 		    			it->second->drop_client(i);
 						continue;
 		    		}
