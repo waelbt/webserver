@@ -30,6 +30,21 @@ bool invalidUrl::operator()(const char& c)
     return (Error.find(std::string(1, c)) != std::string::npos);
 }
 
+std::string generateRandomFile() {
+    static const char charset[] = "abcdefghijklmnopqrstuvwxyz";
+    const int charsetSize = sizeof(charset) - 1;
+    
+    std::string randomFile;
+    srand(time(0));
+    
+    for (int i = 0; i < 10; ++i) {
+        int randomIndex = rand() % charsetSize;
+        randomFile += charset[randomIndex];
+    }
+    
+    return randomFile;
+}
+
 size_t hexaToDecimal(std::string const &str)
 {
     if (str.empty())
@@ -43,23 +58,24 @@ size_t hexaToDecimal(std::string const &str)
     return decimal;
 }
 
-Request::Request() : _request(), _conf(), _location(), _path(), _chunkState(UNDONE), _status(200)
+Request::Request() : _request(), _conf(), _location(), _path(), _body(), _chunkState(UNDONE), _chunkSize(0), _status(200)
 {
 }
 
-Request::Request(std::string const &request, Configuration const & conf) : _request(), _conf(conf), _location(), _path(), _chunkState(UNDONE), _status(200)
+Request::Request(std::string const &request, Configuration const & conf) : _request(), _conf(conf), _location(), _path(), _body(), _chunkState(UNDONE), _chunkSize(0), _status(200)
 {
-    parseRequest(request, conf);
+    this->parseRequest(request, conf);
 }
 
 Request& Request::operator=(const Request& other)
 {
-    _request = other._request;
-    _conf = other._conf;
-    _location = other._location;
-    _path = other._path;
-    _chunkState = other._chunkState;
-    _status = other._status;
+    this->_request = other._request;
+    this->_conf = other._conf;
+    this->_location = other._location;
+    this->_path = other._path;
+    this->_chunkState = other._chunkState;
+    this->_chunkSize = other._chunkSize;
+    this->_status = other._status;
 
     return *this;
 }
@@ -69,64 +85,77 @@ Request::~Request()
 
 void Request::setBody(std::istringstream &req)
 {
-    std::string line;
+    std::string line = "\0";
 
-    std::getline(req, line);
+    this->badFormat();
+    if (this->_status != 200)
+    {
+        this->_chunkState = DONE;
+        return;
+    }
+    if (!this->_chunkSize)
+        std::getline(req, line);
     if (line != "\0")
     {
-        size_t chunkSize = hexaToDecimal(line.substr(0, line.length() - 1));
-        std::cout << "chunkSize  ->" << chunkSize << std::endl;
-        std::ofstream body("body.txt", std::ios::app);
+        if (!this->_chunkSize)
+            this->_chunkSize = hexaToDecimal(line.substr(0, line.length() - 1));
+        std::cout << "chunkSize  ->" << this->_chunkSize << std::endl;
+        if (this->_body.empty())
+            this->_body = generateRandomFile() + ".txt";
         again:
-        std::getline(req, line, '\r');
-        body << line;
-        std::cout << "the line size ----->" << line.length() << std::endl;
-        if (chunkSize > line.length())
+        std::ofstream fdBody(this->_body, std::ios::app);
+        char buffer[this->_chunkSize + 1];
+        req.read(buffer, this->_chunkSize);
+        buffer[req.gcount()] = '\0';
+        fdBody << buffer;
+        fdBody.close();
+        this->_chunkSize -= req.gcount();
+        std::cout << "gcount ---->" << req.gcount() << std::endl;
+        std::cout << "chunkSize after dechunking ->" << this->_chunkSize << std::endl;
+        if (this->_chunkSize)
             return ;
         std::getline(req, line);
-        chunkSize = hexaToDecimal(line);
-        std::cout << "second chunk is -->" << chunkSize << std::endl;
-        if (chunkSize)
+        this->_chunkSize = hexaToDecimal(line);
+        if (this->_chunkSize)
             goto again;
     }
     _chunkState = DONE;
-    badFormat();
     std::cout << std::endl;
 }
 
 void Request::checkMethod()
 {
-    std::vector<std::string> limitExcept = _location.getLimit_except();
-    std::string url = _request["URL"];
-    std::string pattern = _location.getPattren();
+    std::vector<std::string> limitExcept = this->_location.getLimit_except();
+    std::string url = this->_request["URL"];
+    std::string pattern = this->_location.getPattren();
     std::vector<std::string>::iterator it = limitExcept.begin();
 
     for(; it != limitExcept.end(); it++)
     {
-        if ((*it) == _request["Method"])
+        if ((*it) == this->_request["Method"])
         {
             if(url.length() != pattern.length())
             {
                 if (pattern == "/")
-                    _path = _location.getRoot() + url;
+                    this->_path = this->_location.getRoot() + url;
                 else
-                    _path = _location.getRoot() + url.substr(pattern.length());
+                    this->_path = this->_location.getRoot() + url.substr(pattern.length());
             }
             else
-                _path = _location.getRoot();
+                this->_path = this->_location.getRoot();
             break;
         }
     }
     if (it == limitExcept.end())
-        _status = 405;
+        this->_status = 405;
 }
 
 void Request::checkLocation()
 {
-    std::vector<Location> locations = _conf.getLocations();
+    std::vector<Location> locations = this->_conf.getLocations();
     std::vector<Location>::iterator it = locations.begin();
     std::string upper;
-    std::string url = _request["URL"];
+    std::string url = this->_request["URL"];
 
     for(;it != locations.end();it++)
     {
@@ -139,20 +168,20 @@ void Request::checkLocation()
             if (upper.empty())
             {
                 upper = lower;
-                _location = *it;
+                this->_location = *it;
             }
             else
             {
                 if (lower.length() > upper.length())
                 {
                     upper = lower;
-                    _location = *it;
+                    this->_location = *it;
                 }
             }
         }
     }
     if (upper.empty())
-        _status = 404;
+        this->_status = 404;
 }
 
 void Request::setContentType(std::string const & content)
@@ -172,12 +201,11 @@ void Request::setContentType(std::string const & content)
             goto dotfound;
         }
     }
-    _request["Content-Type"] = "text/plain";
+    this->_request["Content-Type"] = "text/plain";
     return ;
     dotfound:
     std::string extention = content.substr(dot);
-    RequestMap::iterator it = cnt.find(extention);
-    _request["Content-Type"] =  it->second;
+    this->_request["Content-Type"] =  cnt.find(extention)->second;
 }
 
 void Request::parseUrl(std::string const &line)
@@ -185,82 +213,85 @@ void Request::parseUrl(std::string const &line)
     size_t url = line.find("/");
     size_t protocol = line.find("HTTP");
     std::string content = line.substr(url, protocol - 5);
-    setContentType(content);
-    _request["Method"] = line.substr(0 , url - 1);
-    _request["URL"] = content;
-    _request["Protocol"] = line.substr(protocol, line.length() - protocol - 1);
+    this->setContentType(content);
+    this->_request["Method"] = line.substr(0 , url - 1);
+    this->_request["URL"] = content;
+    this->_request["Protocol"] = line.substr(protocol, line.length() - protocol - 1);
 }
 
 void Request::badFormat()
 {
-    RequestMap::iterator transferIt = _request.find("Transfer-Encoding");
-    RequestMap::iterator bodyIt = _request.find("body");
-    std::string url = _request.find("URL")->second;
+    RequestMap::iterator transferIt = this->_request.find("Transfer-Encoding");
+    RequestMap::iterator bodyIt = this->_request.find("body");
+    std::string url = this->_request.find("URL")->second;
 
-    checkLocation();
-    if (transferIt != _request.end() && transferIt->second != "chunked")
-        _status = 501;
-    else if (_request.find("Content-Length") == _request.end() && _request.find("Method")->second == "Post")
-        _status = 400;
+    this->checkLocation();
+    if (transferIt != this->_request.end() && transferIt->second != "chunked")
+        this->_status = 501;
+    else if (this->_request.find("Content-Length") == this->_request.end() && this->_request["Method"] == "Post")
+        this->_status = 400;
     // else if ((std::find_if(url.begin(), url.end(), invalidUrl()) != url.end()))
     //     _status = 400;
     else if (url.length() > 2048)
-        _status = 414;
-    else if (bodyIt != _request.end() && bodyIt->second.length() > 2048)
-        _status = 413;
-    if (_status == 200)
-        checkMethod();
+        this->_status = 414;
+    else if (bodyIt != this->_request.end() && bodyIt->second.length() > 2048)
+        this->_status = 413;
+    if (this->_status == 200)
+        this->checkMethod();
 }
 
 void Request::parseRequest(std::string const &request, Configuration const & conf)
 {
     std::string line;
     std::istringstream req(request);
-    if (!_request.empty())
+    std::ofstream fdRequest("request.txt", std::ios::app);
+
+    fdRequest << request;
+    if (!this->_request.empty())
         goto setbody;
-    _conf = conf;
+    this->_conf = conf;
     std::getline(req, line);
-    parseUrl(line);
+    this->parseUrl(line);
     while (std::getline(req, line) && line != "\r")
     {
         size_t separator = line.find(": ");
         if (separator != std::string::npos)
-            _request[line.substr(0, separator)] = line.substr(separator + 2, line.length() - separator - 3);
+            this->_request[line.substr(0, separator)] = line.substr(separator + 2, line.length() - separator - 3);
     }
     setbody:
-    setBody(req);
+    this->setBody(req);
 }
 
 
 void Request::printElement()
 {
     int i = 0;
-    for(std::map<std::string, std::string>::iterator it = _request.begin();
-        it != _request.end(); it++, i++)
+    for(std::map<std::string, std::string>::iterator it = this->_request.begin();
+        it != this->_request.end(); it++, i++)
         std::cout << i << " " << it->first << ": " << it->second << std::endl;
 }
 
 RequestMap const & Request::getRequest() const
 {
-    return _request;
+    return this->_request;
 }
 
 int const &   Request::getStatus() const
 {
-    return _status;
+    return this->_status;
 }
 
 std::string const &   Request::getPath() const
 {
-    return _path;
+    return this->_path;
 }
 
 Location const &  Request::getLocation() const
 {
-    return _location;
+    return this->_location;
 }
 
 ChunkState const &   Request::getChunkedState() const
 {
-    return _chunkState;
+    return this->_chunkState;
 }
