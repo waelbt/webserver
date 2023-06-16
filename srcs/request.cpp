@@ -85,7 +85,7 @@ Request::~Request()
 
 void Request::setBody(std::istringstream &req)
 {
-    std::string line = "\0";
+    std::string line = "garbage";
 
     this->badFormat();
     if (this->_status != 200)
@@ -95,6 +95,7 @@ void Request::setBody(std::istringstream &req)
     }
     if (!this->_chunkSize)
         std::getline(req, line);
+    std::cout << "start----<>" << this->_chunkSize << " and the path ---> "<< _body << std::endl;
     if (line != "\0")
     {
         if (!this->_chunkSize)
