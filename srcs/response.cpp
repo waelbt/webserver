@@ -252,7 +252,7 @@ bool Response::endWith(std::string const &value, std::string const &ending)
 	return true;
 }
 
-char **Response::getENV(const Request &request)
+char **Response::getENV(std::string url, const Request &request)
 {
 	std::map<std::string, std::string> env;
 	std::map<std::string, std::string> headers = request.getRequest();
@@ -262,9 +262,10 @@ char **Response::getENV(const Request &request)
 	env["REQUEST_METHOD"] = headers["Method"];
 	env["REQUEST_URI"] = headers["URL"];
 	env["QUERY_STRING"] = headers["Query"];
-	env["REDIRECT_STATUS"] = "200";
-	env["SERVER_SOFTWARE"] = "webserv";
-	env["PATH"] = "static/cgi-bin/cgi.php";
+	env["REDIRECT_STATUS"] = "CGI";
+	// env["SERVER_SOFTWARE"] = "webserv";
+	env["SCRIPT_FILENAME"] = url;
+	env["SCRIPT_NAME"] = url;
 
 	this->addHTTPToEnvForCGI(env, headers);
 	// from map to char**
@@ -274,7 +275,7 @@ char **Response::getENV(const Request &request)
 	{
 		std::string envVar = it->first + "=" + it->second;
 		envp[i] = new char[envVar.length() + 1];
-		strcpy(envp[i], envVar.c_str());
+		std::strcpy(envp[i], envVar.c_str());
 
 		i++;
 	}
@@ -305,7 +306,7 @@ void Response::serveCGI(std::string url, const Request &request)
 	std::string extension = this->getExtention(cgiPath);
 	std::map<std::string, std::string> cgi = location.getCgi();
 	std::string binary = cgi[extension];
-	char **envp = this->getENV(request);
+	char **envp = this->getENV(cgiPath, request);
 
 	this->executeCGI(cgiPath, binary, envp, errorPages);
 }
@@ -315,6 +316,7 @@ void Response::executeCGI(std::string cgiPath, std::string binary, char **envp, 
 	std::cout << "Executing CGI" << std::endl;
 
 	int fd[2];
+	// slee	p(1);
 	int status;
 	if (pipe(fd) == -1)
 	{
@@ -332,13 +334,19 @@ void Response::executeCGI(std::string cgiPath, std::string binary, char **envp, 
 		std::fstream file;
 		std::cout << "Child process" << std::endl;
 		file.open("log.txt", std::ios::out | std::ios::app);
+		int in = open(cgiPath.c_str(), O_RDONLY);
+		if (in == -1)
+		{
+			std::cout << "Error opening file" << std::endl;
+			exit(1);
+		}
 		close(fd[0]);
+		dup2(in, 0);
 		dup2(fd[1], 1);
-		close(fd[1]);
 		char *argv[] = {const_cast<char *>(binary.c_str()), const_cast<char *>(cgiPath.c_str()), NULL};
 		file << "Binary: " << binary << std::endl;
 		file << "CGI Path: " << cgiPath << std::endl;
-		status = execve(const_cast<char *>(binary.c_str()), argv, envp);
+		status = execve(argv[0], argv, envp);
 		file << "Status: " << status << std::endl;
 		file << "Error: " << errno << std::endl;
 		std::cout << "Status: " << status << std::endl;
@@ -351,25 +359,39 @@ void Response::executeCGI(std::string cgiPath, std::string binary, char **envp, 
 	else
 	{
 		close(fd[1]);
-		waitpid(pid, &status, WNOHANG);
+		// close(fd[0]);
+		std::cout << waitpid(pid, &status, WNOHANG) << std::endl;
+
 		std::cout << "Child exited with status: " << WIFEXITED(status) << " " << WEXITSTATUS(status) << std::endl;
 		if (WIFEXITED(status))
 		{
 			std::cout << "Child exited with status: " << WEXITSTATUS(status) << std::endl;
 			char buffer[1024];
-			std::string responseHeader = "";
+			
 			std::string responseBody = "";
+			std::string responseHeader = "";
 
 			while (read(fd[0], buffer, 1024) > 0)
 			{
 				std::string line = buffer;
-				std::cout << "line: " << line << std::endl;
+				if (line.find("\r\n\r\n") != std::string::npos)
+				{
+					std::cout << "Found end of header" << std::endl;
+					responseBody = line.substr(line.find("\r\n\r\n") + 4);
+					responseHeader = line.substr(0, line.find("\r\n\r\n"));
+					break;
+				}
+				else
+				{
+					responseHeader += line;
+				}
 			}
 
-			this->setBody(responseBody);
-			std::cout << "responseBody" << responseBody << std::endl;
-			this->parseResponseHeader(responseHeader);
-			// this->setHeader("Content-Length", std::to_string(responseBody.length()));
+			this->setBody(responseBody.data());
+			this->setStatus(200);
+			// std::cout << "responseBody " << responseBody << std::endl;
+			this->parseResponseHeader(responseHeader.data());
+			this->setHeader("Content-Length", std::to_string(this->getBody().length()));
 		}
 		else
 		{

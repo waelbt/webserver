@@ -5,3 +5,5 @@ TODO
 tmp
 README
 __pycache__
+*.txt
+webserve

@@ -50,7 +50,7 @@ public:
 	void serveDirectory(std::string url, std::map<int, std::string> &errorPages, Location const &location);
 	void serveDirectoryAutoIndex(std::string url, std::map<int, std::string> &errorPages);
 	void redirect(std::string url);
-	char **getENV(const Request &request);
+	char **getENV(std::string url, const Request &request);
 	void addHTTPToEnvForCGI(std::map<std::string, std::string> &env, std::map<std::string, std::string> &headers);
 	void executeCGI(std::string cgiPath, std::string binary, char **envp, std::map<int, std::string> &errorPages);
 	void parseResponseHeader(std::string responseHeader);
