@@ -19,6 +19,8 @@
 #include <sys/stat.h>
 #include "request.hpp"
 
+#include <dirent.h>
+
 #define MAX_BUFFER_SIZE 1024
 
 class Response
@@ -50,9 +52,8 @@ public:
 	void serveResponse(const Request &request);
 	void serveFile(std::string url, std::map<int, std::string> &errorPages, Request const &request);
 	void serveStaticFile(std::string url, std::map<int, std::string> &errorPages);
-	void serveErrorPage(std::map<int, std::string> &errorPages);
+	void serveErrorPage(std::map<int, std::string> errorPages);
 	void serveDirectory(std::string url, std::map<int, std::string> &errorPages, Location const &location);
-	void deleteDirectoryContent(std::string path, std::map<int, std::string> &errorPages);
 	void serveDirectoryAutoIndex(std::string url, std::map<int, std::string> &errorPages);
 	void redirect(std::string url);
 	char **getENV(std::string url, const Request &request);

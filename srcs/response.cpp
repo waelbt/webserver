@@ -87,16 +87,6 @@ void Response::serveFile(std::string url, std::map<int, std::string> &errorPages
 		this->serveStaticFile(url, errorPages);
 }
 
-
-void Response::deleteDirectoryContent(std::string path, std::map<int, std::string> &errorPages)
-{
-	// if (!access(path.c_str(), W_OK))
-	// 	this->setStatus(500);
-	// else
-	// 	this->setStatus(403);
-	// this->serveErrorPage(errorPages);
-}
-
 void Response::serveDirectory(std::string directoryPath, std::map<int, std::string> &errorPages, Location const &location)
 {
 	std::cout << "Serving directory: " << directoryPath << std::endl;
@@ -467,13 +457,12 @@ bool Response::isFileExists(const std::string &name)
 	return (stat(name.c_str(), &buffer) == 0);
 }
 
-void Response::serveErrorPage(std::map<int, std::string> &errorPages)
+void Response::serveErrorPage(std::map<int, std::string> errorPages)
 {
 	if (errorPages.find(this->_status) != errorPages.end() && errorPages[this->_status] != "" && this->isFileExists(errorPages[this->_status]))
 		this->serveStaticFile(errorPages[this->_status], errorPages);
 	else
 	{
-		std::cout << "Ww" << std::endl;
 		this->serveStaticFile("static/error/" + this->intToString(this->_status) + ".html", errorPages);
 	}
 }
