@@ -150,7 +150,7 @@ void Webserver::run()
 
 int Webserver::send_response (Client *client)
 {
-	client->_response.get(client->_request);
+	client->_response.serveResponse(client->_request);
 	send(client->_socket, client->_response.toString().c_str(), client->_response.toString().length(), 0);
 	FD_CLR(client->_socket, &_writeset);
 	return 1;

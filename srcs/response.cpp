@@ -67,19 +67,17 @@ std::string Response::toString() const
 	return ss.str();
 }
 
-// void Response::serveResponse(const Request &request)
-// {
-// 	this->setStatus(request.getStatus());
-// 	if (this->_status  == 200)
-// 	{
-// 		std::map<std::string, std::string> headers = request.getRequest();
-// 		std::string path = request.getPath();
-// 		this->setHeader("Content-Type", headers["Content-Type"]);
-// 		this->serveFile(path);
-// 	}
-// 	else
-// 		this->serveFile("static/error/" + this->intToString(this->_status) + ".html");
-// }
+void Response::serveResponse(const Request &request)
+{
+	std::string method = request.getRequest().find("Method")->second;
+	std::cout << method << " the path is " << request.getPath() <<std::endl;
+	if (method == "GET")
+		this->get(request);
+	else if (method == "POST")
+		this->post(request);
+	else if (method == "DELETE")
+		this->del(request);
+}
 
 void Response::serveFile(std::string url, std::map<int, std::string> &errorPages, Request const &request)
 {

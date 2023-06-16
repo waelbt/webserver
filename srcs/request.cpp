@@ -143,6 +143,8 @@ void Request::checkMethod()
             }
             else
                 this->_path = this->_location.getRoot();
+            std::cout << "the path is -->" << _path << std::endl;
+            std::cout << "the root is -->" << _location.getRoot() << std::endl;
             break;
         }
     }
@@ -210,13 +212,16 @@ void Request::setContentType(std::string const & content)
 
 void Request::parseUrl(std::string const &line)
 {
-    size_t url = line.find("/");
-    size_t protocol = line.find("HTTP");
-    std::string content = line.substr(url, protocol - 5);
-    this->setContentType(content);
-    this->_request["Method"] = line.substr(0 , url - 1);
-    this->_request["URL"] = content;
-    this->_request["Protocol"] = line.substr(protocol, line.length() - protocol - 1);
+    std::string split;
+    std::istringstream header(line);
+
+    std::getline(header, split, ' ');
+    this->_request["Method"] = split;
+    std::getline(header, split, ' ');
+    this->_request["URL"] = split;
+    std::getline(header, split, ' ');
+    this->_request["Protocol"] = split;
+    this->setContentType(this->_request["URL"]);
 }
 
 void Request::badFormat()
@@ -244,9 +249,7 @@ void Request::parseRequest(std::string const &request, Configuration const & con
 {
     std::string line;
     std::istringstream req(request);
-    std::ofstream fdRequest("request.txt", std::ios::app);
 
-    fdRequest << request;
     if (!this->_request.empty())
         goto setbody;
     this->_conf = conf;

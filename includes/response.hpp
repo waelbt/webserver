@@ -43,6 +43,10 @@ public:
 	void del(const Request &request);
 	void get(const Request &request);
 
+	//post methods
+	void servePostFile(std::string url, std::map<int, std::string> &errorPages, Request const &request);
+	void servePostDirectory(std::string url, std::map<int, std::string> &errorPages, Location const &location, Request const &request);
+
 	void serveResponse(const Request &request);
 	void serveFile(std::string url, std::map<int, std::string> &errorPages, Request const &request);
 	void serveStaticFile(std::string url, std::map<int, std::string> &errorPages);
