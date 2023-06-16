@@ -26,7 +26,7 @@ int Request::contentState = 0;
 
 bool invalidUrl::operator()(const char& c)
 {
-    static std::string Error(":?#[]@!$&'()*+,=;");
+    static std::string Error("^0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ,.-!/()=?`*;:_{}[]\\|~");
     return (Error.find(std::string(1, c)) != std::string::npos);
 }
 
@@ -114,7 +114,6 @@ void Request::setBody(std::istringstream &req)
         std::cout << "chunkSize after dechunking ->" << this->_chunkSize << std::endl;
         if (this->_chunkSize)
             return ;
-        std::cout << "here" << std::endl;
         std::getline(req, line);
         this->_chunkSize = hexaToDecimal(line);
         if (this->_chunkSize)
@@ -217,7 +216,6 @@ void Request::parseUrl(std::string const &line)
     if (line == "\0")
         goto badline;
     std::getline(header, split, ' ');
-    std::cout << "|" << split << "|" << std::endl;
     if (split == "\0" || (split != "POST" && split != "GET" && split != "DELETE"))
         goto badline;
     this->_request["Method"] = split;
@@ -247,8 +245,8 @@ void Request::badFormat()
         this->_status = 501;
     else if (this->_request.find("Content-Length") == this->_request.end() && this->_request["Method"] == "Post")
         this->_status = 400;
-    // else if ((std::find_if(url.begin(), url.end(), invalidUrl()) != url.end()))
-    //     _status = 400;
+    else if (!(std::find_if(url.begin(), url.end(), invalidUrl()) != url.end()))
+        _status = 400;
     else if (url.length() > 2048)
         this->_status = 414;
     else if (bodyIt != this->_request.end() && bodyIt->second.length() > 2048)
