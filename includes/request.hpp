@@ -30,6 +30,7 @@ class Request
         Configuration _conf;
         Location      _location;
         std::string   _path;
+        std::string   _body;
         ChunkState    _chunkState;
         size_t        _chunkSize;
         int           _status;

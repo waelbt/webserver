@@ -30,6 +30,21 @@ bool invalidUrl::operator()(const char& c)
     return (Error.find(std::string(1, c)) != std::string::npos);
 }
 
+std::string generateRandomFile() {
+    static const char charset[] = "abcdefghijklmnopqrstuvwxyz";
+    const int charsetSize = sizeof(charset) - 1;
+    
+    std::string randomFile;
+    srand(time(0));
+    
+    for (int i = 0; i < 10; ++i) {
+        int randomIndex = rand() % charsetSize;
+        randomFile += charset[randomIndex];
+    }
+    
+    return randomFile;
+}
+
 size_t hexaToDecimal(std::string const &str)
 {
     if (str.empty())
@@ -43,11 +58,11 @@ size_t hexaToDecimal(std::string const &str)
     return decimal;
 }
 
-Request::Request() : _request(), _conf(), _location(), _path(), _chunkState(UNDONE), _chunkSize(0), _status(200)
+Request::Request() : _request(), _conf(), _location(), _path(), _body(), _chunkState(UNDONE), _chunkSize(0), _status(200)
 {
 }
 
-Request::Request(std::string const &request, Configuration const & conf) : _request(), _conf(conf), _location(), _path(), _chunkState(UNDONE), _chunkSize(0), _status(200)
+Request::Request(std::string const &request, Configuration const & conf) : _request(), _conf(conf), _location(), _path(), _body(), _chunkState(UNDONE), _chunkSize(0), _status(200)
 {
     parseRequest(request, conf);
 }
@@ -72,29 +87,37 @@ void Request::setBody(std::istringstream &req)
 {
     std::string line;
 
+    badFormat();
+    if (_status != 200)
+    {
+        _chunkState = DONE;
+        return;
+    }
     std::getline(req, line);
     if (line != "\0")
     {
-        _chunkSize = hexaToDecimal(line.substr(0, line.length() - 1));
+        if (!_chunkSize)
+            _chunkSize = hexaToDecimal(line.substr(0, line.length() - 1));
         std::cout << "chunkSize  ->" << _chunkSize << std::endl;
-        std::ofstream body("body.txt", std::ios::app);
+        if (_body.empty())
+            _body = generateRandomFile() + ".txt";
         again:
+        std::ofstream body(_body, std::ios::app);
         char buffer[_chunkSize + 1];
         req.read(buffer, _chunkSize);
-        buffer[req.gcount() - 1] = '\0';
+        buffer[req.gcount()] = '\0';
         body << buffer;
+        body.close();
         _chunkSize -= req.gcount();
         std::cout << "gcount ---->" << req.gcount() << std::endl;
         if (_chunkSize)
             return ;
         std::getline(req, line);
         _chunkSize = hexaToDecimal(line);
-        std::cout << "second chunk is -->" << _chunkSize << " and the line --->" << line << std::endl;
         if (_chunkSize)
             goto again;
     }
     _chunkState = DONE;
-    badFormat();
     std::cout << std::endl;
 }
 
