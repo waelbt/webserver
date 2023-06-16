@@ -43,11 +43,11 @@ size_t hexaToDecimal(std::string const &str)
     return decimal;
 }
 
-Request::Request() : _request(), _conf(), _location(), _path(), _chunkState(UNDONE), _status(200)
+Request::Request() : _request(), _conf(), _location(), _path(), _chunkState(UNDONE), _chunkSize(0), _status(200)
 {
 }
 
-Request::Request(std::string const &request, Configuration const & conf) : _request(), _conf(conf), _location(), _path(), _chunkState(UNDONE), _status(200)
+Request::Request(std::string const &request, Configuration const & conf) : _request(), _conf(conf), _location(), _path(), _chunkState(UNDONE), _chunkSize(0), _status(200)
 {
     parseRequest(request, conf);
 }
@@ -59,6 +59,7 @@ Request& Request::operator=(const Request& other)
     _location = other._location;
     _path = other._path;
     _chunkState = other._chunkState;
+    _chunkSize = other._chunkSize;
     _status = other._status;
 
     return *this;
@@ -74,19 +75,22 @@ void Request::setBody(std::istringstream &req)
     std::getline(req, line);
     if (line != "\0")
     {
-        size_t chunkSize = hexaToDecimal(line.substr(0, line.length() - 1));
-        std::cout << "chunkSize  ->" << chunkSize << std::endl;
+        _chunkSize = hexaToDecimal(line.substr(0, line.length() - 1));
+        std::cout << "chunkSize  ->" << _chunkSize << std::endl;
         std::ofstream body("body.txt", std::ios::app);
         again:
-        std::getline(req, line, '\r');
-        body << line;
-        std::cout << "the line size ----->" << line.length() << std::endl;
-        if (chunkSize > line.length())
+        char buffer[_chunkSize + 1];
+        req.read(buffer, _chunkSize);
+        buffer[req.gcount() - 1] = '\0';
+        body << buffer;
+        _chunkSize -= req.gcount();
+        std::cout << "gcount ---->" << req.gcount() << std::endl;
+        if (_chunkSize)
             return ;
         std::getline(req, line);
-        chunkSize = hexaToDecimal(line);
-        std::cout << "second chunk is -->" << chunkSize << std::endl;
-        if (chunkSize)
+        _chunkSize = hexaToDecimal(line);
+        std::cout << "second chunk is -->" << _chunkSize << " and the line --->" << line << std::endl;
+        if (_chunkSize)
             goto again;
     }
     _chunkState = DONE;
@@ -216,6 +220,7 @@ void Request::parseRequest(std::string const &request, Configuration const & con
 {
     std::string line;
     std::istringstream req(request);
+
     if (!_request.empty())
         goto setbody;
     _conf = conf;
