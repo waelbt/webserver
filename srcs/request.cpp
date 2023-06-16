@@ -114,6 +114,7 @@ void Request::setBody(std::istringstream &req)
         std::cout << "chunkSize after dechunking ->" << this->_chunkSize << std::endl;
         if (this->_chunkSize)
             return ;
+        std::cout << "here" << std::endl;
         std::getline(req, line);
         this->_chunkSize = hexaToDecimal(line);
         if (this->_chunkSize)
@@ -143,8 +144,6 @@ void Request::checkMethod()
             }
             else
                 this->_path = this->_location.getRoot();
-            std::cout << "the path is -->" << _path << std::endl;
-            std::cout << "the root is -->" << _location.getRoot() << std::endl;
             break;
         }
     }
@@ -215,13 +214,26 @@ void Request::parseUrl(std::string const &line)
     std::string split;
     std::istringstream header(line);
 
+    if (line == "\0")
+        goto badline;
     std::getline(header, split, ' ');
+    std::cout << "|" << split << "|" << std::endl;
+    if (split == "\0" || (split != "POST" && split != "GET" && split != "DELETE"))
+        goto badline;
     this->_request["Method"] = split;
     std::getline(header, split, ' ');
+    if (split == "\0" || split[0] != '/')
+        goto badline;
     this->_request["URL"] = split;
-    std::getline(header, split, ' ');
+    std::getline(header, split, '\r');
+    if (split == "\0" || split != "HTTP/1.1")
+        goto badline;
     this->_request["Protocol"] = split;
     this->setContentType(this->_request["URL"]);
+    return;
+    badline:
+    this->_status = 400;
+    this->_chunkState = DONE;
 }
 
 void Request::badFormat()
@@ -255,6 +267,8 @@ void Request::parseRequest(std::string const &request, Configuration const & con
     this->_conf = conf;
     std::getline(req, line);
     this->parseUrl(line);
+    if (this->_status != 200)
+        return ;
     while (std::getline(req, line) && line != "\r")
     {
         size_t separator = line.find(": ");
