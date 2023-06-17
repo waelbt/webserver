@@ -94,10 +94,62 @@ Request& Request::operator=(const Request& other)
 Request::~Request()
 {
 }
+void Request::setFullBody(std::istringstream &req)
+{
+    std::string line;
+
+    if (!this->_chunkSize)
+        this->_chunkSize = stringToDecimal(this->_request["Content-Length"]);
+    std::cout << "chunkSize  ->" << this->_chunkSize << std::endl;
+    if (this->_body.empty())
+        this->_body = generateRandomFile() + ".txt";
+    std::ofstream fdBody(this->_body, std::ios::app);
+    char buffer[this->_chunkSize + 1];
+    req.read(buffer, this->_chunkSize);
+    buffer[req.gcount()] = '\0';
+    fdBody << buffer;
+    fdBody.close();
+    this->_chunkSize -= req.gcount();
+    std::cout << "gcount ---->" << req.gcount() << std::endl;
+    std::cout << "chunkSize after dechunking ->" << this->_chunkSize << std::endl;
+    if (this->_chunkSize)
+        return ;
+    _chunkState = DONE;
+}
+void Request::setChunkedBody(std::istringstream &req)
+{
+    std::string line;
+
+    if (!this->_chunkSize)
+    {
+        std::getline(req, line);
+        this->_chunkSize = hexaToDecimal(line.substr(0, line.length() - 1));
+    }
+    std::cout << "chunkSize  ->" << this->_chunkSize << std::endl;
+    if (this->_body.empty())
+        this->_body = generateRandomFile() + ".txt";
+    again:
+    std::ofstream fdBody(this->_body, std::ios::app);
+    char buffer[this->_chunkSize + 1];
+    req.read(buffer, this->_chunkSize);
+    buffer[req.gcount()] = '\0';
+    fdBody << buffer;
+    fdBody.close();
+    this->_chunkSize -= req.gcount();
+    std::cout << "gcount ---->" << req.gcount() << std::endl;
+    std::cout << "chunkSize after dechunking ->" << this->_chunkSize << std::endl;
+    if (this->_chunkSize)
+        return ;
+    std::getline(req, line);
+    this->_chunkSize = hexaToDecimal(line);
+    if (this->_chunkSize)
+        goto again;
+    _chunkState = DONE;
+}
 
 void Request::setBody(std::istringstream &req)
 {
-    std::string line = "garbage";
+    std::string line;
 
     this->badFormat();
     if (this->_status != 200)
@@ -105,38 +157,10 @@ void Request::setBody(std::istringstream &req)
         this->_chunkState = DONE;
         return;
     }
-    if (!this->_chunkSize && this->_request.find("Transfer-Encoding") != this->_request.end())
-        std::getline(req, line);
-    if (line != "\0")
-    {
-        if (!this->_chunkSize)
-        {
-            if (this->_request.find("Transfer-Encoding") != this->_request.end())
-                this->_chunkSize = hexaToDecimal(line.substr(0, line.length() - 1));
-            else
-                this->_chunkSize = stringToDecimal(this->_request["Content-Length"]);
-        }
-        std::cout << "chunkSize  ->" << this->_chunkSize << std::endl;
-        if (this->_body.empty())
-            this->_body = generateRandomFile() + ".txt";
-        again:
-        std::ofstream fdBody(this->_body, std::ios::app);
-        char buffer[this->_chunkSize + 1];
-        req.read(buffer, this->_chunkSize);
-        buffer[req.gcount()] = '\0';
-        fdBody << buffer;
-        fdBody.close();
-        this->_chunkSize -= req.gcount();
-        std::cout << "gcount ---->" << req.gcount() << std::endl;
-        std::cout << "chunkSize after dechunking ->" << this->_chunkSize << std::endl;
-        if (this->_chunkSize)
-            return ;
-        std::getline(req, line);
-        this->_chunkSize = hexaToDecimal(line);
-        if (this->_chunkSize)
-            goto again;
-    }
-    _chunkState = DONE;
+    if (this->_request.find("Transfer-Encoding") != this->_request.end())
+        setChunkedBody(req);
+    else
+        setFullBody(req);
     std::cout << std::endl;
 }
 
@@ -295,7 +319,14 @@ void Request::parseRequest(std::string const &request, Configuration const & con
             this->_request[line.substr(0, separator)] = line.substr(separator + 2, line.length() - separator - 3);
     }
     setbody:
-    this->setBody(req);
+    std::string method = this->_request["Method"];
+    if (method == "POST")
+        this->setBody(req);
+    else
+    {
+        this->badFormat();
+        _chunkState = DONE;
+    }
 }
 
 

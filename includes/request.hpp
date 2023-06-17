@@ -42,6 +42,8 @@ class Request
         void checkLocation();
         void checkMethod();
         void setBody(std::istringstream &req);
+        void setFullBody(std::istringstream &req);
+        void setChunkedBody(std::istringstream &req);
     public:
         Request();
         Request(std::string const &request, Configuration const & conf);
