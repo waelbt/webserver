@@ -58,6 +58,18 @@ size_t hexaToDecimal(std::string const &str)
     return decimal;
 }
 
+size_t stringToDecimal(std::string const &str)
+{
+    if (str.empty())
+        return (0);
+    std::string hexa = "0123456789";
+    size_t decimal = 0;
+
+    for (size_t i = 0; i < str.length();i++)
+        decimal = decimal * 10 + hexa.find(str[i]);
+    return decimal;
+}
+
 Request::Request() : _request(), _conf(), _location(), _path(), _body(), _chunkState(UNDONE), _chunkSize(0), _status(200)
 {
 }
@@ -95,11 +107,15 @@ void Request::setBody(std::istringstream &req)
     }
     if (!this->_chunkSize)
         std::getline(req, line);
-    std::cout << "start----<>" << this->_chunkSize << " and the path ---> "<< _body << std::endl;
     if (line != "\0")
     {
         if (!this->_chunkSize)
-            this->_chunkSize = hexaToDecimal(line.substr(0, line.length() - 1));
+        {
+            if (this->_request.find("Transfer-Encoding") != this->_request.end())
+                this->_chunkSize = hexaToDecimal(line.substr(0, line.length() - 1));
+            else
+                this->_chunkSize = stringToDecimal(this->_request["Content-Length"]);
+        }
         std::cout << "chunkSize  ->" << this->_chunkSize << std::endl;
         if (this->_body.empty())
             this->_body = generateRandomFile() + ".txt";
@@ -244,6 +260,8 @@ void Request::badFormat()
     this->checkLocation();
     if (transferIt != this->_request.end() && transferIt->second != "chunked")
         this->_status = 501;
+    else if (transferIt != this->_request.end() && this->_request.find("Content-Length") != this->_request.end())
+        this->_status = 400;
     else if (this->_request.find("Content-Length") == this->_request.end() && this->_request["Method"] == "Post")
         this->_status = 400;
     else if (!(std::find_if(url.begin(), url.end(), invalidUrl()) != url.end()))
