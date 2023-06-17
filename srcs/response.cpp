@@ -2,7 +2,7 @@
 
 std::map<int, std::string> _httpResponses;
 
-Response::Response(): _status(200), _isCGIInProcess(0), _isCGIFinished(0), _body("")
+Response::Response(): _status(200), _isCGIInProcess(0), _isCGIFinished(0), _isFileOpned(0), _isHeaderSent(0), _isBodySent(0), _body("")
 {
 	_httpResponses[200] = "OK";
 	_httpResponses[201] = "Created";
@@ -80,7 +80,7 @@ void Response::serveResponse(const Request &request)
 	else
 	{
 		this->setStatus(405);
-		this->serveErrorPage(errorPages);
+		// this->serveErrorPage(errorPages);
 	}
 }
 
@@ -128,6 +128,9 @@ void Response::serveDirectory(std::string directoryPath, std::map<int, std::stri
 
 void Response::get(const Request &request)
 {
+	std::cout << "GET" << std::endl;
+	std::cout << _isHeaderSent << std::endl;
+	std::cout << _isBodySent << std::endl;
 	Location const &location = request.getLocation();
 	std::map<int, std::string> errorPages = location.getErrorPages();
 	std::map<std::string, std::string> headers = request.getRequest();
@@ -226,14 +229,39 @@ void Response::serveDirectoryAutoIndex(std::string url, std::map<int, std::strin
 void Response::serveStaticFile(std::string url, std::map<int, std::string> &errorPages)
 {
 	std::cout << "Serving static file: " << url << std::endl;
-	std::ifstream file(url.c_str());
-	if (file.is_open())
+	if (!this->_isFileOpned)
 	{
-		std::string responseBody((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
-		if (this->_status != 200)
-			this->setHeader("Content-Type", "text/html");
-		this->setHeader("Content-Length", to_string(responseBody.length()));
-		this->setBody(responseBody);
+		this->_file.close();
+		this->_file.open(url.c_str());
+		if (this->_file.fail()) {
+			std::cerr << "Failed to open file" << std::endl;
+			this->setStatus(403);
+			this->serveErrorPage(errorPages);
+		}
+		else
+			this->setIsFileOpned(true);
+	}
+	if (this->_isFileOpned)
+	{
+		if (this->_isHeaderSent == false)
+		{
+			if (this->_status != 200)
+				this->setHeader("Content-Type", "text/html");
+			this->_file.seekg(0, std::ios::end);
+			this->setHeader("Content-Length", to_string(this->_file.tellg()));
+			this->_file.seekg(0, std::ios::beg);
+		}
+		else
+		{
+			char buffer[1024];
+			this->_file.read(buffer, 1024);
+			if (this->_file.eof())
+			{
+				this->setIsBodySent(true);
+				this->_file.close();
+			}
+			this->setBody(buffer);
+		}
 	}
 	else
 	{
@@ -519,4 +547,42 @@ void Response::serveErrorPage(std::map<int, std::string> errorPages)
 	{
 		this->serveStaticFile("static/error/" + this->intToString(this->_status) + ".html", errorPages);
 	}
+}
+
+std::string Response::sendHeader()
+{
+	std::stringstream ss;
+	ss << "HTTP/1.1 " << this->intToString(this->_status) << " " << _httpResponses[this->_status] << "\r\n";
+	for (std::map<std::string, std::string>::const_iterator it = this->_headers.begin(); it != this->_headers.end(); ++it)
+	{
+		ss << it->first << ": " << it->second << "\r\n";
+	}
+	ss << "\r\n";
+	this->setIsHeaderSent(true);
+	return ss.str();
+}
+
+void Response::setIsHeaderSent(bool isHeaderSent)
+{
+	this->_isHeaderSent = isHeaderSent;
+}
+
+void Response::setIsBodySent(bool isBodySent)
+{
+	this->_isBodySent = isBodySent;
+}
+
+void Response::setIsFileOpned(bool isFileOpen)
+{
+	this->_isFileOpned = isFileOpen;
+}
+
+bool Response::getIsHeaderSent() const
+{
+	return this->_isHeaderSent;
+}
+
+bool Response::getIsBodySent() const
+{
+	return this->_isBodySent;
 }

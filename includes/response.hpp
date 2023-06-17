@@ -36,10 +36,15 @@ public:
 	std::string getBody() const;
 	int getStatus() const;
 	std::map<std::string, std::string> getHeaders() const;
+	bool getIsHeaderSent() const;
+	bool getIsBodySent() const;
 
 	void setBody(std::string body);
 	void setStatus(int status);
 	void setHeader(std::string key, std::string value);
+	void setIsHeaderSent(bool isHeaderSent);
+	void setIsBodySent(bool isBodySent);
+	void setIsFileOpned(bool isFileOpned);
 
 	void post(const Request &request);
 	void del(const Request &request);
@@ -63,14 +68,7 @@ public:
 	void serveCGIFile(std::string cgiPath, std::map<int, std::string> &errorPages);
 	int checkCGIStatus(std::map<int, std::string> &errorPages);
 	void serveCGI(std::string url, const Request &request);
-	// void error(int clientSocket);
-	// void serveDirectory(std::string url, int clientSocket);
-	// void serveCgi(const std::string &url, int clientSocket);
-	// void serveGet(std::string url, int clientSocket);
-	// void servePost(std::string url, std::map<std::string, std::string> data, int clientSocket);
-	// void serveDelete(std::string url, int clientSocket);
-	// void clear();
-	// std::string chunkedEncoding(std::string body);
+	std::string sendHeader();
 	std::string toString() const;
 	std::string intToString(int num) const;
 	std::string getPathType(std::string url);
@@ -83,8 +81,12 @@ public:
 	std::vector<std::string> split(const std::string &s, std::string delim);
 private : 
 	int _status;
+	std::ifstream _file;
 	bool _isCGIInProcess;
 	bool _isCGIFinished;
+	bool _isFileOpned;
+	bool _isHeaderSent;
+	bool _isBodySent;
 	pid_t _pid;
 	std::string _body;
 	std::map<std::string, std::string> _headers;

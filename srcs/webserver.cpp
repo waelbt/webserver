@@ -150,10 +150,20 @@ void Webserver::run()
 
 int Webserver::send_response (Client *client)
 {
+	std::string tmp;
 	client->_response.serveResponse(client->_request);
-	send(client->_socket, client->_response.toString().c_str(), client->_response.toString().length(), 0);
-	FD_CLR(client->_socket, &_writeset);
-	return 1;
+	if (client->_response.getIsHeaderSent() == false)
+		tmp = client->_response.sendHeader();
+	else
+		tmp = client->_response.getBody();
+	std::cout << tmp << std::endl;
+	send(client->_socket, tmp.c_str(), tmp.length(), 0);
+	if (client->_response.getIsBodySent() == true)
+	{
+		FD_CLR(client->_socket, &_writeset);
+		return 1;
+	}
+	return 0;
 }
 
 void Webserver::stop()
