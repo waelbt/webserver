@@ -75,8 +75,8 @@ fd_set Webserver::wait_on_client()
 	struct timeval timeout;
 	fd_set reads(_socketset);
 
-	timeout.tv_sec = 1;
-	timeout.tv_usec = 0;
+	timeout.tv_sec = 0;
+	timeout.tv_usec = 5;
 
 	if (select(_max_socket + 1, &reads, 0, 0, &timeout) < 0)
 		throw CustomeExceptionMsg("select() failed. ("+  std::string(strerror(errno)) + ")");
