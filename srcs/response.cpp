@@ -318,10 +318,9 @@ void Response::serveCGI(std::string url, const Request &request)
 		this->executeCGI(cgiPath, binary, envp, errorPages);
 		this->_isCGIFinished = this->checkCGIStatus(errorPages);
 	}
-	else
+	else if (!this->_isCGIFinished)
 		this->_isCGIFinished = this->checkCGIStatus(errorPages);
-
-	if (this->_isCGIFinished)
+	else
 	{
 		std::cout << "CGI execution finished" << std::endl;
 		this->serveCGIFile("cgi_output.txt", errorPages);
