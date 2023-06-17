@@ -60,6 +60,8 @@ public:
 	void addHTTPToEnvForCGI(std::map<std::string, std::string> &env, std::map<std::string, std::string> &headers);
 	void executeCGI(std::string cgiPath, std::string binary, char **envp, std::map<int, std::string> &errorPages);
 	void parseResponseHeader(std::string responseHeader);
+	void serveCGIFile(std::string cgiPath, std::map<int, std::string> &errorPages);
+	int checkCGIStatus(std::map<int, std::string> &errorPages);
 	void serveCGI(std::string url, const Request &request);
 	// void error(int clientSocket);
 	// void serveDirectory(std::string url, int clientSocket);
@@ -79,10 +81,12 @@ public:
 	bool endWith(std::string const &value, std::string const &ending);
 	bool isFileExists(const std::string &name);
 	std::vector<std::string> split(const std::string &s, std::string delim);
-
 private : 
-	std::string _body;
 	int _status;
+	bool _isCGIInProcess;
+	bool _isCGIFinished;
+	pid_t _pid;
+	std::string _body;
 	std::map<std::string, std::string> _headers;
 };
 

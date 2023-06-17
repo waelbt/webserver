@@ -2,7 +2,7 @@
 
 std::map<int, std::string> _httpResponses;
 
-Response::Response()
+Response::Response(): _status(200), _isCGIInProcess(0), _isCGIFinished(0), _body("")
 {
 	_httpResponses[200] = "OK";
 	_httpResponses[201] = "Created";
@@ -296,7 +296,7 @@ void Response::addHTTPToEnvForCGI(std::map<std::string, std::string> &env, std::
 
 void Response::serveCGI(std::string url, const Request &request)
 {
-	std::cout << "Serving CGI: " << url << std::endl;
+	std::cout << "Serving CGI: " << url << "is in process " << this->_isCGIInProcess << " is execution finished " << this->_isCGIFinished << std::endl;
 
 	std::string cgiPath = url;
 	Location const &location = request.getLocation();
@@ -304,100 +304,150 @@ void Response::serveCGI(std::string url, const Request &request)
 	std::string extension = this->getExtention(cgiPath);
 	std::map<std::string, std::string> cgi = location.getCgi();
 	std::string binary = cgi[extension];
-	char **envp = this->getENV(cgiPath, request);
+	if (binary.empty())
+	{
+		std::cout << "No CGI binary found for extension: " << extension << std::endl;
+		this->setStatus(403);
+		this->serveErrorPage(errorPages);
+		return;
+	}
+	if (!this->_isCGIInProcess)
+	{
+		char **envp = this->getENV(cgiPath, request);
 
-	this->executeCGI(cgiPath, binary, envp, errorPages);
+		this->executeCGI(cgiPath, binary, envp, errorPages);
+		this->_isCGIFinished = this->checkCGIStatus(errorPages);
+	}
+	else
+		this->_isCGIFinished = this->checkCGIStatus(errorPages);
+
+	if (this->_isCGIFinished)
+	{
+		std::cout << "CGI execution finished" << std::endl;
+		this->serveCGIFile("cgi_output.txt", errorPages);
+	}
 }
 
 void Response::executeCGI(std::string cgiPath, std::string binary, char **envp, std::map<int, std::string> &errorPages)
 {
-	std::cout << "Executing CGI" << std::endl;
+	if (!this->_isCGIInProcess)
+	{
+		int fd[2];
 
-	int fd[2];
-	// slee	p(1);
-	int status;
-	if (pipe(fd) == -1)
-	{
-		std::cout << "Error creating pipe" << std::endl;
-		exit(1);
-	}
-	pid_t pid = fork();
-	if (pid == -1)
-	{
-		std::cout << "Error forking" << std::endl;
-		exit(1);
-	}
-	else if (pid == 0)
-	{
-		std::fstream file;
-		std::cout << "Child process" << std::endl;
-		file.open("log.txt", std::ios::out | std::ios::app);
-		int in = open(cgiPath.c_str(), O_RDONLY);
-		if (in == -1)
+		fd[0] = open(cgiPath.c_str(), O_RDONLY);
+		fd[1] = open("cgi_output.txt", O_WRONLY | O_CREAT | O_TRUNC, 0666);
+		if (fd[0] == -1 || fd[1] == -1)
 		{
 			std::cout << "Error opening file" << std::endl;
+			this->setStatus(403);
+			this->serveErrorPage(errorPages);
+			return;
+		}
+		this->_isCGIInProcess = true;
+		this->_pid = fork();
+		if (this->_pid == -1)
+		{
+			std::cout << "Error forking" << std::endl;
 			exit(1);
 		}
-		close(fd[0]);
-		dup2(in, 0);
-		dup2(fd[1], 1);
-		char *argv[] = {const_cast<char *>(binary.c_str()), const_cast<char *>(cgiPath.c_str()), NULL};
-		file << "Binary: " << binary << std::endl;
-		file << "CGI Path: " << cgiPath << std::endl;
-		status = execve(argv[0], argv, envp);
-		file << "Status: " << status << std::endl;
-		file << "Error: " << errno << std::endl;
-		std::cout << "Status: " << status << std::endl;
-		if (status == -1)
+		else if (this->_pid == 0)
 		{
-			std::cout << "Error executing CGI" << std::endl;
-			exit(1);
-		}
-	}
-	else
-	{
-		close(fd[1]);
-		// close(fd[0]);
-		std::cout << waitpid(pid, &status, WNOHANG) << std::endl;
-
-		std::cout << "Child exited with status: " << WIFEXITED(status) << " " << WEXITSTATUS(status) << std::endl;
-		if (WIFEXITED(status))
-		{
-			std::cout << "Child exited with status: " << WEXITSTATUS(status) << std::endl;
-			char buffer[1024];
-			
-			std::string responseBody = "";
-			std::string responseHeader = "";
-
-			while (read(fd[0], buffer, 1024) > 0)
+			dup2(fd[0], 0);
+			dup2(fd[1], 1);
+			close(fd[0]);
+			close(fd[1]);
+			if (execve(binary.c_str(), NULL, envp) == -1)
 			{
-				std::string line = buffer;
-				if (line.find("\r\n\r\n") != std::string::npos)
-				{
-					std::cout << "Found end of header" << std::endl;
-					responseBody = line.substr(line.find("\r\n\r\n") + 4);
-					responseHeader = line.substr(0, line.find("\r\n\r\n"));
-					break;
-				}
-				else
-				{
-					responseHeader += line;
-				}
+				std::cout << "Error executing CGI" << std::endl;
+				exit(1);
 			}
-
-			this->setBody(responseBody.data());
-			this->setStatus(200);
-			// std::cout << "responseBody " << responseBody << std::endl;
-			this->parseResponseHeader(responseHeader.data());
-			this->setHeader("Content-Length", std::to_string(this->getBody().length()));
 		}
 		else
 		{
-			std::cout << "Error executing CGI" << std::endl;
-			this->setStatus(500);
-			this->serveErrorPage(errorPages);
+			close(fd[0]);
+			close(fd[1]);
 		}
 	}
+}
+
+int Response::checkCGIStatus(std::map<int, std::string> &errorPages)
+{
+	int status;
+	int w = waitpid(this->_pid, &status, WNOHANG);
+	if (w == -1)
+	{
+		std::cout << "Error waiting for CGI" << std::endl;
+		exit(1);
+	}
+	else if (w == 0)
+	{
+		std::cout << "CGI still running" << std::endl;
+		return false;
+	}
+	else
+	{
+		if (WIFEXITED(status))
+		{
+			std::cout << "CGI exited normally" << std::endl;
+			if (WEXITSTATUS(status) == 0)
+			{
+				std::cout << "CGI exited with status 0" << std::endl;
+				return true;
+			}
+			else
+			{
+				std::cout << "CGI exited with status " << WEXITSTATUS(status) << std::endl;
+				this->setStatus(403);
+				this->serveErrorPage(errorPages);
+				return true;
+			}
+		}
+		else
+		{
+			std::cout << "CGI exited abnormally" << std::endl;
+			this->setStatus(500);
+			this->serveErrorPage(errorPages);
+			return true;
+		}
+	}
+}
+
+void Response::serveCGIFile(std::string cgiPath, std::map<int, std::string> &errorPages)
+{
+	std::cout << "Serving CGI file" << std::endl;
+	std::fstream file;
+	file.open(cgiPath.c_str(), std::ios::in);
+	if (!file.is_open())
+	{
+		std::cout << "Error opening CGI file" << std::endl;
+		this->setStatus(403);
+		this->serveErrorPage(errorPages);
+		return;
+	}
+	std::string line;
+	std::string header;
+	std::string body;
+	bool isHeader = true;
+	while (getline(file, line))
+	{
+		if (isHeader)
+		{
+			if (line.empty())
+			{
+				isHeader = false;
+				continue;
+			}
+			header += line + "\n";
+		}
+		else
+		{
+			body += line + "\n";
+		}
+	}
+	this->parseResponseHeader(header);
+	this->setBody(body);
+	std::cout << this->toString() << std::endl;
+	file.close();
 }
 
 void Response::parseResponseHeader(std::string responseHeader)
