@@ -18,6 +18,7 @@
 #include <unistd.h>
 #include <sys/stat.h>
 #include "request.hpp"
+#include <ctime>
 
 #include <dirent.h>
 
@@ -89,6 +90,7 @@ private :
 	bool _isBodySent;
 	pid_t _pid;
 	std::string _body;
+	std::string _generatedName;
 	std::map<std::string, std::string> _headers;
 };
 

@@ -2,7 +2,7 @@
 
 std::map<int, std::string> _httpResponses;
 
-Response::Response(): _status(200), _isCGIInProcess(0), _isCGIFinished(0), _isFileOpned(0), _isHeaderSent(0), _isBodySent(0), _body("")
+Response::Response(): _status(200), _isCGIInProcess(0), _isCGIFinished(0), _isFileOpned(0), _isHeaderSent(0), _isBodySent(0), _body(""), _generatedName("")
 {
 	_httpResponses[200] = "OK";
 	_httpResponses[201] = "Created";
@@ -217,8 +217,12 @@ void Response::serveDirectoryAutoIndex(std::string url, std::map<int, std::strin
 	std::string responseBody = "<html><body><h1>Directory Listing</h1><ul>" + directoryContent + "</ul></body></html>";
 
 	this->setHeader("Content-Type", "text/html");
-	this->setHeader("Content-Length", to_string(responseBody.length()));
-	this->setBody(responseBody);
+	std::time_t result = std::time(NULL);
+	this->_generatedName = "/tmp/" + std::to_string(result) + ".txt";
+	std::fstream file(this->_generatedName, std::ios::out);
+	file << responseBody;
+	file.close();
+	this->serveStaticFile(this->_generatedName, errorPages);
 }
 
 void Response::serveStaticFile(std::string url, std::map<int, std::string> &errorPages)
