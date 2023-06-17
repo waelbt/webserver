@@ -77,11 +77,6 @@ void Response::serveResponse(const Request &request)
 		this->post(request);
 	else if (method == "DELETE")
 		this->del(request);
-	else
-	{
-		this->setStatus(405);
-		this->serveErrorPage(errorPages);
-	}
 }
 
 void Response::serveFile(std::string url, std::map<int, std::string> &errorPages, Request const &request)

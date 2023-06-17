@@ -105,7 +105,7 @@ void Request::setBody(std::istringstream &req)
         this->_chunkState = DONE;
         return;
     }
-    if (!this->_chunkSize)
+    if (!this->_chunkSize && this->_request.find("Transfer-Encoding") != this->_request.end())
         std::getline(req, line);
     if (line != "\0")
     {
@@ -145,11 +145,12 @@ void Request::checkMethod()
     std::vector<std::string> limitExcept = this->_location.getLimit_except();
     std::string url = this->_request["URL"];
     std::string pattern = this->_location.getPattren();
+    std::string method = this->_request["Method"];
     std::vector<std::string>::iterator it = limitExcept.begin();
 
     for(; it != limitExcept.end(); it++)
     {
-        if ((*it) == this->_request["Method"])
+        if ((*it) == method)
         {
             if(url.length() != pattern.length())
             {
@@ -163,7 +164,8 @@ void Request::checkMethod()
             break;
         }
     }
-    if (it == limitExcept.end())
+    
+    if (it == limitExcept.end() && method != "POST" && method != "DELETE" && method != "GET")
         this->_status = 405;
 }
 
