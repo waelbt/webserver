@@ -17,7 +17,6 @@ void Response::servePostDirectory(std::string directoryPath, std::map<int, std::
 	std::vector<std::string> indexes = location.getIndex();
 	if (!indexes.empty())
 	{
-		size_t i = 0;
 		for (std::vector<std::string>::iterator it = indexes.begin(); it != indexes.end(); ++it)
 		{
 			std::string index = directoryPath + "/" + *it;
@@ -27,19 +26,10 @@ void Response::servePostDirectory(std::string directoryPath, std::map<int, std::
 				this->servePostFile(index, errorPages, request);
 				return;
 			}
-			i++;
-		}
-		if (i == indexes.size())
-		{
-			this->setStatus(403);
-		    this->serveErrorPage(errorPages);
 		}
 	}
-	else
-	{
-		this->setStatus(403);
-		this->serveErrorPage(errorPages);
-	}
+	this->setStatus(403);
+	this->serveErrorPage(errorPages);
 }
 
 void Response::post(const Request &request)
