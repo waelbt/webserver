@@ -34,6 +34,7 @@ class Request
         ChunkState    _chunkState;
         size_t        _chunkSize;
         int           _status;
+        size_t         _bodySize;
         static int    contentState;
 
         void parseUrl(std::string const &line);
@@ -46,7 +47,6 @@ class Request
         void setChunkedBody(std::istringstream &req);
     public:
         Request();
-        Request(std::string const &request, Configuration const & conf);
         ~Request();
         Request& operator=(const Request& other);
 
@@ -56,6 +56,6 @@ class Request
         std::string const &   getPath() const;
         Location const &      getLocation() const;
         ChunkState const &    getChunkedState() const;
-        void                  parseRequest(std::string const &request, Configuration const & conf);
+        void                  parseRequest(std::string const &request, Configuration const & conf, int &r);
         void                  printElement();
 };

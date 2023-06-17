@@ -99,6 +99,7 @@ int Webserver::fetch_request (Client *client, const Configuration& conf)
 	int r;
 
 	r = recv(client->_socket, request, MAX_REQUEST_SIZE, MSG_DONTWAIT);
+	std::cout << "Request from " << r << std::endl;
 	if (r < 1)
 	{
 		std::cout << "Unexpected disconnect from " << client->get_client_address() << std::endl;
@@ -108,7 +109,7 @@ int Webserver::fetch_request (Client *client, const Configuration& conf)
 	else
 	{
 		request[r] = '\0';
-		client->_request.parseRequest(request, conf);
+		client->_request.parseRequest(request, conf, r);
 		if (client->_request.getChunkedState() == DONE)
 		{
 			FD_CLR(client->_socket, &_socketset);

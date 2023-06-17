@@ -74,11 +74,6 @@ Request::Request() : _request(), _conf(), _location(), _path(), _body(), _chunkS
 {
 }
 
-Request::Request(std::string const &request, Configuration const & conf) : _request(), _conf(conf), _location(), _path(), _body(), _chunkState(UNDONE), _chunkSize(0), _status(200)
-{
-    this->parseRequest(request, conf);
-}
-
 Request& Request::operator=(const Request& other)
 {
     this->_request = other._request;
@@ -300,11 +295,15 @@ void Request::badFormat()
         this->checkMethod();
 }
 
-void Request::parseRequest(std::string const &request, Configuration const & conf)
+void Request::parseRequest(std::string const &request, Configuration const & conf, int &r)
 {
     std::string line;
     std::istringstream req(request);
 
+    _bodySize += r;
+    std::cout << "request size ------------>" << request.size() << "<------------" << std::endl;
+    std::cout << "the body size ------------>" << _bodySize << "<------------" << std::endl;
+    std::cout << request << std::endl;
     if (!this->_request.empty())
         goto setbody;
     this->_conf = conf;
