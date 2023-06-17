@@ -55,7 +55,7 @@ class Server
 		Server(const Server& other);
 		Server& operator=(const Server& other);
 
-		void setup_server_socket(std::string host, std::string port);
+		SOCKET server_socket(std::string host, std::string port);
 		class ServerException : public CustomeExceptionMsg
 		{
 			public:

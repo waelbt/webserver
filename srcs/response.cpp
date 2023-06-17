@@ -583,11 +583,8 @@ void Response::serveErrorPage(std::map<int, std::string> errorPages)
 	if (errorPages.find(this->_status) != errorPages.end() && errorPages[this->_status] != "" && this->isFileExists(errorPages[this->_status]))
 		this->serveStaticFile(errorPages[this->_status], errorPages);
 	else
-	{
 		this->serveStaticFile("static/error/" + this->intToString(this->_status) + ".html", errorPages);
-	}
 }
-
 std::string Response::sendHeader()
 {
 	std::stringstream ss;
