@@ -157,8 +157,8 @@ int Webserver::send_response (Client *client)
 		tmp = client->_response.sendHeader();
 	else
 		tmp = client->_response.getBody();
-	std::cout << tmp << std::endl;
-	send(client->_socket, tmp.c_str(), tmp.length(), 0);
+	// std::cout << tmp << std::endl;
+	std::cout << send(client->_socket, tmp.c_str(), tmp.length(), 0) << std::endl;
 	if (client->_response.getIsBodySent() == true)
 	{
 		FD_CLR(client->_socket, &_writeset);

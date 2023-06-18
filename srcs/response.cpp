@@ -231,7 +231,7 @@ void Response::serveStaticFile(std::string url, std::map<int, std::string> &erro
 	if (!this->_isFileOpned)
 	{
 		this->_file.close();
-		this->_file.open(url.c_str());
+		this->_file.open(url.c_str(), std::ios::in | std::ios::binary);
 		if (this->_file.fail()) {
 			std::cerr << "Failed to open file" << std::endl;
 			this->setStatus(403);
@@ -252,14 +252,17 @@ void Response::serveStaticFile(std::string url, std::map<int, std::string> &erro
 		}
 		else
 		{
-			char buffer[1024];
-			this->_file.read(buffer, 1024);
+			std::fstream file("hhhhhh", std::ios::out | std::ios::app);
+			char buffer[40000];
+			this->_file.read(buffer, 40000);
+			std::string line(buffer, this->_file.gcount());
 			if (this->_file.eof())
 			{
 				this->setIsBodySent(true);
 				this->_file.close();
 			}
-			this->setBody(buffer);
+			this->setBody(line);
+			file << line;
 		}
 	}
 	else
@@ -458,27 +461,35 @@ void Response::serveCGIFile(std::string cgiPath, std::map<int, std::string> &err
 	std::string line;
 	std::string header;
 	std::string body;
-	bool isHeader = true;
-	while (getline(file, line))
+	if (this->_isHeaderSent == false)
 	{
-		if (isHeader)
+		bool isHeader = true;
+		while (getline(file, line))
 		{
-			if (line.empty())
+			if (isHeader)
 			{
-				isHeader = false;
-				continue;
+				if (line.empty())
+				{
+					isHeader = false;
+					continue;
+				}
+				header += line + "\n";
 			}
-			header += line + "\n";
 		}
-		else
+		this->parseResponseHeader(header);
+	}else{
+		std::fstream file("hhhhhh", std::ios::out | std::ios::app);
+		char buffer[40000];
+		this->_file.read(buffer, 40000);
+		std::string line(buffer, this->_file.gcount());
+		if (this->_file.eof())
 		{
-			body += line + "\n";
+			this->setIsBodySent(true);
+			this->_file.close();
 		}
+		this->setBody(line);
+		file << line;
 	}
-	this->parseResponseHeader(header);
-	this->setBody(body);
-	std::cout << this->toString() << std::endl;
-	file.close();
 }
 
 void Response::parseResponseHeader(std::string responseHeader)
