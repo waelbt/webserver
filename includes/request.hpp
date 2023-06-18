@@ -34,7 +34,6 @@ class Request
         ChunkState    _chunkState;
         size_t        _chunkSize;
         int           _status;
-        int           _bodySize;
         static int    contentState;
 
         void parseUrl(std::string const &line);

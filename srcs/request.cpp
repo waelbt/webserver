@@ -70,7 +70,7 @@ size_t stringToDecimal(std::string const &str)
     return decimal;
 }
 
-Request::Request() : _request(), _conf(), _location(), _path(), _body(), _chunkState(UNDONE), _chunkSize(0), _status(200), _bodySize(0)
+Request::Request() : _request(), _conf(), _location(), _path(), _body(), _chunkState(UNDONE), _chunkSize(0), _status(200)
 {
 }
 
@@ -94,15 +94,15 @@ void Request::setFullBody(char const *request, int &r)
     std::string line;
     std::istringstream req(request);
 
-    r = 0;
     if (!this->_chunkSize)
         this->_chunkSize = stringToDecimal(this->_request["Content-Length"]);
     std::cout << "chunkSize  ->" << this->_chunkSize << std::endl;
     if (this->_body.empty())
         this->_body = generateRandomFile() + ".txt";
     std::ofstream fdBody(this->_body, std::ios::app);
-    char buffer[this->_chunkSize + 1];
-    req.read(buffer, this->_chunkSize);
+    std::cout << "the read size is " << r << std::endl;
+    char buffer[r + 1];
+    req.read(buffer, r);
     buffer[req.gcount()] = '\0';
     fdBody << buffer;
     fdBody.close();
@@ -118,7 +118,6 @@ void Request::setChunkedBody(char const *request, int &r)
     std::string line;
     std::istringstream req(request);
 
-    r = 0;
     if (!this->_chunkSize)
     {
         std::getline(req, line);
@@ -129,8 +128,9 @@ void Request::setChunkedBody(char const *request, int &r)
         this->_body = generateRandomFile() + ".txt";
     again:
     std::ofstream fdBody(this->_body, std::ios::app);
-    char buffer[this->_chunkSize + 1];
-    req.read(buffer, this->_chunkSize);
+    std::cout << "the read size is " << r << std::endl;
+    char buffer[r + 1];
+    req.read(buffer, r);
     buffer[req.gcount()] = '\0';
     fdBody << buffer;
     fdBody.close();
@@ -303,19 +303,19 @@ void Request::parseRequest(char const *request, Configuration const & conf, int 
 {
     std::string line;
     std::istringstream req(request);
+    int bodySize = r;
 
-    this->_bodySize = r;
     if (!this->_request.empty())
         goto setbody;
     this->_conf = conf;
     std::getline(req, line);
-    this->_bodySize -= line.length() + 1;
+    bodySize -= line.length() + 1;
     this->parseUrl(line);
     if (this->_status != 200)
         return ;
     while (std::getline(req, line))
     {
-        this->_bodySize -= line.length() + 1;
+        bodySize -= line.length() + 1;
         if (line == "\r")
             goto setbody;
         size_t separator = line.find(": ");
@@ -325,7 +325,7 @@ void Request::parseRequest(char const *request, Configuration const & conf, int 
     setbody:
     std::string method = this->_request["Method"];
     if (method == "POST")
-        this->setBody(request + (r - this->_bodySize), this->_bodySize);
+        this->setBody(request + (r - bodySize), bodySize);
     else
     {
         this->badFormat();
