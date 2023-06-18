@@ -70,7 +70,7 @@ size_t stringToDecimal(std::string const &str)
     return decimal;
 }
 
-Request::Request() : _request(), _conf(), _location(), _path(), _body(), _chunkState(UNDONE), _chunkSize(0), _status(200)
+Request::Request() : _request(), _conf(), _location(), _path(), _body(), _chunkState(UNDONE), _chunkSize(0), _status(200), _bodySize(0)
 {
 }
 
@@ -89,10 +89,12 @@ Request& Request::operator=(const Request& other)
 Request::~Request()
 {
 }
-void Request::setFullBody(std::istringstream &req)
+void Request::setFullBody(char const *request, int &r)
 {
     std::string line;
+    std::istringstream req(request);
 
+    r = 0;
     if (!this->_chunkSize)
         this->_chunkSize = stringToDecimal(this->_request["Content-Length"]);
     std::cout << "chunkSize  ->" << this->_chunkSize << std::endl;
@@ -111,10 +113,12 @@ void Request::setFullBody(std::istringstream &req)
         return ;
     _chunkState = DONE;
 }
-void Request::setChunkedBody(std::istringstream &req)
+void Request::setChunkedBody(char const *request, int &r)
 {
     std::string line;
+    std::istringstream req(request);
 
+    r = 0;
     if (!this->_chunkSize)
     {
         std::getline(req, line);
@@ -142,7 +146,7 @@ void Request::setChunkedBody(std::istringstream &req)
     _chunkState = DONE;
 }
 
-void Request::setBody(std::istringstream &req)
+void Request::setBody(char const *request, int &r)
 {
     std::string line;
 
@@ -153,9 +157,9 @@ void Request::setBody(std::istringstream &req)
         return;
     }
     if (this->_request.find("Transfer-Encoding") != this->_request.end())
-        setChunkedBody(req);
+        setChunkedBody(request, r);
     else
-        setFullBody(req);
+        setFullBody(request, r);
     std::cout << std::endl;
 }
 
@@ -295,24 +299,25 @@ void Request::badFormat()
         this->checkMethod();
 }
 
-void Request::parseRequest(std::string const &request, Configuration const & conf, int &r)
+void Request::parseRequest(char const *request, Configuration const & conf, int &r)
 {
     std::string line;
     std::istringstream req(request);
 
-    _bodySize += r;
-    std::cout << "request size ------------>" << request.size() << "<------------" << std::endl;
-    std::cout << "the body size ------------>" << _bodySize << "<------------" << std::endl;
-    std::cout << request << std::endl;
+    this->_bodySize = r;
     if (!this->_request.empty())
         goto setbody;
     this->_conf = conf;
     std::getline(req, line);
+    this->_bodySize -= line.length() + 1;
     this->parseUrl(line);
     if (this->_status != 200)
         return ;
-    while (std::getline(req, line) && line != "\r")
+    while (std::getline(req, line))
     {
+        this->_bodySize -= line.length() + 1;
+        if (line == "\r")
+            goto setbody;
         size_t separator = line.find(": ");
         if (separator != std::string::npos)
             this->_request[line.substr(0, separator)] = line.substr(separator + 2, line.length() - separator - 3);
@@ -320,7 +325,7 @@ void Request::parseRequest(std::string const &request, Configuration const & con
     setbody:
     std::string method = this->_request["Method"];
     if (method == "POST")
-        this->setBody(req);
+        this->setBody(request + (r - this->_bodySize), this->_bodySize);
     else
     {
         this->badFormat();
