@@ -151,37 +151,20 @@ void Webserver::run()
 
 int Webserver::send_response(Client *client)
 {
-	std::string tmp;
-	// std::cout << client->_response.getIsHeaderSent() << std::endl;
-	client->_response.serveResponse(client->_request);
-	if (client->_response.getIsHeaderParsed() && !client->_response.getIsHeaderSent())
+	if (!client->_data_sent.length())
 	{
-		tmp = client->_response.sendHeader();
-		std::cout << "HEADER" << std::endl;
-		std::cout << tmp << std::endl;
-		// exit(-1);
+		client->_response.serveResponse(client->_request);
+		if (client->_response.getIsHeaderParsed() && !client->_response.getIsHeaderSent())
+			client->_data_sent = client->_response.sendHeader();
+		else
+			client->_data_sent = client->_response.getBody();
 	}
-	else
-		tmp = client->_response.getBody();
-
-	// Send the data in a loop until all bytes are sent.
-	size_t bytesSent = 0;
-	while (bytesSent < tmp.length())
-	{
-		ssize_t result = send(client->_socket, tmp.c_str() + bytesSent, tmp.length() - bytesSent, 0);
-		if (result < 0)
-			while (result < 0 && errno == EINTR)
-				result = send(client->_socket, tmp.c_str() + bytesSent, tmp.length() - bytesSent, 0);
-
-		bytesSent += result;
-	}
-
-	std::cout << bytesSent << std::endl;
-	if (client->_response.getIsBodySent() == true)
-	{
-		FD_CLR(client->_socket, &_writeset);
-		return 1;
-	}
+	client->_bytesSent = send(client->_socket, client->_data_sent.c_str(), client->_data_sent.size(), 0);
+	if (client->_response.getIsBodySent() == true || (client->_bytesSent == -1)) {
+		FD_CLR(client->_socket, &_writeset); return 1; }
+	if ((size_t)client->_bytesSent < client->_data_sent.length()) {
+		client->_data_sent = client->_data_sent.substr(client->_bytesSent, client->_data_sent.length()); return 0;}
+	client->_data_sent.clear();
 	return 0;
 }
 

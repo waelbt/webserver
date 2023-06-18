@@ -28,6 +28,8 @@ struct Client {
 	SOCKET _socket;
 	Request _request;
 	Response _response;
+	std::string _data_sent;
+	ssize_t _bytesSent;
 
 	// methods
 	Client();

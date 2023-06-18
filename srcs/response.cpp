@@ -216,7 +216,6 @@ void Response::serveDirectoryAutoIndex(std::string url, std::map<int, std::strin
 	closedir(dir);
 
 	std::string responseBody = "<html><body><h1>Directory Listing</h1><ul>" + directoryContent + "</ul></body></html>";
-
 	this->setHeader("Content-Type", "text/html");
 	std::time_t result = std::time(NULL);
 	this->_generatedName = "/tmp/" + std::to_string(result) + ".txt";
@@ -232,6 +231,7 @@ void Response::serveStaticFile(std::string url, std::map<int, std::string> &erro
 	if (!this->_isFileOpned)
 	{
 		this->_file.close();
+		// notes ila kano bzaaf deyal fd opening fe system 3ayt 3la imran dzb
 		this->_file.open(url.c_str(), std::ios::in | std::ios::binary);
 		if (this->_file.fail()) {
 			std::cerr << "Failed to open file" << std::endl;
