@@ -252,17 +252,21 @@ void Response::serveStaticFile(std::string url, std::map<int, std::string> &erro
 		}
 		else
 		{
-			std::fstream file("hhhhhh", std::ios::out | std::ios::app);
-			char buffer[40000];
-			this->_file.read(buffer, 40000);
-			std::string line(buffer, this->_file.gcount());
-			if (this->_file.eof())
+			char buffer[65536];
+			this->_file.read(buffer, sizeof(buffer));
+			std::streamsize bytesRead = this->_file.gcount();
+
+			if (bytesRead > 0)
+			{
+				std::string chunk(buffer, bytesRead);
+				this->setBody(chunk);
+			}
+			else
 			{
 				this->setIsBodySent(true);
 				this->_file.close();
+				this->setIsFileOpned(false);
 			}
-			this->setBody(line);
-			file << line;
 		}
 	}
 	else

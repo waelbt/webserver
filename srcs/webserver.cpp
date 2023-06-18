@@ -154,11 +154,26 @@ int Webserver::send_response (Client *client)
 	std::string tmp;
 	client->_response.serveResponse(client->_request);
 	if (client->_response.getIsHeaderSent() == false)
+	{
 		tmp = client->_response.sendHeader();
+		std::cout << tmp << std::endl;
+	}
 	else
 		tmp = client->_response.getBody();
-	// std::cout << tmp << std::endl;
-	std::cout << send(client->_socket, tmp.c_str(), tmp.length(), 0) << std::endl;
+
+	// Send the data in a loop until all bytes are sent.
+	size_t bytesSent = 0;
+	while (bytesSent < tmp.length())
+	{
+		ssize_t result = send(client->_socket, tmp.c_str() + bytesSent, tmp.length() - bytesSent, 0);
+		if (result < 0)
+			while (result < 0 && errno == EINTR)
+				result = send(client->_socket, tmp.c_str() + bytesSent, tmp.length() - bytesSent, 0);
+
+		bytesSent += result;
+	}
+
+	std::cout << bytesSent << std::endl;
 	if (client->_response.getIsBodySent() == true)
 	{
 		FD_CLR(client->_socket, &_writeset);

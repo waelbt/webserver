@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   main.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: waboutzo <waboutzo@student.1337.ma>        +#+  +:+       +#+        */
+/*   By: hlimouri <hlimouri@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/15 15:38:53 by waboutzo          #+#    #+#             */
-/*   Updated: 2023/06/15 15:46:38 by waboutzo         ###   ########.fr       */
+/*   Updated: 2023/06/18 13:09:44 by hlimouri         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,6 +39,7 @@ void signalHandler(int signal)
 int main(int ac, char **av)
 {
 	std::signal(SIGINT, signalHandler);
+	std::signal(SIGPIPE, SIG_IGN);
 	try
 	{
 		std::string content(((ac != 2) ? OpenPath() : OpenPath(av[1])));
