@@ -149,14 +149,17 @@ void Webserver::run()
 	this->stop();
 }
 
-int Webserver::send_response (Client *client)
+int Webserver::send_response(Client *client)
 {
 	std::string tmp;
+	// std::cout << client->_response.getIsHeaderSent() << std::endl;
 	client->_response.serveResponse(client->_request);
-	if (client->_response.getIsHeaderSent() == false)
+	if (client->_response.getIsHeaderParsed() && !client->_response.getIsHeaderSent())
 	{
 		tmp = client->_response.sendHeader();
+		std::cout << "HEADER" << std::endl;
 		std::cout << tmp << std::endl;
+		// exit(-1);
 	}
 	else
 		tmp = client->_response.getBody();

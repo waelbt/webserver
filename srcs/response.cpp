@@ -2,7 +2,7 @@
 
 std::map<int, std::string> _httpResponses;
 
-Response::Response(): _status(200), _isCGIInProcess(0), _isCGIFinished(0), _isFileOpned(0), _isHeaderSent(0), _isBodySent(0), _body(""), _generatedName("")
+Response::Response(): _status(200), _isCGIInProcess(0), _isCGIFinished(0), _isCGIParsed(0), _isFileOpned(0), _isHeaderSent(0), _isBodySent(0), _isHeaderParsed(0), _body(""), _generatedName("")
 {
 	_httpResponses[200] = "OK";
 	_httpResponses[201] = "Created";
@@ -140,7 +140,8 @@ void Response::get(const Request &request)
 	{
 		if (pathType == "file")
 		{
-			this->setHeader("Content-Type", headers["Content-Type"]);
+			if (!this->_isFileOpned)
+				this->setHeader("Content-Type", headers["Content-Type"]);
 			this->serveFile(path, errorPages, request);
 		}
 		else if (pathType == "directory")
@@ -249,6 +250,7 @@ void Response::serveStaticFile(std::string url, std::map<int, std::string> &erro
 			this->_file.seekg(0, std::ios::end);
 			this->setHeader("Content-Length", to_string(this->_file.tellg()));
 			this->_file.seekg(0, std::ios::beg);
+			this->_isHeaderParsed = true;
 		}
 		else
 		{
@@ -453,58 +455,81 @@ int Response::checkCGIStatus(std::map<int, std::string> &errorPages)
 void Response::serveCGIFile(std::string cgiPath, std::map<int, std::string> &errorPages)
 {
 	std::cout << "Serving CGI file" << std::endl;
-	std::fstream file;
-	file.open(cgiPath.c_str(), std::ios::in);
-	if (!file.is_open())
+	if (!this->_isCGIParsed)
 	{
-		std::cout << "Error opening CGI file" << std::endl;
-		this->setStatus(403);
-		this->serveErrorPage(errorPages);
-		return;
-	}
-	std::string line;
-	std::string header;
-	std::string body;
-	if (this->_isHeaderSent == false)
-	{
-		bool isHeader = true;
-		while (getline(file, line))
+
+		if (!this->_isFileOpned)
 		{
-			if (isHeader)
-			{
-				if (line.empty())
-				{
-					isHeader = false;
-					continue;
-				}
-				header += line + "\n";
-			}
-		}
-		this->parseResponseHeader(header);
-	}else{
-		std::fstream file("hhhhhh", std::ios::out | std::ios::app);
-		char buffer[40000];
-		this->_file.read(buffer, 40000);
-		std::string line(buffer, this->_file.gcount());
-		if (this->_file.eof())
-		{
-			this->setIsBodySent(true);
 			this->_file.close();
+			this->_file.open(cgiPath.c_str(), std::ios::in | std::ios::binary);
+			if (this->_file.fail())
+			{
+				std::cerr << "Failed to open file" << std::endl;
+				this->setStatus(403);
+				this->serveErrorPage(errorPages);
+			}
+			else
+				this->setIsFileOpned(true);
 		}
-		this->setBody(line);
-		file << line;
+
+		if (this->_isFileOpned)
+		{
+			std::string line;
+			std::string header;
+			std::string body;
+
+			std::streamsize size = 0;
+
+			while (getline(this->_file, line))
+			{
+				if (line == "\r")
+					break;
+				header += line;
+				header += "\n";
+				size += line.size() + 1;
+			}
+
+			this->parseResponseHeader(header);
+
+			// Read the rest of the file into the body string:
+			while (getline(this->_file, line))
+			{
+				body += line;
+				body += "\n";
+			}
+			// Close the ifstream:
+			this->_file.close();
+			std::cout << "File closed" << std::endl;
+			std::cout << "Body: " << std::endl;
+			std::cout << body << std::endl;
+			// Open the file as ofstream and write the body back to it:
+			std::ofstream ofs(cgiPath.c_str(), std::ios::out | std::ios::trunc);
+			ofs << body;
+
+			// Close the ofstream:
+			ofs.close();
+
+			this->setIsFileOpned(false);
+		}
+		this->_isCGIParsed = true;
 	}
+	std::cout << "CGI parsed" << std::endl;
+	this->serveStaticFile(cgiPath, errorPages);
 }
 
 void Response::parseResponseHeader(std::string responseHeader)
 {
 	std::vector<std::string> lines = this->split(responseHeader, "\r\n");
 	std::vector<std::string> firstLine = this->split(lines[0], ": ");
-	// this->setProtocol(firstLine[0]);
-	this->setStatus(atoi(firstLine[1].c_str()));
+	if (firstLine[0] == "Status")
+		this->setStatus(atoi(firstLine[1].c_str()));
+	else
+		this->setStatus(200);
 	for (int i = 1; i < (int)lines.size(); i++)
 	{
 		std::vector<std::string> header = this->split(lines[i], ": ");
+		if (header[0] == "Content-type")
+			header[0] = "Content-Type";
 		this->setHeader(header[0], header[1]);
 	}
 }
@@ -599,4 +624,9 @@ bool Response::getIsHeaderSent() const
 bool Response::getIsBodySent() const
 {
 	return this->_isBodySent;
+}
+
+bool Response::getIsHeaderParsed() const
+{
+	return this->_isHeaderParsed;
 }

@@ -39,6 +39,7 @@ public:
 	std::map<std::string, std::string> getHeaders() const;
 	bool getIsHeaderSent() const;
 	bool getIsBodySent() const;
+	bool getIsHeaderParsed() const;
 
 	void setBody(std::string body);
 	void setStatus(int status);
@@ -85,9 +86,11 @@ private :
 	std::ifstream _file;
 	bool _isCGIInProcess;
 	bool _isCGIFinished;
+	bool _isCGIParsed;
 	bool _isFileOpned;
 	bool _isHeaderSent;
 	bool _isBodySent;
+	bool _isHeaderParsed;
 	pid_t _pid;
 	std::string _body;
 	std::string _generatedName;
