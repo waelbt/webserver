@@ -32,6 +32,7 @@ class Request
         std::string   _path;
         std::string   _body;
         ChunkState    _chunkState;
+        size_t        _bodySize;
         size_t        _chunkSize;
         int           _status;
         static int    contentState;
@@ -41,9 +42,10 @@ class Request
         void badFormat();
         void checkLocation();
         void checkMethod();
-        void setBody(char const *request, int &r);
-        void setFullBody(char const *request, int &r);
-        void setChunkedBody(char const *request, int &r);
+        void setBody(char *request, int &r);
+        void setFullBody(char *request, int &r);
+        void setChunkedBody(char *request, int &r);
+        int  readChunkedBody(char *request, int &r);
     public:
         Request();
         ~Request();
@@ -55,6 +57,6 @@ class Request
         std::string const &   getPath() const;
         Location const &      getLocation() const;
         ChunkState const &    getChunkedState() const;
-        void                  parseRequest(char const *request, Configuration const & conf, int &r);
+        void                  parseRequest(char *request, Configuration const & conf, int &r);
         void                  printElement();
 };

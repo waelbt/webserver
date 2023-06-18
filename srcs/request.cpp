@@ -70,7 +70,7 @@ size_t stringToDecimal(std::string const &str)
     return decimal;
 }
 
-Request::Request() : _request(), _conf(), _location(), _path(), _body(), _chunkState(UNDONE), _chunkSize(0), _status(200)
+Request::Request() : _request(), _conf(), _location(), _path(), _body(), _chunkState(UNDONE), _bodySize(0), _chunkSize(0), _status(200)
 {
 }
 
@@ -89,64 +89,88 @@ Request& Request::operator=(const Request& other)
 Request::~Request()
 {
 }
-void Request::setFullBody(char const *request, int &r)
-{
-    std::string line;
-    std::istringstream req(request);
 
-    if (!this->_chunkSize)
-        this->_chunkSize = stringToDecimal(this->_request["Content-Length"]);
-    std::cout << "chunkSize  ->" << this->_chunkSize << std::endl;
+void Request::setFullBody(char *request, int &r)
+{
+    if (!this->_bodySize)
+        this->_bodySize = stringToDecimal(this->_request["Content-Length"]);
+    std::cout << "chunkSize  ->" << this->_bodySize << std::endl;
     if (this->_body.empty())
         this->_body = generateRandomFile() + ".txt";
     std::ofstream fdBody(this->_body, std::ios::app);
-    std::cout << "the read size is " << r << std::endl;
-    char buffer[r + 1];
-    req.read(buffer, r);
-    buffer[req.gcount()] = '\0';
-    fdBody << buffer;
+    for (int i = 0; i < r; i++)
+        fdBody << request[i];
     fdBody.close();
-    this->_chunkSize -= req.gcount();
-    std::cout << "gcount ---->" << req.gcount() << std::endl;
-    std::cout << "chunkSize after dechunking ->" << this->_chunkSize << std::endl;
-    if (this->_chunkSize)
+    this->_bodySize -= r;
+    std::cout << "gcount ---->" << r << std::endl;
+    std::cout << "chunkSize after dechunking ->" << this->_bodySize << std::endl;
+    if (this->_bodySize)
         return ;
     _chunkState = DONE;
 }
-void Request::setChunkedBody(char const *request, int &r)
+
+int Request::readChunkedBody(char *request, int &r)
+{
+    std::ofstream fdBody(this->_body, std::ios::app);
+    for (int i = 0; i < r; i++)
+    {
+        fdBody << request[i];
+        this->_chunkSize++;
+        if (this->_chunkSize == this->_bodySize)
+        {
+            fdBody.close();
+            return i;
+        }
+    }
+    fdBody.close();
+    return r;
+}
+
+void Request::setChunkedBody(char *request, int &r)
 {
     std::string line;
     std::istringstream req(request);
 
-    if (!this->_chunkSize)
+    if (!this->_bodySize)
     {
         std::getline(req, line);
-        this->_chunkSize = hexaToDecimal(line.substr(0, line.length() - 1));
+        this->_bodySize = hexaToDecimal(line.substr(0, line.length() - 1));
+        request += line.length() + 1;
+        r -= line.length() + 1;
     }
-    std::cout << "chunkSize  ->" << this->_chunkSize << std::endl;
+    std::cout << "chunkSize  ->" << this->_bodySize << std::endl;
     if (this->_body.empty())
         this->_body = generateRandomFile() + ".txt";
     again:
-    std::ofstream fdBody(this->_body, std::ios::app);
-    std::cout << "the read size is " << r << std::endl;
-    char buffer[r + 1];
-    req.read(buffer, r);
-    buffer[req.gcount()] = '\0';
-    fdBody << buffer;
-    fdBody.close();
-    this->_chunkSize -= req.gcount();
-    std::cout << "gcount ---->" << req.gcount() << std::endl;
+    int chunkRead = this->readChunkedBody(request, r);
+    std::cout << "gcount ---->" << chunkRead << std::endl;
     std::cout << "chunkSize after dechunking ->" << this->_chunkSize << std::endl;
-    if (this->_chunkSize)
-        return ;
-    std::getline(req, line);
-    this->_chunkSize = hexaToDecimal(line);
-    if (this->_chunkSize)
-        goto again;
-    _chunkState = DONE;
+    if (this->_chunkSize == this->_bodySize)
+    {
+        chunkRead += 3;
+        this->_chunkSize = 0;
+        this->_bodySize = 0;
+        for (;request[chunkRead] != '\n'; chunkRead++)
+        {
+            if (request[chunkRead] != '\r')
+                line += request[chunkRead];
+        }
+        request += chunkRead + 1;
+        r -= chunkRead + 1;
+        this->_bodySize = hexaToDecimal(line);
+        std::cout << "here " << this->_bodySize <<  std::endl;
+        if (!this->_bodySize)
+        {
+            _chunkState = DONE;
+            std::cout << "done" << std::endl;
+            return ;
+        }
+        else if (r > 0)
+            goto again;
+    }
 }
 
-void Request::setBody(char const *request, int &r)
+void Request::setBody(char *request, int &r)
 {
     std::string line;
 
@@ -299,7 +323,7 @@ void Request::badFormat()
         this->checkMethod();
 }
 
-void Request::parseRequest(char const *request, Configuration const & conf, int &r)
+void Request::parseRequest(char *request, Configuration const & conf, int &r)
 {
     std::string line;
     std::istringstream req(request);
