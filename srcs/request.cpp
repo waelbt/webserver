@@ -94,16 +94,13 @@ void Request::setFullBody(char *request, int &r)
 {
     if (!this->_bodySize)
         this->_bodySize = stringToDecimal(this->_request["Content-Length"]);
-    std::cout << "chunkSize  ->" << this->_bodySize << std::endl;
     if (this->_body.empty())
-        this->_body = generateRandomFile() + ".txt";
+        this->_body = generateRandomFile() + this->_extention;
     std::ofstream fdBody(this->_body, std::ios::app);
     for (int i = 0; i < r; i++)
         fdBody << request[i];
     fdBody.close();
     this->_bodySize -= r;
-    std::cout << "gcount ---->" << r << std::endl;
-    std::cout << "chunkSize after dechunking ->" << this->_bodySize << std::endl;
     if (this->_bodySize)
         return ;
     _chunkState = DONE;
@@ -138,19 +135,17 @@ void Request::setChunkedBody(char *request, int &r)
         request += line.length() + 1;
         r -= line.length() + 1;
     }
-    std::cout << "chunkSize  ->" << this->_bodySize << std::endl;
     if (this->_body.empty())
-        this->_body = generateRandomFile() + ".txt";
+        this->_body = generateRandomFile() + this->_extention;
     again:
     int chunkRead = this->readChunkedBody(request, r);
-    std::cout << "gcount ---->" << chunkRead << std::endl;
-    std::cout << "chunkSize after dechunking ->" << this->_chunkSize << std::endl;
     if (this->_chunkSize == this->_bodySize)
     {
-        chunkRead += 3;
+        std::cout << "------>" << request + chunkRead << "<---------" << std::endl;
+        chunkRead += 2;
         this->_chunkSize = 0;
         this->_bodySize = 0;
-        for (;request[chunkRead] != '\n'; chunkRead++)
+        for (;chunkRead < r && request[chunkRead] != '\n'; chunkRead++)
         {
             if (request[chunkRead] != '\r')
                 line += request[chunkRead];
@@ -158,11 +153,11 @@ void Request::setChunkedBody(char *request, int &r)
         request += chunkRead + 1;
         r -= chunkRead + 1;
         this->_bodySize = hexaToDecimal(line);
-        std::cout << "here " << this->_bodySize <<  std::endl;
+        std::cout << "line: " << line << std::endl;
+        std::cout << "bodySize: " << this->_bodySize << std::endl;
         if (!this->_bodySize)
         {
             _chunkState = DONE;
-            std::cout << "done" << std::endl;
             return ;
         }
         else if (r > 0)
@@ -184,7 +179,6 @@ void Request::setBody(char *request, int &r)
         setChunkedBody(request, r);
     else
         setFullBody(request, r);
-    std::cout << std::endl;
 }
 
 void Request::checkMethod()
@@ -255,23 +249,14 @@ void Request::setContentType(std::string const & content)
     if (!contentState)
     {
         for (int i = 0; i < 76; i++)
-            cnt[mimeType[i]] = contentType[i];
+            cnt[contentType[i]] = mimeType[i];
         contentState = 1;
     }
-    size_t dot;
-    for (int i = content.length() - 1; i >= 0; i--)
-    {
-        if (content[i] == '.')
-        {
-            dot = i;
-            goto dotfound;
-        }
-    }
-    this->_request["Content-Type"] = "text/plain";
-    return ;
-    dotfound:
-    std::string extention = content.substr(dot);
-    this->_request["Content-Type"] =  cnt.find(extention)->second;
+    RequestMap::iterator it = cnt.find(content);
+    if (it != cnt.end())
+        this->_extention = it->second;
+    else
+        this->_extention = ".txt";
 }
 
 void Request::parseUrl(std::string const &line)
@@ -293,7 +278,6 @@ void Request::parseUrl(std::string const &line)
     if (split == "\0" || split != "HTTP/1.1")
         goto badline;
     this->_request["Protocol"] = split;
-    this->setContentType(this->_request["URL"]);
     return;
     badline:
     this->_status = 400;
@@ -347,6 +331,7 @@ void Request::parseRequest(char *request, Configuration const & conf, int &r)
             this->_request[line.substr(0, separator)] = line.substr(separator + 2, line.length() - separator - 3);
     }
     setbody:
+    this->setContentType(this->_request["Content-Type"]);
     std::string method = this->_request["Method"];
     if (method == "POST")
         this->setBody(request + (r - bodySize), bodySize);

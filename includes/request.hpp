@@ -31,6 +31,7 @@ class Request
         Location      _location;
         std::string   _path;
         std::string   _body;
+        std::string   _extention;
         ChunkState    _chunkState;
         size_t        _bodySize;
         size_t        _chunkSize;
