@@ -40,6 +40,7 @@ public:
 	bool getIsHeaderSent() const;
 	bool getIsBodySent() const;
 	bool getIsHeaderParsed() const;
+	bool getIsRedirect() const;
 
 	void setBody(std::string body);
 	void setStatus(int status);
@@ -91,6 +92,7 @@ private :
 	bool _isHeaderSent;
 	bool _isBodySent;
 	bool _isHeaderParsed;
+	bool _isRedirect;
 	pid_t _pid;
 	std::string _body;
 	std::string _generatedName;

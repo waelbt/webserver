@@ -2,7 +2,7 @@
 
 std::map<int, std::string> _httpResponses;
 
-Response::Response(): _status(200), _isCGIInProcess(0), _isCGIFinished(0), _isCGIParsed(0), _isFileOpned(0), _isHeaderSent(0), _isBodySent(0), _isHeaderParsed(0), _body(""), _generatedName("")
+Response::Response(): _status(200), _isCGIInProcess(0), _isCGIFinished(0), _isCGIParsed(0), _isFileOpned(0), _isHeaderSent(0), _isBodySent(0), _isHeaderParsed(0), _isRedirect(0), _body(""), _generatedName("")
 {
 	_httpResponses[200] = "OK";
 	_httpResponses[201] = "Created";
@@ -190,6 +190,9 @@ void Response::redirect(std::string uri)
 	std::cout << "redirect made" << std::endl;
 	this->setStatus(301);
 	this->setHeader("Location", uri);
+	this->_isHeaderParsed = true;
+	this->_isRedirect = true;
+	this->_isBodySent = true;
 }
 
 void Response::serveDirectoryAutoIndex(std::string url, std::map<int, std::string> &errorPages)
@@ -217,6 +220,7 @@ void Response::serveDirectoryAutoIndex(std::string url, std::map<int, std::strin
 
 	std::string responseBody = "<html><body><h1>Directory Listing</h1><ul>" + directoryContent + "</ul></body></html>";
 	this->setHeader("Content-Type", "text/html");
+	this->_isHeaderParsed = true;
 	std::time_t result = std::time(NULL);
 	this->_generatedName = "/tmp/" + std::to_string(result) + ".txt";
 	std::fstream file(this->_generatedName, std::ios::out);
@@ -626,4 +630,9 @@ bool Response::getIsBodySent() const
 bool Response::getIsHeaderParsed() const
 {
 	return this->_isHeaderParsed;
+}
+
+bool Response::getIsRedirect() const
+{
+	return this->_isRedirect;
 }
