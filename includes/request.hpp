@@ -60,6 +60,7 @@ class Request
         std::string const &   getPath() const;
         Location const &      getLocation() const;
         ChunkState const &    getChunkedState() const;
+        std::string const &   getBody() const;
         void                  parseRequest(char *request, Configuration const & conf, int &r);
         void                  printElement();
 };

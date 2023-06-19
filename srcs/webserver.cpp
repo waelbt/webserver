@@ -99,7 +99,6 @@ int Webserver::fetch_request (Client *client, const Configuration& conf)
 	int r;
 
 	r = recv(client->_socket, request, MAX_REQUEST_SIZE, MSG_DONTWAIT);
-	std::cout << "Request from " << r << std::endl;
 	if (r < 1)
 	{
 		std::cout << "Unexpected disconnect from " << client->get_client_address() << std::endl;
@@ -138,11 +137,11 @@ void Webserver::run()
 					if (!fetch_request(_client[i], it->second->get_configuration())) {
 						it->second->drop_client(i); continue ; }
 				}
-				if (FD_ISSET(_client[i]->_socket, &_writeset))
-				{
-					if(send_response(_client[i]))
-						it->second->drop_client(i);
-				}
+				// if (FD_ISSET(_client[i]->_socket, &_writeset))
+				// {
+				// 	if(send_response(_client[i]))
+				// 		it->second->drop_client(i);
+				// }
 		    }
         }
     }

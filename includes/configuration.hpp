@@ -52,7 +52,7 @@
 #define END_BLOCK '}'
 
 #define MAX_PENDING_CNX 10
-#define MAX_REQUEST_SIZE 2047
+#define MAX_REQUEST_SIZE 65536
 
 typedef char 								EntityType;
 typedef std::string::iterator 				StrIter;

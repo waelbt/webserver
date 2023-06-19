@@ -138,12 +138,8 @@ void Request::setChunkedBody(char *request, int &r)
     again:
     if (!this->_bodySize)
     {
-        int i = 0;
-        while (isHexa(request[i]))
-        {
+        for (int i =0; isHexa(request[i]); i++)
             this->_chunkedBodySize.push_back(request[i]);
-            i++;
-        }
         this->_bodySize = hexaToDecimal(this->_chunkedBodySize);
         request += this->_chunkedBodySize.length() + 2;
         r -= this->_chunkedBodySize.length() + 2;
@@ -219,7 +215,7 @@ void Request::checkMethod()
         }
     }
     
-    if (it == limitExcept.end() && method != "POST" && method != "DELETE" && method != "GET")
+    if (it == limitExcept.end() || (method != "POST" && method != "DELETE" && method != "GET"))
         this->_status = 405;
 }
 
@@ -387,4 +383,9 @@ Location const &  Request::getLocation() const
 ChunkState const &   Request::getChunkedState() const
 {
     return this->_chunkState;
+}
+
+std::string const &   Request::getBody() const
+{
+    return this->_body;
 }
