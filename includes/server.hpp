@@ -28,6 +28,8 @@ struct Client {
 	SOCKET _socket;
 	Request _request;
 	Response _response;
+	std::string _data_sent;
+	ssize_t _bytesSent;
 
 	// methods
 	Client();
@@ -55,7 +57,7 @@ class Server
 		Server(const Server& other);
 		Server& operator=(const Server& other);
 
-		void setup_server_socket(std::string host, std::string port);
+		SOCKET server_socket(std::string host, std::string port);
 		class ServerException : public CustomeExceptionMsg
 		{
 			public:

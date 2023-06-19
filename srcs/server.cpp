@@ -16,9 +16,8 @@ Server::Server() : _conf(), _listen_sockets(), _client()
 {
 }
 
-Server::Server(const Configuration& conf): _conf(conf), _client()
+Server::Server(const Configuration& conf): _conf(conf), _listen_sockets(server_socket(_conf.getHost(), _conf.getPort())) , _client()
 {
-	setup_server_socket(_conf.getHost(), _conf.getPort());
 }
 
 
@@ -33,7 +32,7 @@ void Server::setnonblocking(int sock)
 	throw ServerException("fcntl failed to set set the modified file status flags back to the socket") : (NULL);
 }
 
-void Server::setup_server_socket(std::string host, std::string port)
+SOCKET Server::server_socket(std::string host, std::string port)
 {	
 	int yes;
 	s_addrinfo hints;
@@ -57,10 +56,11 @@ void Server::setup_server_socket(std::string host, std::string port)
 		if (listen(_listen_sockets, MAX_PENDING_CNX) < 0)
 			error_message = "listen system call failed.";
 		freeaddrinfo(bind_addr);
-		return ;
+		return _listen_sockets;
 	}
 	freeaddrinfo(bind_addr);
 	throw ServerException(error_message);
+	return 0;
 }
 
 
