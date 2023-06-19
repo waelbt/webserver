@@ -58,6 +58,15 @@ size_t hexaToDecimal(std::string const &str)
     return decimal;
 }
 
+int isHexa(char c)
+{
+    std::string hexa = "0123456789abcdef";
+
+    if (hexa.find(c) != std::string::npos)
+        return 1;
+    return 0;
+}
+
 size_t stringToDecimal(std::string const &str)
 {
     if (str.empty())
@@ -70,7 +79,8 @@ size_t stringToDecimal(std::string const &str)
     return decimal;
 }
 
-Request::Request() : _request(), _conf(), _location(), _path(), _body(), _chunkState(UNDONE), _bodySize(0), _chunkSize(0), _status(200)
+Request::Request() : _request(), _conf(), _location(), _path(), _body(), _extention(), _chunkedBodySize(),
+             _chunkState(UNDONE), _fdBody(), _bodySize(0), _chunkSize(0), _status(200)
 {
 }
 
@@ -95,75 +105,78 @@ void Request::setFullBody(char *request, int &r)
     if (!this->_bodySize)
         this->_bodySize = stringToDecimal(this->_request["Content-Length"]);
     if (this->_body.empty())
+    {
         this->_body = generateRandomFile() + this->_extention;
-    std::ofstream fdBody(this->_body, std::ios::app);
+        this->_fdBody.close();
+        this->_fdBody.open(this->_body, std::ios::app);
+    }
     for (int i = 0; i < r; i++)
-        fdBody << request[i];
-    fdBody.close();
+        this->_fdBody << request[i];
     this->_bodySize -= r;
     if (this->_bodySize)
         return ;
+    this->_fdBody.close();
     _chunkState = DONE;
 }
 
 int Request::readChunkedBody(char *request, int &r)
 {
-    std::ofstream fdBody(this->_body, std::ios::app);
     for (int i = 0; i < r; i++)
     {
-        fdBody << request[i];
+        this->_fdBody << request[i];
         this->_chunkSize++;
         if (this->_chunkSize == this->_bodySize)
-        {
-            fdBody.close();
-            return i;
-        }
+            return i + 1;
     }
-    fdBody.close();
     return r;
 }
 
 void Request::setChunkedBody(char *request, int &r)
 {
-    std::string line;
-    std::istringstream req(request);
+    int chunkRead = 0;
 
+    again:
     if (!this->_bodySize)
     {
-        std::getline(req, line);
-        this->_bodySize = hexaToDecimal(line.substr(0, line.length() - 1));
-        request += line.length() + 1;
-        r -= line.length() + 1;
+        int i = 0;
+        while (isHexa(request[i]))
+        {
+            this->_chunkedBodySize.push_back(request[i]);
+            i++;
+        }
+        this->_bodySize = hexaToDecimal(this->_chunkedBodySize);
+        request += this->_chunkedBodySize.length() + 2;
+        r -= this->_chunkedBodySize.length() + 2;
+        this->_chunkedBodySize.clear();
+        if (this->_bodySize == 0)
+        {
+            std::cout << "done" << std::endl;
+            this->_fdBody.close();
+            this->_chunkState = DONE;
+            return ;
+        }
     }
     if (this->_body.empty())
+    {
         this->_body = generateRandomFile() + this->_extention;
-    again:
-    int chunkRead = this->readChunkedBody(request, r);
+        this->_fdBody.close();
+        this->_fdBody.open(this->_body, std::ios::app);
+    }
+    chunkRead = this->readChunkedBody(request, r);
     if (this->_chunkSize == this->_bodySize)
     {
-        std::cout << "------>" << request + chunkRead << "<---------" << std::endl;
         chunkRead += 2;
         this->_chunkSize = 0;
         this->_bodySize = 0;
-        for (;chunkRead < r && request[chunkRead] != '\n'; chunkRead++)
-        {
-            if (request[chunkRead] != '\r')
-                line += request[chunkRead];
-        }
-        request += chunkRead + 1;
-        r -= chunkRead + 1;
-        this->_bodySize = hexaToDecimal(line);
-        std::cout << "line: " << line << std::endl;
-        std::cout << "bodySize: " << this->_bodySize << std::endl;
-        if (!this->_bodySize)
-        {
-            _chunkState = DONE;
+        r -= chunkRead;
+        request += chunkRead;
+        if (r <= 0)
             return ;
-        }
-        else if (r > 0)
-            goto again;
+        goto again;
     }
 }
+
+
 
 void Request::setBody(char *request, int &r)
 {

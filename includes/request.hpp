@@ -32,7 +32,9 @@ class Request
         std::string   _path;
         std::string   _body;
         std::string   _extention;
+        std::string   _chunkedBodySize;
         ChunkState    _chunkState;
+        std::ofstream _fdBody;
         size_t        _bodySize;
         size_t        _chunkSize;
         int           _status;
