@@ -2,7 +2,7 @@
 
 std::map<int, std::string> _httpResponses;
 
-Response::Response(): _status(200), _isCGIInProcess(0), _isCGIFinished(0), _isCGIParsed(0), _isFileOpned(0), _isHeaderSent(0), _isBodySent(0), _isHeaderParsed(0), _body(""), _generatedName("")
+Response::Response(): _status(200), _isCGIInProcess(0), _isCGIFinished(0), _isCGIParsed(0), _isFileOpned(0), _isHeaderSent(0), _isBodySent(0), _isHeaderParsed(0), _isRedirect(0), _body(""), _generatedName("")
 {
 	_httpResponses[200] = "OK";
 	_httpResponses[201] = "Created";
@@ -190,6 +190,9 @@ void Response::redirect(std::string uri)
 	std::cout << "redirect made" << std::endl;
 	this->setStatus(301);
 	this->setHeader("Location", uri);
+	this->_isHeaderParsed = true;
+	this->_isRedirect = true;
+	this->_isBodySent = true;
 }
 
 void Response::serveDirectoryAutoIndex(std::string url, std::map<int, std::string> &errorPages)
@@ -217,6 +220,7 @@ void Response::serveDirectoryAutoIndex(std::string url, std::map<int, std::strin
 
 	std::string responseBody = "<html><body><h1>Directory Listing</h1><ul>" + directoryContent + "</ul></body></html>";
 	this->setHeader("Content-Type", "text/html");
+	this->_isHeaderParsed = true;
 	std::time_t result = std::time(NULL);
 	this->_generatedName = "/tmp/" + std::to_string(result) + ".txt";
 	std::fstream file(this->_generatedName, std::ios::out);
@@ -297,7 +301,7 @@ char **Response::getENV(std::string url, const Request &request)
 	std::map<std::string, std::string> headers = request.getRequest();
 
 	env["CONTENT_TYPE"] = headers["Content-Type"];
-	env["CONTENT_LENGTH"] = headers["Content-Length"];
+	env["CONTENT_LENGTH"] = std::to_string(request.getBody().size());
 	env["REQUEST_METHOD"] = headers["Method"];
 	env["REQUEST_URI"] = headers["URL"];
 	env["QUERY_STRING"] = headers["Query"];
@@ -356,7 +360,7 @@ void Response::serveCGI(std::string url, const Request &request)
 	{
 		char **envp = this->getENV(cgiPath, request);
 
-		this->executeCGI(cgiPath, binary, envp, errorPages);
+		this->executeCGI(cgiPath, binary, envp, errorPages, request);
 		this->_isCGIFinished = this->checkCGIStatus(errorPages);
 	}
 	else if (!this->_isCGIFinished)
@@ -368,11 +372,12 @@ void Response::serveCGI(std::string url, const Request &request)
 	}
 }
 
-void Response::executeCGI(std::string cgiPath, std::string binary, char **envp, std::map<int, std::string> &errorPages)
+void Response::executeCGI(std::string cgiPath, std::string binary, char **envp, std::map<int, std::string> &errorPages, const Request &request)
 {
 	if (!this->_isCGIInProcess)
 	{
 		int fd[2];
+		std::map<std::string, std::string> headers = request.getRequest();
 
 		fd[0] = open(cgiPath.c_str(), O_RDONLY);
 		fd[1] = open("cgi_output.txt", O_WRONLY | O_CREAT | O_TRUNC, 0666);
@@ -396,6 +401,11 @@ void Response::executeCGI(std::string cgiPath, std::string binary, char **envp, 
 			dup2(fd[1], 1);
 			close(fd[0]);
 			close(fd[1]);
+			// Write the POST data to stdin
+			if (headers["Method"] == "POST") {
+				std::string body = request.getBody();
+				write(0, body.c_str(), body.size());
+			}
 			if (execve(binary.c_str(), NULL, envp) == -1)
 			{
 				std::cout << "Error executing CGI" << std::endl;
@@ -626,4 +636,9 @@ bool Response::getIsBodySent() const
 bool Response::getIsHeaderParsed() const
 {
 	return this->_isHeaderParsed;
+}
+
+bool Response::getIsRedirect() const
+{
+	return this->_isRedirect;
 }

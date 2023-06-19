@@ -40,6 +40,7 @@ public:
 	bool getIsHeaderSent() const;
 	bool getIsBodySent() const;
 	bool getIsHeaderParsed() const;
+	bool getIsRedirect() const;
 
 	void setBody(std::string body);
 	void setStatus(int status);
@@ -65,7 +66,7 @@ public:
 	void redirect(std::string url);
 	char **getENV(std::string url, const Request &request);
 	void addHTTPToEnvForCGI(std::map<std::string, std::string> &env, std::map<std::string, std::string> &headers);
-	void executeCGI(std::string cgiPath, std::string binary, char **envp, std::map<int, std::string> &errorPages);
+	void executeCGI(std::string cgiPath, std::string binary, char **envp, std::map<int, std::string> &errorPages, const Request &request);
 	void parseResponseHeader(std::string responseHeader);
 	void serveCGIFile(std::string cgiPath, std::map<int, std::string> &errorPages);
 	int checkCGIStatus(std::map<int, std::string> &errorPages);
@@ -91,6 +92,7 @@ private :
 	bool _isHeaderSent;
 	bool _isBodySent;
 	bool _isHeaderParsed;
+	bool _isRedirect;
 	pid_t _pid;
 	std::string _body;
 	std::string _generatedName;
