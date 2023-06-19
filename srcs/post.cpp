@@ -63,6 +63,13 @@ void Response::post(const Request &request)
 			    this->serveErrorPage(errorPages);
             }
         }
+		else
+		{
+			this->setStatus(201);
+			this->_isHeaderParsed = true;
+			this->_isRedirect = true;
+			this->_isBodySent = true;
+		}
     }
     else
         this->serveErrorPage(errorPages);

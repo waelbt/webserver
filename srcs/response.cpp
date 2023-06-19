@@ -402,9 +402,25 @@ void Response::executeCGI(std::string cgiPath, std::string binary, char **envp, 
 			close(fd[0]);
 			close(fd[1]);
 			// Write the POST data to stdin
+			std::cout << "Method: " << headers["Method"] << std::endl;
 			if (headers["Method"] == "POST") {
 				std::string body = request.getBody();
-				write(0, body.c_str(), body.size());
+				std::cout << "Body: " << body << std::endl;
+				exit(1);
+				std::ifstream file(body, std::ios::out | std::ios::app);
+				if (file.fail()) {
+					std::cerr << "Failed to open file" << std::endl;
+					this->setStatus(403);
+					this->serveErrorPage(errorPages);
+				}
+				else
+				{
+					std::string line;
+				
+					while (getline(file, line))
+						write(fd[0], line.c_str(), line.size());
+					file.close();
+				}
 			}
 			if (execve(binary.c_str(), NULL, envp) == -1)
 			{

@@ -20,9 +20,13 @@ std::string contentType[76] = {"audio/aac", "application/x-abiword", "applicatio
         "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "application/xml", "application/vnd.mozilla.xul+xml", "application/x-rar-compressed", "video/3gpp",
         "video/3gpp2", "application/x-7z-compressed"};
 
-RequestMap cnt;
+RequestMap cntPost;
 
-int Request::contentState = 0;
+RequestMap cntGet;
+
+int Request::contentStatePost = 0;
+
+int Request::contentStateGet = 0;
 
 bool invalidUrl::operator()(const char& c)
 {
@@ -253,19 +257,44 @@ void Request::checkLocation()
         this->_status = 404;
 }
 
-void Request::setContentType(std::string const & content)
+void Request::setContentTypePost(std::string const & content)
 {
-    if (!contentState)
+    if (!contentStatePost)
     {
         for (int i = 0; i < 76; i++)
-            cnt[contentType[i]] = mimeType[i];
-        contentState = 1;
+            cntPost[contentType[i]] = mimeType[i];
+        contentStatePost = 1;
     }
-    RequestMap::iterator it = cnt.find(content);
-    if (it != cnt.end())
+    RequestMap::iterator it = cntPost.find(content);
+    if (it != cntPost.end())
         this->_extention = it->second;
     else
         this->_extention = ".txt";
+}
+
+void Request::setContentTypeGet(std::string const & content)
+{
+    if (!contentStateGet)
+    {
+        for (int i = 0; i < 76; i++)
+            cntGet[mimeType[i]] = contentType[i];
+        contentStateGet = 1;
+    }
+    size_t dot;
+    for (int i = content.length() - 1; i >= 0; i--)
+    {
+        if (content[i] == '.')
+        {
+            dot = i;
+            goto dotfound;
+        }
+    }
+    this->_request["Content-Type"] = "text/plain";
+    return ;
+    dotfound:
+    std::string extention = content.substr(dot);
+    RequestMap::iterator it = cntGet.find(extention);
+    this->_request["Content-Type"] =  it->second;
 }
 
 void Request::parseUrl(std::string const &line)
@@ -340,12 +369,15 @@ void Request::parseRequest(char *request, Configuration const & conf, int &r)
             this->_request[line.substr(0, separator)] = line.substr(separator + 2, line.length() - separator - 3);
     }
     setbody:
-    this->setContentType(this->_request["Content-Type"]);
     std::string method = this->_request["Method"];
     if (method == "POST")
+    {
+        this->setContentTypePost(this->_request["Content-Type"]);
         this->setBody(request + (r - bodySize), bodySize);
+    }
     else
     {
+        this->setContentTypeGet(this->_request["URL"]);
         this->badFormat();
         _chunkState = DONE;
     }

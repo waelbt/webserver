@@ -38,10 +38,12 @@ class Request
         size_t        _bodySize;
         size_t        _chunkSize;
         int           _status;
-        static int    contentState;
+        static int    contentStatePost;
+        static int    contentStateGet;
 
         void parseUrl(std::string const &line);
-        void setContentType(std::string const & content);
+        void setContentTypePost(std::string const & content);
+        void setContentTypeGet(std::string const & content);
         void badFormat();
         void checkLocation();
         void checkMethod();
