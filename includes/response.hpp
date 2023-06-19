@@ -66,7 +66,7 @@ public:
 	void redirect(std::string url);
 	char **getENV(std::string url, const Request &request);
 	void addHTTPToEnvForCGI(std::map<std::string, std::string> &env, std::map<std::string, std::string> &headers);
-	void executeCGI(std::string cgiPath, std::string binary, char **envp, std::map<int, std::string> &errorPages);
+	void executeCGI(std::string cgiPath, std::string binary, char **envp, std::map<int, std::string> &errorPages, const Request &request);
 	void parseResponseHeader(std::string responseHeader);
 	void serveCGIFile(std::string cgiPath, std::map<int, std::string> &errorPages);
 	int checkCGIStatus(std::map<int, std::string> &errorPages);

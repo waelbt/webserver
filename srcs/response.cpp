@@ -301,7 +301,7 @@ char **Response::getENV(std::string url, const Request &request)
 	std::map<std::string, std::string> headers = request.getRequest();
 
 	env["CONTENT_TYPE"] = headers["Content-Type"];
-	env["CONTENT_LENGTH"] = headers["Content-Length"];
+	env["CONTENT_LENGTH"] = std::to_string(request.getBody().size());
 	env["REQUEST_METHOD"] = headers["Method"];
 	env["REQUEST_URI"] = headers["URL"];
 	env["QUERY_STRING"] = headers["Query"];
@@ -360,7 +360,7 @@ void Response::serveCGI(std::string url, const Request &request)
 	{
 		char **envp = this->getENV(cgiPath, request);
 
-		this->executeCGI(cgiPath, binary, envp, errorPages);
+		this->executeCGI(cgiPath, binary, envp, errorPages, request);
 		this->_isCGIFinished = this->checkCGIStatus(errorPages);
 	}
 	else if (!this->_isCGIFinished)
@@ -372,11 +372,12 @@ void Response::serveCGI(std::string url, const Request &request)
 	}
 }
 
-void Response::executeCGI(std::string cgiPath, std::string binary, char **envp, std::map<int, std::string> &errorPages)
+void Response::executeCGI(std::string cgiPath, std::string binary, char **envp, std::map<int, std::string> &errorPages, const Request &request)
 {
 	if (!this->_isCGIInProcess)
 	{
 		int fd[2];
+		std::map<std::string, std::string> headers = request.getRequest();
 
 		fd[0] = open(cgiPath.c_str(), O_RDONLY);
 		fd[1] = open("cgi_output.txt", O_WRONLY | O_CREAT | O_TRUNC, 0666);
@@ -400,6 +401,11 @@ void Response::executeCGI(std::string cgiPath, std::string binary, char **envp, 
 			dup2(fd[1], 1);
 			close(fd[0]);
 			close(fd[1]);
+			// Write the POST data to stdin
+			if (headers["Method"] == "POST") {
+				std::string body = request.getBody();
+				write(0, body.c_str(), body.size());
+			}
 			if (execve(binary.c_str(), NULL, envp) == -1)
 			{
 				std::cout << "Error executing CGI" << std::endl;
