@@ -137,11 +137,11 @@ void Webserver::run()
 					if (!fetch_request(_client[i], it->second->get_configuration())) {
 						it->second->drop_client(i); continue ; }
 				}
-				// if (FD_ISSET(_client[i]->_socket, &_writeset))
-				// {
-				// 	if(send_response(_client[i]))
-				// 		it->second->drop_client(i);
-				// }
+				if (FD_ISSET(_client[i]->_socket, &_writeset))
+				{
+					if(send_response(_client[i]))
+						it->second->drop_client(i);
+				}
 		    }
         }
     }
