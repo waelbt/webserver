@@ -2,7 +2,7 @@
 
 std::map<int, std::string> _httpResponses;
 
-Response::Response(): _status(200), _isCGIInProcess(0), _isCGIFinished(0), _isCGIParsed(0), _isFileOpned(0), _isHeaderSent(0), _isBodySent(0), _isHeaderParsed(0), _isRedirect(0), _body(""), _generatedName("")
+Response::Response(): _status(200), _length(0), _isCGIInProcess(0), _isCGIFinished(0), _isCGIParsed(0), _isFileOpned(0), _isHeaderSent(0), _isBodySent(0), _isHeaderParsed(0), _isRedirect(0), _body(""), _generatedName("")
 {
 	_httpResponses[200] = "OK";
 	_httpResponses[201] = "Created";
@@ -258,13 +258,17 @@ void Response::serveStaticFile(std::string url, std::map<int, std::string> &erro
 		else
 		{
 			char buffer[65536];
+			this->_file.seekg(this->_length);
 			this->_file.read(buffer, sizeof(buffer));
+			this->_length = this->_file.tellg();
 			std::streamsize bytesRead = this->_file.gcount();
 
 			if (bytesRead > 0)
 			{
 				std::string chunk(buffer, bytesRead);
 				this->setBody(chunk);
+				this->_file.close();
+				this->setIsFileOpned(false);
 			}
 			else
 			{
@@ -273,12 +277,6 @@ void Response::serveStaticFile(std::string url, std::map<int, std::string> &erro
 				this->setIsFileOpned(false);
 			}
 		}
-	}
-	else
-	{
-		std::cout << "Error opening file" << std::endl;
-		this->setStatus(403);
-		this->serveErrorPage(errorPages);
 	}
 }
 
@@ -417,7 +415,7 @@ void Response::executeCGI(std::string cgiPath, std::string binary, char **envp, 
 			dup2(fd[1], 1);
 			close(fd[0]);
 			close(fd[1]);
-			char *args[] = {(char*)binary.c_str(), (char*)cgiPath.c_str(), NULL};
+			char *args[3] = {(char*)binary.c_str(), (char*)cgiPath.c_str(), NULL};
 			if (execve(binary.c_str(), args, envp) == -1)
 			{
 				std::cout << "Error executing CGI" << std::endl;
@@ -666,6 +664,7 @@ std::string Response::size_tToString(size_t size)
 void Response::reset()
 {
 	this->_status = 200;
+	this->_length = 0;
 	this->_headers.clear();
 	this->_body.clear();
 	this->_isHeaderSent = false;

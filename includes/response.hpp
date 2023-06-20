@@ -87,6 +87,7 @@ public:
 	void reset();
 private : 
 	int _status;
+	int _length;
 	std::ifstream _file;
 	bool _isCGIInProcess;
 	bool _isCGIFinished;
