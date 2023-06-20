@@ -81,11 +81,12 @@ class Server
 class Webserver
 {
 	public:
+		typedef std::pair<fd_set, fd_set> SetsPair;
 		typedef std::map<SOCKET, Server*> ServerMap;
 	private:
 		ServerMap  _servers;
 		static fd_set _writeset;
-		static fd_set _socketset;
+		static fd_set _readset;
 		static SOCKET _max_socket;
 	public:
 		Webserver();
@@ -95,7 +96,7 @@ class Webserver
 		~Webserver();
 
 		void setup(std::string content);
-		fd_set wait_on_client();
+		SetsPair wait_on_client();
 		void run();
 		void stop();
 

@@ -1,6 +1,6 @@
 #include "../includes/server.hpp"
 
-fd_set Webserver::_socketset;
+fd_set Webserver::_readset;
 fd_set Webserver::_writeset;
 SOCKET Webserver::_max_socket = 0;
 
@@ -16,7 +16,7 @@ Webserver::Webserver(std::string content) : _servers()
 
 void Webserver::add_socket(SOCKET socket)
 {
-	FD_SET(socket, &_socketset);
+	FD_SET(socket, &_readset);
 	if (_max_socket < socket)
 		_max_socket = socket;
 }
@@ -64,32 +64,32 @@ Webserver::Webserver(const Webserver&  other)
 Webserver& Webserver::operator=(const Webserver&  other)
 {
 	_servers = other._servers;
-	_socketset = other._socketset;
+	_readset = other._readset;
 	_max_socket = other._max_socket;
 	return *this;
 }
 
 
-fd_set Webserver::wait_on_client()
+Webserver::SetsPair Webserver::wait_on_client()
 {
 	struct timeval timeout;
-	fd_set reads(_socketset);
+	SetsPair sets(_readset, _writeset);
 
 	timeout.tv_sec = 0;
 	timeout.tv_usec = 5;
 
-	if (select(_max_socket + 1, &reads, 0, 0, &timeout) < 0)
+	if (select(_max_socket + 1, &sets.first, &sets.second, 0, &timeout) < 0)
 		throw CustomeExceptionMsg("select() failed. ("+  std::string(strerror(errno)) + ")");
-	return reads;
+	return sets;
 }
 
 void  Webserver::clear_set()
 {
 	for (SOCKET fd = 0; fd <= Webserver::_max_socket; fd++) {
-		if (FD_ISSET(fd, &Webserver::_socketset) || FD_ISSET(fd, &Webserver::_writeset))
+		if (FD_ISSET(fd, &Webserver::_readset) || FD_ISSET(fd, &Webserver::_writeset))
 			close(fd);
 	}
-	FD_ZERO(&_socketset);
+	FD_ZERO(&_readset);
 	FD_ZERO(&_writeset);
 }
 
@@ -102,7 +102,7 @@ int Webserver::fetch_request (Client *client, const Configuration& conf)
 	if (r < 1)
 	{
 		std::cout << "Unexpected disconnect from " << client->get_client_address() << std::endl;
-		FD_CLR(client->_socket, &_socketset);
+		FD_CLR(client->_socket, &_readset);
 		return 0;
 	}
 	else
@@ -111,7 +111,7 @@ int Webserver::fetch_request (Client *client, const Configuration& conf)
 		client->_request.parseRequest(request, conf, r);
 		if (client->_request.getChunkedState() == DONE)
 		{
-			FD_CLR(client->_socket, &_socketset);
+			FD_CLR(client->_socket, &_readset);
 			FD_SET(client->_socket, &_writeset);
 		}
 	}
@@ -120,24 +120,24 @@ int Webserver::fetch_request (Client *client, const Configuration& conf)
 
 void Webserver::run()
 {
-    fd_set tmpset;
+    SetsPair temps;
 
 	while (1)
     {
-        tmpset = wait_on_client();
+        temps = wait_on_client();
         for (ServerMap::iterator it = _servers.begin(); it != _servers.end(); it++)
         {
             std::vector<Client *>& _client = it->second->get_clients();
-    	    if (FD_ISSET(it->first, &tmpset))
+    	    if (FD_ISSET(it->first, &temps.first))
 		    	_client.insert(_client.end(), new Client(it->first));
 		    for (size_t i = 0; i < _client.size(); i++)
 		    {
-		    	if (FD_ISSET(_client[i]->_socket, &tmpset))
+		    	if (FD_ISSET(_client[i]->_socket, &temps.first))
 		    	{
 					if (!fetch_request(_client[i], it->second->get_configuration())) {
 						it->second->drop_client(i); continue ; }
 				}
-				if (FD_ISSET(_client[i]->_socket, &_writeset))
+				if (FD_ISSET(_client[i]->_socket, &temps.second))
 				{
 					if(send_response(_client[i]))
 						it->second->drop_client(i);
