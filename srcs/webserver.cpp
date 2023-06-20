@@ -103,6 +103,7 @@ int Webserver::fetch_request (Client *client, const Configuration& conf)
 	{
 		std::cout << "Unexpected disconnect from " << client->get_client_address() << std::endl;
 		FD_CLR(client->_socket, &_readset);
+		FD_CLR(client->_socket, &_writeset);
 		return 0;
 	}
 	else
