@@ -13,6 +13,10 @@ void Response::post(const Request &request)
         if (location.getUpload().empty())
         {
 			std::cout << "No upload path -->" << bodyPath << std::endl;
+			this->setStatus(201);
+			this->_isHeaderParsed = true;
+			this->_isRedirect = true;
+			this->_isBodySent = true;
         }
 		else
 		{
