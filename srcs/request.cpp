@@ -84,7 +84,8 @@ size_t stringToDecimal(std::string const &str)
 }
 
 Request::Request() : _request(), _conf(), _location(), _path(), _body(), _extention(), _chunkedBodySize(),
-             _chunkState(UNDONE), _fdBody(), _bodySize(0), _chunkSize(0), _status(200), _contentLength(0)
+                _chunkState(UNDONE), _fdBody(), _bodySize(0), _chunkSize(0), _status(200), _contentLength(0),
+                _badFormat(0)
 {
     this->_fdBody.close();
 }
@@ -249,7 +250,8 @@ void Request::setBody(char *request, int &r)
 {
     std::string line;
 
-    this->badFormat();
+    if (!this->_badFormat)
+        this->badFormat();
     if (this->_status != 200)
     {
         this->_chunkState = DONE;
@@ -416,6 +418,7 @@ void Request::badFormat()
         this->_status = 413;
     if (this->_status == 200)
         this->checkMethod();
+    this->_badFormat = 1;
 }
 
 void Request::parseRequest(char *request, Configuration const & conf, int &r)

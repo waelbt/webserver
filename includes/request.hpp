@@ -43,6 +43,7 @@ class Request
         size_t        _chunkSize;
         int           _status;
         size_t        _contentLength;
+        int           _badFormat;
         static int    contentStatePost;
         static int    contentStateGet;
 
