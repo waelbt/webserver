@@ -1,6 +1,7 @@
 <?php
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
+    print_r($_FILES);
     // save $_FILES['avatar'] to a inside a folder
     $avatar = $_FILES['avatar'];
     $avatar_name = $avatar['name'];

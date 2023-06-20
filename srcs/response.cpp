@@ -70,7 +70,7 @@ std::string Response::toString() const
 void Response::serveResponse(const Request &request)
 {
 	std::string method = request.getRequest().find("Method")->second;
-	std::cout << method << " the path is " << request.getPath() <<std::endl;
+	// std::cout << method << " the path is " << request.getPath() <<std::endl;
 	if (method == "GET")
 		this->get(request);
 	else if (method == "POST")
@@ -308,6 +308,8 @@ char **Response::getENV(std::string url, const Request &request)
 	// env["SERVER_SOFTWARE"] = "webserv";
 	env["SCRIPT_FILENAME"] = url;
 	env["SCRIPT_NAME"] = url;
+	if (headers["Method"] == "POST")
+		env["REDIRECT_STATUS"] = "1";
 
 	this->addHTTPToEnvForCGI(env, headers);
 	// from map to char**
@@ -340,7 +342,7 @@ void Response::addHTTPToEnvForCGI(std::map<std::string, std::string> &env, std::
 
 void Response::serveCGI(std::string url, const Request &request)
 {
-	std::cout << "Serving CGI: " << url << "is in process " << this->_isCGIInProcess << " is execution finished " << this->_isCGIFinished << std::endl;
+	// std::cout << "Serving CGI: " << url << "is in process " << this->_isCGIInProcess << " is execution finished " << this->_isCGIFinished << std::endl;
 
 	std::string cgiPath = url;
 	Location const &location = request.getLocation();
@@ -378,7 +380,14 @@ void Response::executeCGI(std::string cgiPath, std::string binary, char **envp, 
 		int fd[2];
 		std::map<std::string, std::string> headers = request.getRequest();
 
-		fd[0] = open(cgiPath.c_str(), O_RDONLY);
+		if (headers["Method"] == "POST") {
+			std::string bodyPath = request.getBody();
+			fd[0] = open(bodyPath.c_str(), O_RDONLY);
+			dup2(fd[0], 0);
+		}
+		// else {
+		// 	// fd[0] = open(cgiPath.c_str(), O_RDONLY);
+		// }
 		fd[1] = open("cgi_output.txt", O_WRONLY | O_CREAT | O_TRUNC, 0666);
 		if (fd[0] == -1 || fd[1] == -1)
 		{
@@ -387,6 +396,7 @@ void Response::executeCGI(std::string cgiPath, std::string binary, char **envp, 
 			this->serveErrorPage(errorPages);
 			return;
 		}
+
 		this->_isCGIInProcess = true;
 		this->_pid = fork();
 		if (this->_pid == -1)
@@ -396,32 +406,13 @@ void Response::executeCGI(std::string cgiPath, std::string binary, char **envp, 
 		}
 		else if (this->_pid == 0)
 		{
+
 			dup2(fd[0], 0);
 			dup2(fd[1], 1);
 			close(fd[0]);
 			close(fd[1]);
-			// Write the POST data to stdin
-			std::cout << "Method: " << headers["Method"] << std::endl;
-			if (headers["Method"] == "POST") {
-				std::string body = request.getBody();
-				std::cout << "Body: " << body << std::endl;
-				exit(1);
-				std::ifstream file(body, std::ios::out | std::ios::app);
-				if (file.fail()) {
-					std::cerr << "Failed to open file" << std::endl;
-					this->setStatus(403);
-					this->serveErrorPage(errorPages);
-				}
-				else
-				{
-					std::string line;
-				
-					while (getline(file, line))
-						write(fd[0], line.c_str(), line.size());
-					file.close();
-				}
-			}
-			if (execve(binary.c_str(), NULL, envp) == -1)
+			char *args[] = {(char*)binary.c_str(), (char*)cgiPath.c_str(), NULL};
+			if (execve(binary.c_str(), args, envp) == -1)
 			{
 				std::cout << "Error executing CGI" << std::endl;
 				exit(1);
@@ -446,7 +437,7 @@ int Response::checkCGIStatus(std::map<int, std::string> &errorPages)
 	}
 	else if (w == 0)
 	{
-		std::cout << "CGI still running" << std::endl;
+		// std::cout << "CGI still running" << std::endl;
 		return false;
 	}
 	else
@@ -454,18 +445,19 @@ int Response::checkCGIStatus(std::map<int, std::string> &errorPages)
 		if (WIFEXITED(status))
 		{
 			std::cout << "CGI exited normally" << std::endl;
-			if (WEXITSTATUS(status) == 0)
-			{
-				std::cout << "CGI exited with status 0" << std::endl;
-				return true;
-			}
-			else
-			{
-				std::cout << "CGI exited with status " << WEXITSTATUS(status) << std::endl;
-				this->setStatus(403);
-				this->serveErrorPage(errorPages);
-				return true;
-			}
+			// if (WEXITSTATUS(status) == 0)
+			// {
+			// 	std::cout << "CGI exited with status 0" << std::endl;
+			// 	return true;
+			// }
+			// else
+			// {
+			// 	std::cout << "CGI exited with status " << WEXITSTATUS(status) << std::endl;
+			// 	this->setStatus(403);
+			// 	this->serveErrorPage(errorPages);
+			// 	return true;
+			// }
+			return true;
 		}
 		else
 		{

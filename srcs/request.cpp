@@ -420,6 +420,9 @@ void Request::parseRequest(char *request, Configuration const & conf, int &r)
     std::istringstream req(request);
     int bodySize = r;
 
+    std::cout << "-----------------------------------" << std::endl;
+    std::cout << request << std::endl;
+    std::cout << "-----------------------------------" << std::endl;
     if (!this->_request.empty())
         goto setbody;
     this->_conf = conf;
