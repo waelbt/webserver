@@ -86,6 +86,7 @@ size_t stringToDecimal(std::string const &str)
 Request::Request() : _request(), _conf(), _location(), _path(), _body(), _extention(), _chunkedBodySize(),
              _chunkState(UNDONE), _fdBody(), _bodySize(0), _chunkSize(0), _status(200)
 {
+    this->_fdBody.close();
 }
 
 Request& Request::operator=(const Request& other)
@@ -111,19 +112,26 @@ bool Request::is_directory(const char *path)
 	return S_ISDIR(buf.st_mode);
 }
 
+bool Request::is_file(const char *path)
+{
+    struct stat buf;
+    stat(path, &buf);
+    return S_ISREG(buf.st_mode);
+}
+
 void Request::setBodyPath()
 {
     std::string upload = this->_location.getUpload();
     std::string dirPath;
     if (!upload.empty())
     {
-        if (!is_directory(upload.c_str()))
+        if (is_file(upload.c_str()))
         {
             this->_status = 400;
             this->_chunkState = DONE;
             return ;
         }
-        else
+        else if (is_directory(upload.c_str()))
         {
             if (access(upload.c_str(), W_OK) == 0)
                 dirPath = upload + "/";
@@ -134,9 +142,14 @@ void Request::setBodyPath()
                 return ;
             }
         }
+        else
+        {
+            this->_status = 404;
+            this->_chunkState = DONE;
+            return ;
+        }
     }
     this->_body = dirPath + generateRandomFile() + this->_extention;
-    this->_fdBody.close();
     this->_fdBody.open(this->_body, std::ios::app);
 }
 
