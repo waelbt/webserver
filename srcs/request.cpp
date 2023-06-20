@@ -191,11 +191,27 @@ void Request::setChunkedBody(char *request, int &r)
     again:
     if (!this->_bodySize)
     {
-        for (int i =0; isHexa(request[i]); i++)
+        int i = 0;
+        if (request[0] == '\r' && request[1] == '\n' && isHexa(request[2]))
+            i = 2;
+        else if (request[0] == '\n' && isHexa(request[1]))
+            i = 1;
+        while (isHexa(request[i]))
+        {
             this->_chunkedBodySize.push_back(request[i]);
+            i++;
+        }
+        if (request[i] == '\0')
+            return ;
+        if (request[i] != '\r' && request[i + 1] != '\n')
+        {
+            this->_status = 400;
+            this->_chunkState = DONE;
+            return ;
+        }
         this->_bodySize = hexaToDecimal(this->_chunkedBodySize);
-        request += this->_chunkedBodySize.length() + 2;
-        r -= this->_chunkedBodySize.length() + 2;
+        request += i + 2;
+        r -= i + 2;
         this->_chunkedBodySize.clear();
         if (this->_bodySize == 0)
         {
