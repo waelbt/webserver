@@ -84,7 +84,7 @@ size_t stringToDecimal(std::string const &str)
 }
 
 Request::Request() : _request(), _conf(), _location(), _path(), _body(), _extention(), _chunkedBodySize(),
-             _chunkState(UNDONE), _fdBody(), _bodySize(0), _chunkSize(0), _status(200)
+             _chunkState(UNDONE), _fdBody(), _bodySize(0), _chunkSize(0), _status(200), _contentLength(0)
 {
     this->_fdBody.close();
 }
@@ -156,7 +156,10 @@ void Request::setBodyPath()
 void Request::setFullBody(char *request, int &r)
 {
     if (!this->_bodySize)
+    {
         this->_bodySize = stringToDecimal(this->_request["Content-Length"]);
+        this->_contentLength = this->_bodySize;
+    }
     if (this->_body.empty())
     {
         this->setBodyPath();
@@ -230,6 +233,7 @@ void Request::setChunkedBody(char *request, int &r)
     chunkRead = this->readChunkedBody(request, r);
     if (this->_chunkSize == this->_bodySize)
     {
+        this->_contentLength += this->_bodySize;
         chunkRead += 2;
         this->_chunkSize = 0;
         this->_bodySize = 0;
@@ -420,9 +424,6 @@ void Request::parseRequest(char *request, Configuration const & conf, int &r)
     std::istringstream req(request);
     int bodySize = r;
 
-    std::cout << "-----------------------------------" << std::endl;
-    std::cout << request << std::endl;
-    std::cout << "-----------------------------------" << std::endl;
     if (!this->_request.empty())
         goto setbody;
     this->_conf = conf;
@@ -492,4 +493,9 @@ ChunkState const &   Request::getChunkedState() const
 std::string const &   Request::getBody() const
 {
     return this->_body;
+}
+
+size_t const &   Request::getContentLength() const
+{
+    return this->_contentLength;
 }

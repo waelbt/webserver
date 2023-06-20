@@ -42,6 +42,7 @@ class Request
         size_t        _bodySize;
         size_t        _chunkSize;
         int           _status;
+        size_t        _contentLength;
         static int    contentStatePost;
         static int    contentStateGet;
 
@@ -70,7 +71,8 @@ class Request
         Location const &      getLocation() const;
         ChunkState const &    getChunkedState() const;
         std::string const &   getBody() const;
+        size_t const &        getContentLength() const;
         void                  parseRequest(char *request, Configuration const & conf, int &r);
         void                  printElement();
-        std::string    get_attribute(const std::string& key); // wael ---------
+        std::string           get_attribute(const std::string& key); // wael ---------
 };
