@@ -7,6 +7,10 @@
 #include <utility>
 #include <math.h>
 #include <fstream>
+#include <sys/types.h>
+#include <dirent.h>
+#include <unistd.h>
+#include <sys/stat.h>
 #include "configuration.hpp"
 
 #define RequestMap std::map<std::string, std::string>
@@ -51,6 +55,8 @@ class Request
         void setFullBody(char *request, int &r);
         void setChunkedBody(char *request, int &r);
         int  readChunkedBody(char *request, int &r);
+        bool is_file(const char *path);
+        bool is_directory(const char *path);
     public:
         Request();
         ~Request();

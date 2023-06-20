@@ -104,13 +104,43 @@ Request::~Request()
 {
 }
 
+bool Request::is_file(const char *path)
+{
+	struct stat buf;
+	stat(path, &buf);
+	return S_ISREG(buf.st_mode);
+}
+
+bool Request::is_directory(const char *path)
+{
+	struct stat buf;
+	stat(path, &buf);
+	return S_ISDIR(buf.st_mode);
+}
+
+
 void Request::setFullBody(char *request, int &r)
 {
     if (!this->_bodySize)
         this->_bodySize = stringToDecimal(this->_request["Content-Length"]);
     if (this->_body.empty())
     {
-        this->_body = generateRandomFile() + this->_extention;
+        if (!this->_location.getUpload().empty())
+        {
+            if (is_file(this->_location.getUpload().c_str()))
+            {
+                this->_status = 400;
+                this->_chunkState = DONE;
+                return ;
+            }
+            else if (!is_directory(this->_location.getUpload().c_str()))
+            {
+                this->_status = 403;
+                this->_chunkState = DONE;
+                return ;
+            }
+        }
+        this->_body = this->_location.getUpload() + "/"  + generateRandomFile() + this->_extention;
         this->_fdBody.close();
         this->_fdBody.open(this->_body, std::ios::app);
     }
@@ -158,7 +188,22 @@ void Request::setChunkedBody(char *request, int &r)
     }
     if (this->_body.empty())
     {
-        this->_body = generateRandomFile() + this->_extention;
+        if (!this->_location.getUpload().empty())
+        {
+            if (is_file(this->_location.getUpload().c_str()))
+            {
+                this->_status = 400;
+                this->_chunkState = DONE;
+                return ;
+            }
+            else if (!is_directory(this->_location.getUpload().c_str()))
+            {
+                this->_status = 403;
+                this->_chunkState = DONE;
+                return ;
+            }
+        }
+        this->_body = this->_location.getUpload() + "/"  + generateRandomFile() + this->_extention;
         this->_fdBody.close();
         this->_fdBody.open(this->_body, std::ios::app);
     }
@@ -175,8 +220,6 @@ void Request::setChunkedBody(char *request, int &r)
         goto again;
     }
 }
-
-
 
 void Request::setBody(char *request, int &r)
 {
