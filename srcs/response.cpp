@@ -497,9 +497,6 @@ void Response::serveCGIFile(std::string cgiPath, std::map<int, std::string> &err
 		{
 			std::string line;
 			std::string header;
-			std::string body;
-
-			std::streamsize size = 0;
 
 			while (getline(this->_file, line))
 			{
@@ -507,29 +504,21 @@ void Response::serveCGIFile(std::string cgiPath, std::map<int, std::string> &err
 					break;
 				header += line;
 				header += "\n";
-				size += line.size() + 1;
 			}
 
 			this->parseResponseHeader(header);
 
-			// Read the rest of the file into the body string:
+			// Open the file as ofstream and write line by line to it:
+			std::ofstream ofs(cgiPath.c_str(), std::ios::out | std::ios::trunc);
 			while (getline(this->_file, line))
 			{
-				body += line;
-				body += "\n";
+				ofs << line << "\n";
 			}
-			// Close the ifstream:
+			// Close the ifstream and ofstream:
 			this->_file.close();
-			std::cout << "File closed" << std::endl;
-			std::cout << "Body: " << std::endl;
-			std::cout << body << std::endl;
-			// Open the file as ofstream and write the body back to it:
-			std::ofstream ofs(cgiPath.c_str(), std::ios::out | std::ios::trunc);
-			ofs << body;
-
-			// Close the ofstream:
 			ofs.close();
 
+			std::cout << "File closed" << std::endl;
 			this->setIsFileOpned(false);
 		}
 		this->_isCGIParsed = true;
@@ -545,10 +534,15 @@ void Response::parseResponseHeader(std::string responseHeader)
 	if (firstLine[0] == "Status")
 		this->setStatus(atoi(firstLine[1].c_str()));
 	else
+	{
+		this->setHeader(firstLine[0], firstLine[1]);
 		this->setStatus(200);
+	}
 	for (int i = 1; i < (int)lines.size(); i++)
 	{
 		std::vector<std::string> header = this->split(lines[i], ": ");
+		if (header[0].empty())
+			continue;
 		if (header[0] == "Content-type")
 			header[0] = "Content-Type";
 		this->setHeader(header[0], header[1]);
