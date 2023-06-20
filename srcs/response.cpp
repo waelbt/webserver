@@ -300,7 +300,6 @@ char **Response::getENV(std::string url, const Request &request)
 	std::map<std::string, std::string> headers = request.getRequest();
 
 	env["CONTENT_TYPE"] = headers["Content-Type"];
-	env["CONTENT_LENGTH"] = std::to_string(request.getBody().size());
 	env["REQUEST_METHOD"] = headers["Method"];
 	env["REQUEST_URI"] = headers["URL"];
 	env["QUERY_STRING"] = headers["Query"];
@@ -309,7 +308,10 @@ char **Response::getENV(std::string url, const Request &request)
 	env["SCRIPT_FILENAME"] = url;
 	env["SCRIPT_NAME"] = url;
 	if (headers["Method"] == "POST")
+	{
 		env["REDIRECT_STATUS"] = "1";
+		env["CONTENT_LENGTH"] = this->size_tToString(request.getContentLength());
+	}
 
 	this->addHTTPToEnvForCGI(env, headers);
 	// from map to char**
@@ -377,17 +379,21 @@ void Response::executeCGI(std::string cgiPath, std::string binary, char **envp, 
 {
 	if (!this->_isCGIInProcess)
 	{
-		int fd[2];
 		std::map<std::string, std::string> headers = request.getRequest();
+		// int i = 0;
+		// while (envp[i])
+		// {
+		// 	std::cout << envp[i] << "|";
+		// 	i++;
+		// }
+		// if (headers["Method"] == "POST")
+		// exit(2);
+		int fd[2] = {0, 1};
 
 		if (headers["Method"] == "POST") {
 			std::string bodyPath = request.getBody();
 			fd[0] = open(bodyPath.c_str(), O_RDONLY);
-			dup2(fd[0], 0);
 		}
-		// else {
-		// 	// fd[0] = open(cgiPath.c_str(), O_RDONLY);
-		// }
 		fd[1] = open("cgi_output.txt", O_WRONLY | O_CREAT | O_TRUNC, 0666);
 		if (fd[0] == -1 || fd[1] == -1)
 		{
@@ -648,4 +654,11 @@ bool Response::getIsHeaderParsed() const
 bool Response::getIsRedirect() const
 {
 	return this->_isRedirect;
+}
+
+std::string Response::size_tToString(size_t size)
+{
+	std::ostringstream oss;
+	oss << size;
+	return oss.str();
 }

@@ -1,7 +1,6 @@
 <?php
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
-    print_r($_FILES);
     // save $_FILES['avatar'] to a inside a folder
     $avatar = $_FILES['avatar'];
     $avatar_name = $avatar['name'];
@@ -27,15 +26,15 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 setcookie('email', $_POST['email'], time() + 3600 * 24 * 7);
                 setcookie('avatar', $avatar_destination, time() + 3600 * 24 * 7);
             } else {
-                echo '<h1>File too big</h1>';
+                echo '<h2>File too big</h2>';
                 exit(1);
             }
         } else {
-            echo '<h1>Error</h1>';
+            echo '<h2>Error</h2>';
             exit(1);
         }
     } else {
-        echo '<h1>Not allowed</h1>';
+        echo '<h2>Not allowed</h2>';
         exit(1);
     }
 } else if ($_SERVER['REQUEST_METHOD'] == 'GET' && isset($_GET['logout'])) {
