@@ -662,3 +662,15 @@ std::string Response::size_tToString(size_t size)
 	oss << size;
 	return oss.str();
 }
+
+void Response::reset()
+{
+	this->_status = 200;
+	this->_headers.clear();
+	this->_body.clear();
+	this->_isHeaderSent = false;
+	this->_isBodySent = false;
+	this->_isHeaderParsed = false;
+	this->_isRedirect = false;
+	this->_isFileOpned = false;
+}
