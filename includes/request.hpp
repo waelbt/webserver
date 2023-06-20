@@ -65,4 +65,5 @@ class Request
         std::string const &   getBody() const;
         void                  parseRequest(char *request, Configuration const & conf, int &r);
         void                  printElement();
+        std::string    get_attribute(const std::string& key); // wael ---------
 };
