@@ -372,6 +372,42 @@ void Request::setContentTypeGet(std::string const & content)
     this->_request["Content-Type"] =  it->second;
 }
 
+std::string Request::decodeUrl(std::string const &url)
+{
+    std::string decoded;
+    std::string hexa = "0123456789abcdef";
+    size_t pos = url.find('%');
+
+    if (pos == std::string::npos)
+        return url;
+    decoded = url.substr(0, pos);
+    if (pos + 2 >= url.length())
+    {
+        this->_status = 400;
+        this->_chunkState = DONE;
+    }
+    else if (!isHexa(url[pos + 1]) && !isHexa(url[pos + 2]))
+    {
+        this->_status = 400;
+        this->_chunkState = DONE;
+    }
+    else
+    {
+        decoded += (int)hexaToDecimal(url.substr(pos + 1, 2));
+        decoded += decodeUrl(url.substr(pos + 3));
+    }
+    return decoded;
+}
+
+std::string Request::decipherUrl(std::string const &url)
+{
+    std::string decoded = url;
+
+    while (decoded.find('%') != std::string::npos)
+        decoded = this->decodeUrl(decoded);
+    return decoded;
+}
+
 void Request::parseUrl(std::string const &line)
 {
     std::string split;
@@ -386,7 +422,7 @@ void Request::parseUrl(std::string const &line)
     std::getline(header, split, ' ');
     if (split == "\0" || split[0] != '/')
         goto badline;
-    this->_request["URL"] = split;
+    this->_request["URL"] = this->decipherUrl(split);
     std::getline(header, split, '\r');
     if (split == "\0" || split != "HTTP/1.1")
         goto badline;

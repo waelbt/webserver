@@ -60,6 +60,8 @@ class Request
         bool is_file(const char *path);
         void setBodyPath();
         int  readChunkedBody(char *request, int &r);
+        std::string decodeUrl(std::string const &url);
+        std::string decipherUrl(std::string const &url);
     public:
         Request();
         ~Request();
