@@ -78,6 +78,7 @@ public:
 	std::string toUpperCase(std::string str);
 	std::string getExtention(std::string url);
 	std::string size_tToString(size_t size);
+	std::string generateRandomFile(std::time_t result);
 	bool is_file(const char *path);
 	bool is_directory(const char *path);
 	bool endWith(std::string const &value, std::string const &ending);

@@ -222,7 +222,7 @@ void Response::serveDirectoryAutoIndex(std::string url, std::map<int, std::strin
 	this->setHeader("Content-Type", "text/html");
 	this->_isHeaderParsed = true;
 	std::time_t result = std::time(NULL);
-	this->_generatedName = "/tmp/" + std::to_string(result) + ".txt";
+	this->_generatedName = "/tmp/" + this->generateRandomFile(result) + ".txt";
 	std::fstream file(this->_generatedName, std::ios::out);
 	file << responseBody;
 	file.close();
@@ -673,4 +673,21 @@ void Response::reset()
 	this->_isHeaderParsed = false;
 	this->_isRedirect = false;
 	this->_isFileOpned = false;
+}
+
+std::string Response::generateRandomFile(std::time_t result)
+{
+	static const char charset[] = "abcdefghijklmnopqrstuvwxyz";
+	const int charsetSize = sizeof(charset) - 1;
+
+	std::string randomFile;
+	srand(time(0));
+
+	for (int i = 0; i < 10; ++i)
+	{
+		int randomIndex = rand() % charsetSize;
+		randomFile += charset[randomIndex];
+	}
+
+	return randomFile + this->intToString(result);
 }
