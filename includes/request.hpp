@@ -54,9 +54,9 @@ class Request
         void setBody(char *request, int &r);
         void setFullBody(char *request, int &r);
         void setChunkedBody(char *request, int &r);
-        int  readChunkedBody(char *request, int &r);
-        bool is_file(const char *path);
         bool is_directory(const char *path);
+        void setBodyPath();
+        int  readChunkedBody(char *request, int &r);
     public:
         Request();
         ~Request();
