@@ -96,9 +96,10 @@ class Webserver
 		~Webserver();
 
 		void setup(std::string content);
-		SetsPair wait_on_client();
+		bool wait_on_client(SetsPair& sets);
 		void run();
 		void stop();
+		void reset();
 
 		int fetch_request (Client *client, const Configuration& conf);
 		int send_response (Client *client);

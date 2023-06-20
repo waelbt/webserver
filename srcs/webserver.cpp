@@ -70,17 +70,32 @@ Webserver& Webserver::operator=(const Webserver&  other)
 }
 
 
-Webserver::SetsPair Webserver::wait_on_client()
+bool Webserver::wait_on_client(SetsPair& sets)
 {
 	struct timeval timeout;
-	SetsPair sets(_readset, _writeset);
 
 	timeout.tv_sec = 0;
 	timeout.tv_usec = 5;
+	sets = std::make_pair(_readset, _writeset);
+	if (select(_max_socket + 1, &sets.first, &sets.second, 0, &timeout) < 0)\
+	{
+		this->reset();
+		return false;
+	}
+	return true;
+}
 
-	if (select(_max_socket + 1, &sets.first, &sets.second, 0, &timeout) < 0)
-		throw CustomeExceptionMsg("select() failed. ("+  std::string(strerror(errno)) + ")");
-	return sets;
+void Webserver::reset()
+{
+	FD_ZERO(&_readset);
+	FD_ZERO(&_writeset);
+	for (ServerMap::iterator it = _servers.begin(); it != _servers.end(); it++)
+	{
+		FD_SET(it->first, &_readset);
+		size_t clients_num = it->second->get_clients().size();
+		for (size_t i = 0; i < clients_num; i++)
+			it->second->drop_client(i);
+	}
 }
 
 void  Webserver::clear_set()
@@ -125,7 +140,8 @@ void Webserver::run()
 
 	while (1)
     {
-        temps = wait_on_client();
+        if (!wait_on_client(temps))
+			continue;
         for (ServerMap::iterator it = _servers.begin(); it != _servers.end(); it++)
         {
             std::vector<Client *>& _client = it->second->get_clients();
