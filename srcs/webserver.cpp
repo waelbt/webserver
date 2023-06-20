@@ -154,13 +154,24 @@ int Webserver::send_response(Client *client)
 	{
 		client->_response.serveResponse(client->_request);
 		if (client->_response.getIsHeaderParsed() && !client->_response.getIsHeaderSent())
+		{
 			client->_data_sent = client->_response.sendHeader();
+			std::cout << client->_data_sent << std::endl;
+		}
 		else
 			client->_data_sent = client->_response.getBody();
 	}
 	client->_bytesSent = send(client->_socket, client->_data_sent.c_str(), client->_data_sent.size(), 0);
-	if (client->_response.getIsBodySent() == true || (client->_bytesSent == -1)) {
-		FD_CLR(client->_socket, &_writeset); return 1; }
+	if (client->_response.getIsBodySent() == true || (client->_bytesSent == -1))
+	{
+		FD_CLR(client->_socket, &_writeset);
+		if (client->_request.get_attribute("Connection") != "close")
+		{
+			FD_SET(client->_socket, &_readset);
+			return 0;
+		}
+		return 1;
+	}
 	if ((size_t)client->_bytesSent < client->_data_sent.length()) {
 		client->_data_sent = client->_data_sent.substr(client->_bytesSent, client->_data_sent.length()); return 0;}
 	client->_data_sent.clear();

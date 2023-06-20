@@ -53,7 +53,7 @@ SOCKET Server::server_socket(std::string host, std::string port)
 		setnonblocking(_listen_sockets);
 		if (bind(_listen_sockets, bind_addr->ai_addr, bind_addr->ai_addrlen))
 			error_message = "bind system call failed.";
-		if (listen(_listen_sockets, MAX_PENDING_CNX) < 0)
+		if (listen(_listen_sockets, BACKLOG) < 0)
 			error_message = "listen system call failed.";
 		freeaddrinfo(bind_addr);
 		return _listen_sockets;

@@ -315,6 +315,12 @@ void Request::setContentTypePost(std::string const & content)
         this->_extention = ".txt";
 }
 
+
+std::string    Request::get_attribute(const std::string& key)
+{
+    return _request[key];
+}
+
 void Request::setContentTypeGet(std::string const & content)
 {
     if (!contentStateGet)

@@ -51,7 +51,7 @@
 #define BLOCK '{'
 #define END_BLOCK '}'
 
-#define MAX_PENDING_CNX 10
+#define BACKLOG 32767
 #define MAX_REQUEST_SIZE 65536
 
 typedef char 								EntityType;
