@@ -78,13 +78,16 @@ public:
 	std::string toUpperCase(std::string str);
 	std::string getExtention(std::string url);
 	std::string size_tToString(size_t size);
+	std::string generateRandomFile(std::time_t result);
 	bool is_file(const char *path);
 	bool is_directory(const char *path);
 	bool endWith(std::string const &value, std::string const &ending);
 	bool isFileExists(const std::string &name);
 	std::vector<std::string> split(const std::string &s, std::string delim);
+	void reset();
 private : 
 	int _status;
+	int _length;
 	std::ifstream _file;
 	bool _isCGIInProcess;
 	bool _isCGIFinished;

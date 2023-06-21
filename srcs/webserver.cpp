@@ -182,11 +182,11 @@ int Webserver::send_response(Client *client)
 	if (client->_response.getIsBodySent() == true || (client->_bytesSent == -1))
 	{
 		FD_CLR(client->_socket, &_writeset);
-		if (client->_request.get_attribute("Connection") != "close")
-		{
-			FD_SET(client->_socket, &_readset);
-			return 0;
-		}
+		// if (client->_request.get_attribute("Connection") != "close")
+		// {
+		// 	FD_SET(client->_socket, &_readset);
+		// 	return 0;
+		// }
 		return 1;
 	}
 	if ((size_t)client->_bytesSent < client->_data_sent.length()) {

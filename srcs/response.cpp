@@ -2,7 +2,7 @@
 
 std::map<int, std::string> _httpResponses;
 
-Response::Response(): _status(200), _isCGIInProcess(0), _isCGIFinished(0), _isCGIParsed(0), _isFileOpned(0), _isHeaderSent(0), _isBodySent(0), _isHeaderParsed(0), _isRedirect(0), _body(""), _generatedName("")
+Response::Response(): _status(200), _length(0), _isCGIInProcess(0), _isCGIFinished(0), _isCGIParsed(0), _isFileOpned(0), _isHeaderSent(0), _isBodySent(0), _isHeaderParsed(0), _isRedirect(0), _body(""), _generatedName("")
 {
 	_httpResponses[200] = "OK";
 	_httpResponses[201] = "Created";
@@ -222,7 +222,7 @@ void Response::serveDirectoryAutoIndex(std::string url, std::map<int, std::strin
 	this->setHeader("Content-Type", "text/html");
 	this->_isHeaderParsed = true;
 	std::time_t result = std::time(NULL);
-	this->_generatedName = "/tmp/" + std::to_string(result) + ".txt";
+	this->_generatedName = "/tmp/" + this->generateRandomFile(result) + ".txt";
 	std::fstream file(this->_generatedName, std::ios::out);
 	file << responseBody;
 	file.close();
@@ -258,13 +258,17 @@ void Response::serveStaticFile(std::string url, std::map<int, std::string> &erro
 		else
 		{
 			char buffer[65536];
+			this->_file.seekg(this->_length);
 			this->_file.read(buffer, sizeof(buffer));
+			this->_length = this->_file.tellg();
 			std::streamsize bytesRead = this->_file.gcount();
 
 			if (bytesRead > 0)
 			{
 				std::string chunk(buffer, bytesRead);
 				this->setBody(chunk);
+				this->_file.close();
+				this->setIsFileOpned(false);
 			}
 			else
 			{
@@ -273,12 +277,6 @@ void Response::serveStaticFile(std::string url, std::map<int, std::string> &erro
 				this->setIsFileOpned(false);
 			}
 		}
-	}
-	else
-	{
-		std::cout << "Error opening file" << std::endl;
-		this->setStatus(403);
-		this->serveErrorPage(errorPages);
 	}
 }
 
@@ -417,7 +415,7 @@ void Response::executeCGI(std::string cgiPath, std::string binary, char **envp, 
 			dup2(fd[1], 1);
 			close(fd[0]);
 			close(fd[1]);
-			char *args[] = {(char*)binary.c_str(), (char*)cgiPath.c_str(), NULL};
+			char *args[3] = {(char*)binary.c_str(), (char*)cgiPath.c_str(), NULL};
 			if (execve(binary.c_str(), args, envp) == -1)
 			{
 				std::cout << "Error executing CGI" << std::endl;
@@ -499,9 +497,6 @@ void Response::serveCGIFile(std::string cgiPath, std::map<int, std::string> &err
 		{
 			std::string line;
 			std::string header;
-			std::string body;
-
-			std::streamsize size = 0;
 
 			while (getline(this->_file, line))
 			{
@@ -509,29 +504,21 @@ void Response::serveCGIFile(std::string cgiPath, std::map<int, std::string> &err
 					break;
 				header += line;
 				header += "\n";
-				size += line.size() + 1;
 			}
 
 			this->parseResponseHeader(header);
 
-			// Read the rest of the file into the body string:
+			// Open the file as ofstream and write line by line to it:
+			std::ofstream ofs(cgiPath.c_str(), std::ios::out | std::ios::trunc);
 			while (getline(this->_file, line))
 			{
-				body += line;
-				body += "\n";
+				ofs << line << "\n";
 			}
-			// Close the ifstream:
+			// Close the ifstream and ofstream:
 			this->_file.close();
-			std::cout << "File closed" << std::endl;
-			std::cout << "Body: " << std::endl;
-			std::cout << body << std::endl;
-			// Open the file as ofstream and write the body back to it:
-			std::ofstream ofs(cgiPath.c_str(), std::ios::out | std::ios::trunc);
-			ofs << body;
-
-			// Close the ofstream:
 			ofs.close();
 
+			std::cout << "File closed" << std::endl;
 			this->setIsFileOpned(false);
 		}
 		this->_isCGIParsed = true;
@@ -547,10 +534,15 @@ void Response::parseResponseHeader(std::string responseHeader)
 	if (firstLine[0] == "Status")
 		this->setStatus(atoi(firstLine[1].c_str()));
 	else
+	{
+		this->setHeader(firstLine[0], firstLine[1]);
 		this->setStatus(200);
+	}
 	for (int i = 1; i < (int)lines.size(); i++)
 	{
 		std::vector<std::string> header = this->split(lines[i], ": ");
+		if (header[0].empty())
+			continue;
 		if (header[0] == "Content-type")
 			header[0] = "Content-Type";
 		this->setHeader(header[0], header[1]);
@@ -661,4 +653,34 @@ std::string Response::size_tToString(size_t size)
 	std::ostringstream oss;
 	oss << size;
 	return oss.str();
+}
+
+void Response::reset()
+{
+	this->_status = 200;
+	this->_length = 0;
+	this->_headers.clear();
+	this->_body.clear();
+	this->_isHeaderSent = false;
+	this->_isBodySent = false;
+	this->_isHeaderParsed = false;
+	this->_isRedirect = false;
+	this->_isFileOpned = false;
+}
+
+std::string Response::generateRandomFile(std::time_t result)
+{
+	static const char charset[] = "abcdefghijklmnopqrstuvwxyz";
+	const int charsetSize = sizeof(charset) - 1;
+
+	std::string randomFile;
+	srand(time(0));
+
+	for (int i = 0; i < 10; ++i)
+	{
+		int randomIndex = rand() % charsetSize;
+		randomFile += charset[randomIndex];
+	}
+
+	return randomFile + this->intToString(result);
 }
