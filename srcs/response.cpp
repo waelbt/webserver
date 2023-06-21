@@ -2,21 +2,6 @@
 
 std::map<int, std::string> _httpResponses;
 
-std::string generateRandomFileName() {
-    static const char charset[] = "abcdefghijklmnopqrstuvwxyz";
-    const int charsetSize = sizeof(charset) - 1;
-    
-    std::string randomFile;
-    srand(time(0));
-    
-    for (int i = 0; i < 10; ++i) {
-        int randomIndex = rand() % charsetSize;
-        randomFile += charset[randomIndex];
-    }
-    
-    return randomFile;
-}
-
 void Response::initHTTPResponses()
 {
 	_httpResponses[200] = "OK";
@@ -321,7 +306,7 @@ char **Response::getENV(std::string url, const Request &request)
 	env["CONTENT_TYPE"] = headers["Content-Type"];
 	env["REQUEST_METHOD"] = headers["Method"];
 	env["REQUEST_URI"] = headers["URL"];
-	env["QUERY_STRING"] = headers["Query"];
+	env["QUERY_STRING"] = request.getQueries();
 	env["REDIRECT_STATUS"] = "CGI";
 	// env["SERVER_SOFTWARE"] = "webserv";
 	env["SCRIPT_FILENAME"] = url;
@@ -390,7 +375,7 @@ void Response::serveCGI(std::string url, const Request &request)
 	else
 	{
 		std::cout << "CGI execution finished" << std::endl;
-		this->serveCGIFile("cgi_output.txt", errorPages);
+		this->serveCGIFile(this->_cgiOutput, errorPages);
 	}
 }
 
@@ -405,9 +390,9 @@ void Response::executeCGI(std::string cgiPath, std::string binary, char **envp, 
 			std::string bodyPath = request.getBody();
 			fd[0] = open(bodyPath.c_str(), O_RDONLY);
 		}
-		// if (this->_cgiOutput.empty())
-		// 	this->_cgiOutput = generateRandomFileName() + ".txt";
-		fd[1] = open("cgi_output.txt" , O_WRONLY | O_CREAT | O_TRUNC, 0666);
+		if (this->_cgiOutput.empty())
+			this->_cgiOutput = "/tmp/" + this->generateRandomFile(std::time(NULL)) + ".txt";
+		fd[1] = open(this->_cgiOutput.c_str() , O_WRONLY | O_CREAT | O_TRUNC, 0666);
 		if (fd[0] == -1 || fd[1] == -1)
 		{
 			std::cout << "Error opening file" << std::endl;
