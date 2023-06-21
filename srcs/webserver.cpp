@@ -103,8 +103,8 @@ void  Webserver::clear_set()
 	for (SOCKET fd = 0; fd <= Webserver::_max_socket; fd++) {
 		if (FD_ISSET(fd, &Webserver::_readset) || FD_ISSET(fd, &Webserver::_writeset))
 		{
-			if (fd == 0) {
-				std::cout << "wwwwwwwwwwdawdawdawdawdwa" << std::endl; exit(0);}
+			// if (fd == 0) {
+			// 	std::cout << "wwwwwwwwwwdawdawdawdawdwa" << std::endl; exit(0);}
 			close(fd);
 		}
 	}
@@ -192,13 +192,9 @@ int Webserver::send_response(Client *client)
 			std::cout << "_remaining " << client->_bytesSent << std::endl;
 			client->_data_sent = client->_data_sent.substr(client->_bytesSent, client->_data_sent.length());
 		}
-		else	
-			std::cout << strerror(errno) << std::endl;
-		std::cout << "send " << client->_bytesSent << std::endl;
 	}
-	if (client->_response.getIsBodySent()) 
+	if (client->_response.getIsBodySent() || client->_bytesSent == -1) 
 	{
-		std::cout << "body sent" << std::endl;
 		std::cout << "***************************************** disconnected **************************************************" << std::endl;
 		// kill(client->_response._pid, SIGKILL);
 		FD_CLR(client->_socket, &_writeset);
@@ -212,11 +208,11 @@ void Webserver::stop()
 {
 	for (ServerMap::iterator it = _servers.begin(); it != _servers.end(); it++)
 	{
-		if (!it->first)
-		{
-			std::cout << "zadawawdawdawdawdawdawdawaab" << std::endl;
-			exit(0);
-		}
+		// if (!it->first)
+		// {
+		// 	std::cout << "zadawawdawdawdawdawdawdawaab" << std::endl;
+		// 	exit(0);
+		// }
 		close(it->first);
 	}
 }
