@@ -34,7 +34,7 @@ void Server::setnonblocking(int sock)
 
 SOCKET Server::server_socket(std::string host, std::string port)
 {	
-	int yes;
+	int opt;
 	s_addrinfo hints;
     s_addrinfo *bind_addr;
 	std::string error_message("getaddrinfo system call failed.");
@@ -49,7 +49,7 @@ SOCKET Server::server_socket(std::string host, std::string port)
 		Webserver::add_socket(_listen_sockets);
 		if (_listen_sockets < 0)
 			error_message = "socket system call failed.";
-		setsockopt(_listen_sockets, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes));
+		setsockopt(_listen_sockets, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
 		setnonblocking(_listen_sockets);
 		if (bind(_listen_sockets, bind_addr->ai_addr, bind_addr->ai_addrlen))
 			error_message = "bind system call failed.";
@@ -96,7 +96,8 @@ void Server::drop_client(size_t i)
 {
 	if (i < _client.size())
 	{
-		close(_client[i]->_socket);
+		std::cout << "drop_client socket  " << _client[i]->_socket << std::endl;
+		delete _client[i];
 		_client.erase(_client.begin() + i);
 	}
 }
@@ -127,5 +128,10 @@ void Server::showConfig() const
 Server::~Server()
 {
 	clear_clients();
+	if (_listen_sockets == 0)
+	{
+		std::cout << "xadadawdawd wffawfwaf" << std::endl;
+		exit(0);
+	}
  	close(_listen_sockets);
 }

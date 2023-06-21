@@ -445,11 +445,6 @@ void Response::executeCGI(std::string cgiPath, std::string binary, char **envp, 
 				exit(1);
 			}
 		}
-		else
-		{
-			close(fd[0]);
-			close(fd[1]);
-		}
 	}
 }
 

@@ -102,7 +102,11 @@ void  Webserver::clear_set()
 {
 	for (SOCKET fd = 0; fd <= Webserver::_max_socket; fd++) {
 		if (FD_ISSET(fd, &Webserver::_readset) || FD_ISSET(fd, &Webserver::_writeset))
+		{
+			if (fd == 0) {
+				std::cout << "wwwwwwwwwwdawdawdawdawdwa" << std::endl; exit(0);}
 			close(fd);
+		}
 	}
 	FD_ZERO(&_readset);
 	FD_ZERO(&_writeset);
@@ -113,12 +117,11 @@ int Webserver::fetch_request (Client *client, const Configuration& conf)
 	char request[MAX_REQUEST_SIZE + 1] = {0};
 	int r;
 
-	r = recv(client->_socket, request, MAX_REQUEST_SIZE, MSG_DONTWAIT);
+	r = recv(client->_socket, request, MAX_REQUEST_SIZE, 0);
 	if (r < 1)
 	{
-		std::cout << "Unexpected disconnect from " << client->get_client_address() << std::endl;
+		std::cout << "Unexpected disconnect from " << client->get_client_address() << strerror(errno) << std::endl;
 		FD_CLR(client->_socket, &_readset);
-		FD_CLR(client->_socket, &_writeset);
 		return 0;
 	}
 	else
@@ -189,13 +192,15 @@ int Webserver::send_response(Client *client)
 			std::cout << "_remaining " << client->_bytesSent << std::endl;
 			client->_data_sent = client->_data_sent.substr(client->_bytesSent, client->_data_sent.length());
 		}
+		else	
+			std::cout << strerror(errno) << std::endl;
 		std::cout << "send " << client->_bytesSent << std::endl;
 	}
 	if (client->_response.getIsBodySent()) 
 	{
 		std::cout << "body sent" << std::endl;
 		std::cout << "***************************************** disconnected **************************************************" << std::endl;
-		kill(client->_response._pid, SIGKILL);
+		// kill(client->_response._pid, SIGKILL);
 		FD_CLR(client->_socket, &_writeset);
 		// client->_response.reset();
 		return 1;
@@ -206,7 +211,14 @@ int Webserver::send_response(Client *client)
 void Webserver::stop()
 {
 	for (ServerMap::iterator it = _servers.begin(); it != _servers.end(); it++)
+	{
+		if (!it->first)
+		{
+			std::cout << "zadawawdawdawdawdawdawdawaab" << std::endl;
+			exit(0);
+		}
 		close(it->first);
+	}
 }
 
 

@@ -6,14 +6,16 @@ Client::Client() : _server_socket(), _address(), _address_length(sizeof(_address
     
 }
 
-Client::Client(SOCKET server_socket) : _server_socket(server_socket), _address(), _address_length(sizeof(_address)), _request(), _response(), _data_sent(), _bytesSent(), _remaining()
+Client::Client(SOCKET server_socket) : _server_socket(server_socket), _address(), _address_length(sizeof _address), _request(), _response(), _data_sent(), _bytesSent(), _remaining()
 {
-    _socket = accept(_server_socket, (struct sockaddr*) &(_address), &(_address_length));
-    if (_socket < 0)
-        throw CustomeExceptionMsg("socket() failed. ("+  std::string(strerror(errno)) + ")");
+    std::cout << "procces " << getpid() << "paremt process   "<< getppid() << std::endl;
+    std::cout << "_server_socket "<< _server_socket << std::endl;
+    _socket = accept(_server_socket, NULL, NULL);
+    if (_socket <= 0)
+        throw CustomeExceptionMsg("accept() failed. ("+  std::string(strerror(errno)) + ")");
     Server::setnonblocking(_socket);
     Webserver::add_socket(_socket);
-    std::cout << "New connection from " << get_client_address() << std::endl;
+    std::cout << "New connection from , socket " << get_client_address() << _socket << std::endl;
 }
 
 
