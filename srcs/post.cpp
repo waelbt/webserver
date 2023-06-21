@@ -11,8 +11,8 @@ void Response::post(const Request &request)
     this->setStatus(request.getStatus());
     if (this->_status == 200)
     {
-        if (location.getUpload().empty())
-        {
+        // if (location.getUpload().empty())
+        // {
 			if (pathType == "file")
 			{
 				if (!this->_isFileOpned)
@@ -31,16 +31,16 @@ void Response::post(const Request &request)
 				this->setStatus(404);
 				this->serveErrorPage(errorPages);
 			}
-			std::remove(path.c_str());
-        }
-		else
-		{
-			this->serveCGI(path, request);
-			this->setStatus(201);
-			this->_isHeaderParsed = true;
-			this->_isRedirect = true;
-			this->_isBodySent = true;
-		}
+			// std::remove(path.c_str());
+        // }
+		// else
+		// {
+		// 	this->serveCGI(path, request);
+		// 	this->setStatus(201);
+		// 	this->_isHeaderParsed = true;
+		// 	this->_isRedirect = true;
+		// 	this->_isBodySent = true;
+		// }
     }
     else
         this->serveErrorPage(errorPages);

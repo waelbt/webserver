@@ -165,34 +165,61 @@ void Webserver::run()
 	this->stop();
 }
 
+
+// if (!client->_data_sent.length())
+// 	{
+// 		client->_response.serveResponse(client->_request);
+// 		if (client->_response.getIsHeaderParsed() && !client->_response.getIsHeaderSent())
+// 		{
+// 			client->_data_sent = client->_response.sendHeader();
+// 			std::cout << client->_data_sent << std::endl;
+// 		}
+// 		else
+// 			client->_data_sent = client->_response.getBody();
+// 	}
+// 	client->_bytesSent = send(client->_socket, client->_data_sent.c_str(), client->_data_sent.size(), 0);
+// 	if (client->_response.getIsBodySent() == true || (client->_bytesSent == -1))
+// 	{
+// 		FD_CLR(client->_socket, &_writeset);
+// 		client->_response.reset();
+// 		return 1;
+// 	}
+// 	if ((size_t)client->_bytesSent < client->_data_sent.length()) {
+// 		client->_data_sent = client->_data_sent.substr(client->_bytesSent, client->_data_sent.length()); return 0;}
+// 	client->_data_sent.clear();
+
 int Webserver::send_response(Client *client)
 {
-	if (!client->_data_sent.length())
+	if (!client->_remaining)
 	{
 		client->_response.serveResponse(client->_request);
 		if (client->_response.getIsHeaderParsed() && !client->_response.getIsHeaderSent())
-		{
 			client->_data_sent = client->_response.sendHeader();
-			std::cout << client->_data_sent << std::endl;
-		}
 		else
 			client->_data_sent = client->_response.getBody();
 	}
 	client->_bytesSent = send(client->_socket, client->_data_sent.c_str(), client->_data_sent.size(), 0);
-	if (client->_response.getIsBodySent() == true || (client->_bytesSent == -1))
+	if (client->_bytesSent == (ssize_t)client->_data_sent.size())
+	{
+		std::cout << "send all" << std::endl;
+		client->_remaining = false;
+	}
+	else if (client->_bytesSent < (ssize_t)client->_data_sent.size())
+	{
+		client->_remaining = true;
+		if (client->_bytesSent != -1)
+		{
+			std::cout << "_remaining " << client->_bytesSent << std::endl;
+			client->_data_sent = client->_data_sent.substr(client->_bytesSent, client->_data_sent.length());
+		}
+		std::cout << "send " << client->_bytesSent << std::endl;
+	}
+	if (client->_response.getIsBodySent()) 
 	{
 		FD_CLR(client->_socket, &_writeset);
-		// if (client->_request.get_attribute("Connection") != "close")
-		// {
-		// 	FD_SET(client->_socket, &_readset);
-		// 	return 0;
-		// }
 		client->_response.reset();
 		return 1;
 	}
-	if ((size_t)client->_bytesSent < client->_data_sent.length()) {
-		client->_data_sent = client->_data_sent.substr(client->_bytesSent, client->_data_sent.length()); return 0;}
-	client->_data_sent.clear();
 	return 0;
 }
 

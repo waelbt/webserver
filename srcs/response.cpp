@@ -17,10 +17,7 @@ std::string generateRandomFileName() {
     return randomFile;
 }
 
-Response::Response(): _status(200), _length(0), _isCGIInProcess(0), _isCGIFinished(0), _isCGIParsed(0), _isFileOpned(0), _isHeaderSent(0), _isBodySent(0), _isHeaderParsed(0), _isRedirect(0), _body(""), _generatedName(""), _cgiOutput(""), _headers()
-{
-	this->initHTTPResponses();
-}
+void Response::initHTTPResponses()
 {
 	_httpResponses[200] = "OK";
 	_httpResponses[201] = "Created";
@@ -38,6 +35,12 @@ Response::Response(): _status(200), _length(0), _isCGIInProcess(0), _isCGIFinish
 	_httpResponses[500] = "Internal Server Error";
 	_httpResponses[501] = "Not Implemented";
 	_httpResponses[505] = "HTTP Version Not Supported";
+}
+
+
+Response::Response(): _status(200), _length(0), _isCGIInProcess(0), _isCGIFinished(0), _isCGIParsed(0), _isFileOpned(0), _isHeaderSent(0), _isBodySent(0), _isHeaderParsed(0), _isRedirect(0), _body(""), _generatedName(""), _cgiOutput(""), _headers()
+{
+	this->initHTTPResponses();
 }
 
 Response::Response(Response const &src) { *this = src; }
@@ -410,9 +413,9 @@ void Response::executeCGI(std::string cgiPath, std::string binary, char **envp, 
 			std::string bodyPath = request.getBody();
 			fd[0] = open(bodyPath.c_str(), O_RDONLY);
 		}
-		if (this->_cgiOutput.empty())
-			this->_cgiOutput = generateRandomFileName() + ".txt";);
-		fd[1] = open(this->_cgiOutput, O_WRONLY | O_CREAT | O_TRUNC, 0666);
+		// if (this->_cgiOutput.empty())
+		// 	this->_cgiOutput = generateRandomFileName() + ".txt";
+		fd[1] = open("cgi_output.txt" , O_WRONLY | O_CREAT | O_TRUNC, 0666);
 		if (fd[0] == -1 || fd[1] == -1)
 		{
 			std::cout << "Error opening file" << std::endl;
@@ -461,7 +464,7 @@ int Response::checkCGIStatus(std::map<int, std::string> &errorPages)
 	}
 	else if (w == 0)
 	{
-		// std::cout << "CGI still running" << std::endl;
+		std::cout << "CGI still running" << std::endl;
 		return false;
 	}
 	else

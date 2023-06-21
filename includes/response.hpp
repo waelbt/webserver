@@ -84,6 +84,7 @@ public:
 	bool endWith(std::string const &value, std::string const &ending);
 	bool isFileExists(const std::string &name);
 	std::vector<std::string> split(const std::string &s, std::string delim);
+	void initHTTPResponses();
 	void reset();
 private : 
 	int _status;
