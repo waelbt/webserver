@@ -399,14 +399,6 @@ void Response::executeCGI(std::string cgiPath, std::string binary, char **envp, 
 	if (!this->_isCGIInProcess)
 	{
 		std::map<std::string, std::string> headers = request.getRequest();
-		// int i = 0;
-		// while (envp[i])
-		// {
-		// 	std::cout << envp[i] << "|";
-		// 	i++;
-		// }
-		// if (headers["Method"] == "POST")
-		// exit(2);
 		int fd[2] = {0, 1};
 
 		if (headers["Method"] == "POST") {
@@ -445,6 +437,10 @@ void Response::executeCGI(std::string cgiPath, std::string binary, char **envp, 
 				exit(1);
 			}
 		}
+		if (headers["Method"] == "POST") {
+			close(fd[0]);
+		}
+		close(fd[1]);
 	}
 }
 

@@ -83,7 +83,7 @@ size_t stringToDecimal(std::string const &str)
     return decimal;
 }
 
-Request::Request() : _request(), _queries(), _conf(), _location(), _path(), _body(), _extention(), _chunkedBodySize(),
+Request::Request() : _request(), _conf(), _location(), _path(), _body(), _queries(), _extention(), _chunkedBodySize(),
                 _chunkState(UNDONE), _fdBody(), _bodySize(0), _chunkSize(0), _status(200), _contentLength(0),
                 _badFormat(0)
 {
@@ -93,11 +93,11 @@ Request::Request() : _request(), _queries(), _conf(), _location(), _path(), _bod
 Request& Request::operator=(const Request& other)
 {
     this->_request = other._request;
-    this->_queries = other._queries;
     this->_conf = other._conf;
     this->_location = other._location;
     this->_path = other._path;
     this->_body = other._body;
+    this->_queries = other._queries;
     this->_extention = other._extention;
     this->_chunkedBodySize = other._chunkedBodySize;
     this->_chunkState = other._chunkState;
@@ -379,22 +379,6 @@ void Request::setContentTypeGet(std::string const & content)
     this->_request["Content-Type"] =  it->second;
 }
 
-std::string Request::parseQueries(std::string const &line)
-{
-    size_t  pos = line.find('?');
-    std::istringstream req(line.substr(pos + 1));
-    std::string split;
-    while (std::getline(req, split, '&'))
-    {
-        size_t separator = split.find("=");
-        if (separator != std::string::npos)
-            this->_queries[split.substr(0, separator)] = split.substr(separator + 1);
-        else
-            this->_queries[split] = "";
-    }
-    return line.substr(0, pos);
-}
-
 std::string Request::decodeUrl(std::string const &url)
 {
     std::string decoded;
@@ -429,7 +413,10 @@ std::string Request::decipherUrl(std::string const &url)
     while (decoded.find('%') != std::string::npos)
         decoded = this->decodeUrl(decoded);
     if (decoded.find('?') != std::string::npos)
-        decoded = this->parseQueries(decoded);
+    {
+        this->_queries = decoded.substr(decoded.find('?') + 1);
+        decoded = decoded.substr(0, decoded.find('?'));
+    }
     return decoded;
 }
 
@@ -562,4 +549,9 @@ std::string const &   Request::getBody() const
 size_t const &   Request::getContentLength() const
 {
     return this->_contentLength;
+}
+
+std::string const &   Request::getQueries() const
+{
+    return this->_queries;
 }

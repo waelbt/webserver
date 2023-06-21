@@ -32,11 +32,11 @@ class Request
 {
     private:
         RequestMap    _request;
-        QueriesMap    _queries;
         Configuration _conf;
         Location      _location;
         std::string   _path;
         std::string   _body;
+        std::string   _queries;
         std::string   _extention;
         std::string   _chunkedBodySize;
         ChunkState    _chunkState;
@@ -49,7 +49,6 @@ class Request
         static int    contentStatePost;
         static int    contentStateGet;
 
-        std::string parseQueries(std::string const &line);
         std::string decodeUrl(std::string const &url);
         std::string decipherUrl(std::string const &url);
         void parseUrl(std::string const &line);
@@ -70,9 +69,8 @@ class Request
         ~Request();
         Request& operator=(const Request& other);
 
-        RequestMap const      &getRequest() const;
-        QueriesMap const      &getQueries() const;
-        std::string const &   getType() const;
+        RequestMap const  &   getRequest() const;
+        std::string const &   getQueries() const;
         int const &           getStatus() const;
         std::string const &   getPath() const;
         Location const &      getLocation() const;
