@@ -128,10 +128,10 @@ void Server::showConfig() const
 Server::~Server()
 {
 	clear_clients();
-	if (_listen_sockets == 0)
-	{
-		std::cout << "xadadawdawd wffawfwaf" << std::endl;
-		exit(0);
-	}
+	// if (_listen_sockets == 0)
+	// {
+	// 	std::cout << "xadadawdawd wffawfwaf" << std::endl;
+	// 	exit(0);
+	// }
  	close(_listen_sockets);
 }
