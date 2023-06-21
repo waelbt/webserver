@@ -187,6 +187,7 @@ int Webserver::send_response(Client *client)
 		// 	FD_SET(client->_socket, &_readset);
 		// 	return 0;
 		// }
+		client->_response.reset();
 		return 1;
 	}
 	if ((size_t)client->_bytesSent < client->_data_sent.length()) {

@@ -100,6 +100,7 @@ private :
 	pid_t _pid;
 	std::string _body;
 	std::string _generatedName;
+	std::string _cgiOutput;
 	std::map<std::string, std::string> _headers;
 };
 
