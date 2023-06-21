@@ -1,5 +1,4 @@
 <?php
-print_r($_GET);
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
     // save $_FILES['avatar'] to a inside a folder
@@ -13,7 +12,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $avatar_actual_ext = strtolower(end($avatar_ext));
 
     $allowed = array('jpg', 'jpeg', 'png' );
-
     if (in_array($avatar_actual_ext, $allowed)) {
         if ($avatar_error === 0) {
             if ($avatar_size < 10000000000000000) {

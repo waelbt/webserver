@@ -326,9 +326,10 @@ char **Response::getENV(std::string url, const Request &request)
 		std::string envVar = it->first + "=" + it->second;
 		envp[i] = new char[envVar.length() + 1];
 		std::strcpy(envp[i], envVar.c_str());
-
+		std::cout << envp[i] << std::endl;
 		i++;
 	}
+	// exit(0);
 	envp[i] = NULL;
 	return envp;
 }
@@ -410,7 +411,6 @@ void Response::executeCGI(std::string cgiPath, std::string binary, char **envp, 
 		}
 		else if (this->_pid == 0)
 		{
-
 			dup2(fd[0], 0);
 			dup2(fd[1], 1);
 			close(fd[0]);
@@ -504,6 +504,7 @@ void Response::serveCGIFile(std::string cgiPath, std::map<int, std::string> &err
 				header += line;
 				header += "\n";
 			}
+			std::cout << "Header: " << header << std::endl;
 
 			this->parseResponseHeader(header);
 
@@ -512,11 +513,12 @@ void Response::serveCGIFile(std::string cgiPath, std::map<int, std::string> &err
 			while (getline(this->_file, line))
 			{
 				ofs << line << "\n";
+				std::cout << line << std::endl;
 			}
 			// Close the ifstream and ofstream:
 			this->_file.close();
 			ofs.close();
-
+			// exit(0);
 			std::cout << "File closed" << std::endl;
 			this->setIsFileOpned(false);
 		}
@@ -544,7 +546,16 @@ void Response::parseResponseHeader(std::string responseHeader)
 			continue;
 		if (header[0] == "Content-type")
 			header[0] = "Content-Type";
+		if (this->_headers.find(header[0]) != this->_headers.end())
+		{
+			std::string value = this->_headers[header[0]];
+			if (!value.empty())
+				value += " \r\n" + header[0] + ": ";
+			value += header[1];
+			header[1] = value;
+		}
 		this->setHeader(header[0], header[1]);
+		std::cout << "Header: " << header[0] << " " << header[1] << std::endl;
 	}
 }
 
