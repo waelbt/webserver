@@ -26,6 +26,8 @@
 #include <string>
 #include <exception>
 #include <vector>
+ #include <sys/types.h>
+ #include <signal.h>
 
 #define NOROUTE				"define a server without location is forbidden"
 #define ServerError			": can't be in the server scope"

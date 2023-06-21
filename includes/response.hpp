@@ -86,7 +86,7 @@ public:
 	std::vector<std::string> split(const std::string &s, std::string delim);
 	void initHTTPResponses();
 	void reset();
-private : 
+public : 
 	int _status;
 	int _length;
 	std::ifstream _file;

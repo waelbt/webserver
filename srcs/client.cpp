@@ -24,11 +24,12 @@ Client::Client(const Client& other)
 
 Client& Client::operator=(const Client& other)
 {
-    _server_socket = other._server_socket;
-    _address = other._address;
-    _address_length = other._address_length;
-    _socket = other._socket;
-	_response = other._response;
+    this->_server_socket = other._server_socket;
+    this->_address = other._address;
+    this->_address_length = other._address_length;
+    this->_socket = other._socket;
+	this->_response = other._response;
+    this->_remaining = other._remaining;
     return *this;
 }
 
