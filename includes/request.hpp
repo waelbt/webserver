@@ -14,6 +14,7 @@
 #include "configuration.hpp"
 
 #define RequestMap std::map<std::string, std::string>
+#define QueriesMap std::map<std::string, std::string>
 
 
 struct invalidUrl
@@ -31,6 +32,7 @@ class Request
 {
     private:
         RequestMap    _request;
+        QueriesMap    _queries;
         Configuration _conf;
         Location      _location;
         std::string   _path;
@@ -47,6 +49,9 @@ class Request
         static int    contentStatePost;
         static int    contentStateGet;
 
+        std::string parseQueries(std::string const &line);
+        std::string decodeUrl(std::string const &url);
+        std::string decipherUrl(std::string const &url);
         void parseUrl(std::string const &line);
         void setContentTypePost(std::string const & content);
         void setContentTypeGet(std::string const & content);
@@ -60,14 +65,13 @@ class Request
         bool is_file(const char *path);
         void setBodyPath();
         int  readChunkedBody(char *request, int &r);
-        std::string decodeUrl(std::string const &url);
-        std::string decipherUrl(std::string const &url);
     public:
         Request();
         ~Request();
         Request& operator=(const Request& other);
 
         RequestMap const      &getRequest() const;
+        QueriesMap const      &getQueries() const;
         std::string const &   getType() const;
         int const &           getStatus() const;
         std::string const &   getPath() const;
