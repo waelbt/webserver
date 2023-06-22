@@ -466,10 +466,7 @@ void Request::badFormat()
     else if (url.length() > 2048)
         this->_status = 414;
     else if (contentLength != this->_request.end() && stringToDecimal(contentLength->second) > this->_location.getClientMaxBodySize())
-    {
-        std::cout << "|" << stringToDecimal(contentLength->second) << "|" << this->_location.getClientMaxBodySize() << "|" << std::endl;
         this->_status = 413;
-    }
     if (this->_status == 200)
         this->checkMethod();
     this->_badFormat = 1;
