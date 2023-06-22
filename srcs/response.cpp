@@ -257,6 +257,7 @@ void Response::serveStaticFile(std::string url, std::map<int, std::string> &erro
 			if (this->_status != 200)
 				this->setHeader("Content-Type", "text/html");
 			this->_file.seekg(0, std::ios::end);
+			std::cout << "File size: " << this->_file.tellg() << std::endl;
 			this->setHeader("Content-Length", to_string(this->_file.tellg()));
 			this->_file.seekg(0, std::ios::beg);
 			this->_isHeaderParsed = true;
@@ -366,9 +367,7 @@ void Response::serveCGI(std::string url, const Request &request)
 	}
 	if (!this->_isCGIInProcess)
 	{
-		char **envp = this->getENV(cgiPath, request);
-
-		this->executeCGI(cgiPath, binary, envp, errorPages, request);
+		this->executeCGI(cgiPath, binary, errorPages, request);
 		this->_isCGIFinished = this->checkCGIStatus(errorPages);
 	}
 	else if (!this->_isCGIFinished)
@@ -380,7 +379,7 @@ void Response::serveCGI(std::string url, const Request &request)
 	}
 }
 
-void Response::executeCGI(std::string cgiPath, std::string binary, char **envp, std::map<int, std::string> &errorPages, const Request &request)
+void Response::executeCGI(std::string cgiPath, std::string binary, std::map<int, std::string> &errorPages, const Request &request)
 {
 	if (!this->_isCGIInProcess)
 	{
@@ -411,6 +410,7 @@ void Response::executeCGI(std::string cgiPath, std::string binary, char **envp, 
 		}
 		else if (this->_pid == 0)
 		{
+			char **envp = this->getENV(cgiPath, request);
 			dup2(fd[0], 0);
 			dup2(fd[1], 1);
 			close(fd[0]);
@@ -448,18 +448,6 @@ int Response::checkCGIStatus(std::map<int, std::string> &errorPages)
 		if (WIFEXITED(status))
 		{
 			std::cout << "CGI exited normally" << std::endl;
-			// if (WEXITSTATUS(status) == 0)
-			// {
-			// 	std::cout << "CGI exited with status 0" << std::endl;
-			// 	return true;
-			// }
-			// else
-			// {
-			// 	std::cout << "CGI exited with status " << WEXITSTATUS(status) << std::endl;
-			// 	this->setStatus(403);
-			// 	this->serveErrorPage(errorPages);
-			// 	return true;
-			// }
 			return true;
 		}
 		else
