@@ -176,7 +176,7 @@ class Location : public CommonEntity
 		std::vector<std::string> _limit_except;
 		std::map<std::string, std::string> _cgi;
 		std::string _upload;
-		std::vector<std::string> _redirect;
+		std::string _redirect;
 	public:
 		Location();
 		Location(const CommonEntity& base, TokenVectsIter& begin, TokenVectsIter& end);
@@ -191,7 +191,7 @@ class Location : public CommonEntity
 		std::vector<std::string> 	getLimit_except() const;
 		std::map<std::string, std::string> 			getCgi() const;
 		std::string 				getUpload() const;
-		std::vector<std::string> 	getRedirect() const;
+		std::string 				getRedirect() const;
 		~Location();
 		friend std::ostream& operator<<(std::ostream& o, Location obj);
 };

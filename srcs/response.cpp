@@ -75,13 +75,16 @@ std::string Response::toString() const
 
 void Response::serveResponse(const Request &request)
 {
+	Location location = request.getLocation();
 	std::string method = request.getRequest().find("Method")->second;
-	std::map<int, std::string> errorPages = request.getLocation().getErrorPages();
+	std::map<int, std::string> errorPages = location.getErrorPages();
 
 	this->setStatus(request.getStatus());
 
 	if (this->_status != 200)
 		this->serveErrorPage(errorPages);
+	else if (!location.getRedirect().empty())
+		this->redirect(location.getRedirect());
 	else if (method == "GET")
 		this->get(request);
 	else if (method == "POST")
@@ -435,7 +438,8 @@ int Response::checkCGIStatus(std::map<int, std::string> &errorPages)
 	if (w == -1)
 	{
 		std::cout << "Error waiting for CGI" << std::endl;
-		exit(1);
+		this->setStatus(500);
+		this->serveErrorPage(errorPages);
 	}
 	else if (w == 0)
 	{
@@ -457,6 +461,7 @@ int Response::checkCGIStatus(std::map<int, std::string> &errorPages)
 			return true;
 		}
 	}
+	return true;
 }
 
 void Response::serveCGIFile(std::string cgiPath, std::map<int, std::string> &errorPages)

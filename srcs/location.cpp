@@ -63,7 +63,7 @@ void Location::InitUpload(std::string value)
 
 void Location::InitRedirect(std::string value)
 {
-    _redirect = converter(value, TokenToString());
+    _redirect = value;
 }
 
 Location::Location(const CommonEntity& Base, TokenVectsIter& begin, TokenVectsIter& end) : CommonEntity(Base), _pattren("/"), _limit_except(), _cgi(), _upload()
@@ -114,7 +114,7 @@ std::string Location::getUpload() const
     return _upload;
 }
 
-std::vector<std::string> Location::getRedirect() const
+std::string Location::getRedirect() const
 {
     return _redirect;
 }
@@ -147,7 +147,7 @@ std::ostream& operator<<(std::ostream& o, Location obj)
     std::map<std::string, std::string> cgi = obj.getCgi();
     std::for_each(cgi.begin(), cgi.end(), &print_cgi);
     std::cout << std::endl;
-    print_vec(obj.getRedirect(), "  redirect:");
+    std::cout << "  limit_except: " << obj.getRedirect() << std::endl;
     return o;
 }
 
