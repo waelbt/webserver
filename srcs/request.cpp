@@ -133,16 +133,17 @@ void Request::setBodyPath()
     std::string dirPath;
     if (!upload.empty())
     {
-        if (is_file(upload.c_str()))
+        std::string path = "./" + this->_location.getRoot() + "/" + upload;
+        if (is_file(path.c_str()))
         {
             this->_status = 400;
             this->_chunkState = DONE;
             return ;
         }
-        else if (is_directory(upload.c_str()))
+        else if (is_directory(path.c_str()))
         {
-            if (access(upload.c_str(), W_OK) == 0)
-                dirPath = upload + "/";
+            if (access(path.c_str(), W_OK) == 0)
+                dirPath = path + "/";
             else
             {
                 this->_status = 403;
@@ -449,23 +450,26 @@ void Request::parseUrl(std::string const &line)
 
 void Request::badFormat()
 {
-    RequestMap::iterator transferIt = this->_request.find("Transfer-Encoding");
-    RequestMap::iterator bodyIt = this->_request.find("body");
+    RequestMap::iterator transferEncoding = this->_request.find("Transfer-Encoding");
+    RequestMap::iterator contentLength = this->_request.find("Content-Length");
     std::string url = this->_request.find("URL")->second;
 
     this->checkLocation();
-    if (transferIt != this->_request.end() && transferIt->second != "chunked")
+    if (transferEncoding != this->_request.end() && transferEncoding->second != "chunked" && this->_request["Method"] == "POST")
         this->_status = 501;
-    else if (transferIt != this->_request.end() && this->_request.find("Content-Length") != this->_request.end())
+    else if (transferEncoding != this->_request.end() && contentLength != this->_request.end())
         this->_status = 400;
-    else if (this->_request.find("Content-Length") == this->_request.end() && this->_request["Method"] == "Post")
+    else if (transferEncoding == this->_request.end() && contentLength == this->_request.end() && this->_request["Method"] == "POST")
         this->_status = 400;
     else if (!(std::find_if(url.begin(), url.end(), invalidUrl()) != url.end()))
         _status = 400;
     else if (url.length() > 2048)
         this->_status = 414;
-    else if (bodyIt != this->_request.end() && bodyIt->second.length() > 2048)
+    else if (contentLength != this->_request.end() && stringToDecimal(contentLength->second) > this->_location.getClientMaxBodySize())
+    {
+        std::cout << "|" << stringToDecimal(contentLength->second) << "|" << this->_location.getClientMaxBodySize() << "|" << std::endl;
         this->_status = 413;
+    }
     if (this->_status == 200)
         this->checkMethod();
     this->_badFormat = 1;

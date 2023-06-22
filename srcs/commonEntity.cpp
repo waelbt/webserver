@@ -23,10 +23,10 @@ CommonEntity::CommonEntity(const CommonEntity& other)
     *this = other;
 }
 
-CommonEntity::CommonEntity(TokenVectsIter begin, TokenVectsIter end): _root(), _index(), _error_pages(), _client_max_body_size(), _AutoIndex(false)
+CommonEntity::CommonEntity(TokenVectsIter begin, TokenVectsIter end): _root(), _index(), _error_pages(), _client_max_body_size(1073741824), _AutoIndex(false)
 {
     CommonEntity::methods MemberInit[5] = {&CommonEntity::InitRoot, &CommonEntity::InitIndex, &CommonEntity::InitErrorPage, &CommonEntity::InitClienBodySize, &CommonEntity::InitAutoIndex};
-    static std::string keywords[6] = {"root", "index", "error_page", "client_body_size", "AutoIndex", InvalidSeverKey};
+    static std::string keywords[6] = {"root", "index", "error_page", "client_max_body_size", "AutoIndex", InvalidSeverKey};
     std::vector<TokenPair> directive;
     std::string *key;
 
