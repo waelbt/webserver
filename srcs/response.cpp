@@ -76,8 +76,13 @@ std::string Response::toString() const
 void Response::serveResponse(const Request &request)
 {
 	std::string method = request.getRequest().find("Method")->second;
-	// std::cout << method << " the path is " << request.getPath() <<std::endl;
-	if (method == "GET")
+	std::map<int, std::string> errorPages = request.getLocation().getErrorPages();
+
+	this->setStatus(request.getStatus());
+
+	if (this->_status != 200)
+		this->serveErrorPage(errorPages);
+	else if (method == "GET")
 		this->get(request);
 	else if (method == "POST")
 		this->post(request);
@@ -137,34 +142,28 @@ void Response::get(const Request &request)
 	std::map<std::string, std::string> headers = request.getRequest();
 	std::string path = request.getPath();
 	std::cout << "Path: " << path << std::endl;
-	this->setStatus(request.getStatus());
 
 	std::string pathType = this->getPathType(path);
 
 	std::cout << "pathType: " << pathType << std::endl;
-	if (this->_status == 200)
+	if (pathType == "file")
 	{
-		if (pathType == "file")
-		{
-			if (!this->_isFileOpned)
-				this->setHeader("Content-Type", headers["Content-Type"]);
-			this->serveFile(path, errorPages, request);
-		}
-		else if (pathType == "directory")
-		{
-			if (headers["URL"][headers["URL"].length() - 1] != '/')
-				this->redirect(headers["URL"] + "/");
-			else
-				this->serveDirectory(path, errorPages, location);
-		}
+		if (!this->_isFileOpned)
+			this->setHeader("Content-Type", headers["Content-Type"]);
+		this->serveFile(path, errorPages, request);
+	}
+	else if (pathType == "directory")
+	{
+		if (headers["URL"][headers["URL"].length() - 1] != '/')
+			this->redirect(headers["URL"] + "/");
 		else
-		{
-			this->setStatus(404);
-			this->serveErrorPage(errorPages);
-		}
+			this->serveDirectory(path, errorPages, location);
 	}
 	else
+	{
+		this->setStatus(404);
 		this->serveErrorPage(errorPages);
+	}
 }
 
 bool Response::is_file(const char *path)

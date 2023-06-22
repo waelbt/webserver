@@ -36,21 +36,16 @@ void Response::del(const Request &request)
 	std::map<std::string, std::string> headers(request.getRequest());
 	std::string path = request.getPath();
 
-	this->setStatus(request.getStatus());
-	if (this->_status == 200)
+	if (is_directory(path.c_str()))
 	{
-		if (is_directory(path.c_str()))
-		{
-			if (headers["URL"][headers["URL"].length() - 1] != '/')
-				this->setStatus(409);
-			else
-				(deleteContent(path) == -1) ? ((!access(path.c_str(), W_OK)) ? \
-				this->setStatus(500) : this->setStatus(403)) : this->setStatus(204);
-		}
-        else if (is_file(path.c_str())) {
-            unlink(path.c_str()); this->setStatus(204);}
+		if (headers["URL"][headers["URL"].length() - 1] != '/')
+			this->setStatus(409);
 		else
-			this->setStatus(404);
+			(deleteContent(path) == -1) ? ((!access(path.c_str(), W_OK)) ? \
+			this->setStatus(500) : this->setStatus(403)) : this->setStatus(204);
 	}
-	this->serveErrorPage((request.getLocation()).getErrorPages());
+    else if (is_file(path.c_str())) {
+        unlink(path.c_str()); this->setStatus(204);}
+	else
+		this->setStatus(404);
 }

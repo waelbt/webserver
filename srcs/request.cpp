@@ -157,6 +157,8 @@ void Request::setBodyPath()
             return ;
         }
     }
+    else
+        dirPath = "/tmp/";
     this->_body = dirPath + generateRandomFile() + this->_extention;
     this->_fdBody.open(this->_body, std::ios::app);
 }
