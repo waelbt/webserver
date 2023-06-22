@@ -14,10 +14,10 @@ if 'HTTP_COOKIE' in os.environ:
     received_cookies = cookies.SimpleCookie(os.environ['HTTP_COOKIE'])
     if 'test_cookie' in received_cookies:
         print("Content-Type: text/html")
-        print()
+        print("\r\n\r\n")
         print(f"Cookie 'test_cookie' is set!<br>")
         print(f"Value is: {received_cookies['test_cookie'].value}")
     else:
         print("Content-Type: text/html")
-        print()
+        print("\r\n\r\n")
         print("Cookie named 'test_cookie' is not set!")
