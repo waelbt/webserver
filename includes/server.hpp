@@ -23,6 +23,8 @@ typedef struct sockaddr_storage s_sockaddr_storage;
 struct Client {
 	// attributes
 	SOCKET _server_socket;
+	std::string 										_host;
+	std::string 										_port;
 	s_sockaddr_storage _address;
 	socklen_t _address_length;
 	SOCKET _socket;
@@ -35,7 +37,7 @@ struct Client {
 
 	// methods
 	Client();
-	Client(SOCKET server_socket);
+	Client(SOCKET server_socket, std::string host, std::string port);
 	Client(const Client& other);
 	Client& operator=(const Client& other);
 	std::string get_client_address();

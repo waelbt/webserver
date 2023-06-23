@@ -11,7 +11,7 @@
 #include <dirent.h>
 #include <unistd.h>
 #include <sys/stat.h>
-#include "configuration.hpp"
+// #include "configuration.hpp"
 #include "server.hpp"
 
 #define RequestMap std::map<std::string, std::string>

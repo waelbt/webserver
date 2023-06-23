@@ -149,8 +149,9 @@ void Webserver::run()
         	for (ServerMap::iterator it = _servers.begin(); it != _servers.end(); it++)
         	{
             	std::vector<Client *>& _client = it->second->get_clients();
+				Configuration conf = it->second->get_configuration();
     	    	if (FD_ISSET(it->first, &temps.first))
-		    		_client.insert(_client.end(), new Client(it->first));
+		    		_client.insert(_client.end(), new Client(it->first, conf.getHost(), conf.getPort()));
 		   		for (size_t i = 0; i < _client.size(); i++)
 		    	{
 		    		if (FD_ISSET(_client[i]->_socket, &temps.first))
