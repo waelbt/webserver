@@ -13,7 +13,7 @@
 #include "../includes/server.hpp"
 
 
-CommonEntity::CommonEntity() : _root(), _index(), _error_pages(), _client_max_body_size(), _AutoIndex(false)
+CommonEntity::CommonEntity() : _root(), _index(), _error_pages(), _client_max_body_size(), _AutoIndex(false), _root_exits(false)
 {
     default_error_pages(_error_pages);
 }
@@ -23,7 +23,7 @@ CommonEntity::CommonEntity(const CommonEntity& other)
     *this = other;
 }
 
-CommonEntity::CommonEntity(TokenVectsIter begin, TokenVectsIter end): _root(), _index(), _error_pages(), _client_max_body_size(1073741824), _AutoIndex(false)
+CommonEntity::CommonEntity(TokenVectsIter begin, TokenVectsIter end): _root(), _index(), _error_pages(), _client_max_body_size(1073741824), _AutoIndex(false), _root_exits(false)
 {
     CommonEntity::methods MemberInit[5] = {&CommonEntity::InitRoot, &CommonEntity::InitIndex, &CommonEntity::InitErrorPage, &CommonEntity::InitClienBodySize, &CommonEntity::InitAutoIndex};
     static std::string keywords[6] = {"root", "index", "error_page", "client_max_body_size", "AutoIndex", InvalidSeverKey};
@@ -52,12 +52,14 @@ CommonEntity& CommonEntity::operator=(const CommonEntity& other)
     this->_error_pages = other._error_pages;
     this->_client_max_body_size = other._client_max_body_size;
     this->_AutoIndex = other._AutoIndex;
+    this->_root_exits = other._root_exits;
     return *this;
 }
 
 void CommonEntity::InitRoot(std::string value)
 {
     _root = value;
+    _root_exits = true;
 }
 
 void CommonEntity::InitIndex(std::string value)
