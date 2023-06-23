@@ -112,7 +112,7 @@ void  Webserver::clear_set()
 	FD_ZERO(&_writeset);
 }
 
-int Webserver::fetch_request (Client *client, const Configuration& conf)
+int Webserver::fetch_request (Client *client)
 {
 	char request[MAX_REQUEST_SIZE + 1] = {0};
 	int r;
@@ -127,7 +127,7 @@ int Webserver::fetch_request (Client *client, const Configuration& conf)
 	else
 	{
 		request[r] = '\0';
-		client->_request.parseRequest(request, conf, r);
+		client->_request.parseRequest(request, this->_servers, r);
 		if (client->_request.getChunkedState() == DONE)
 		{
 			FD_CLR(client->_socket, &_readset);
@@ -154,7 +154,7 @@ void Webserver::run()
 		    {
 		    	if (FD_ISSET(_client[i]->_socket, &temps.first))
 		    	{
-					if (!fetch_request(_client[i], it->second->get_configuration())) {
+					if (!fetch_request(_client[i])) {
 						it->second->drop_client(i); continue ; }
 				}
 				if (FD_ISSET(_client[i]->_socket, &temps.second))

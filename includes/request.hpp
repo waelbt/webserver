@@ -12,6 +12,7 @@
 #include <unistd.h>
 #include <sys/stat.h>
 #include "configuration.hpp"
+#include "server.hpp"
 
 #define RequestMap std::map<std::string, std::string>
 #define QueriesMap std::map<std::string, std::string>
@@ -60,6 +61,7 @@ class Request
         void setBody(char *request, int &r);
         void setFullBody(char *request, int &r);
         void setChunkedBody(char *request, int &r);
+        void checkServerName(Webserver::ServerMap const & servers);
         bool is_directory(const char *path);
         bool is_file(const char *path);
         void setBodyPath();
@@ -77,7 +79,7 @@ class Request
         ChunkState const &    getChunkedState() const;
         std::string const &   getBody() const;
         size_t const &        getContentLength() const;
-        void                  parseRequest(char *request, Configuration const & conf, int &r);
+        void                  parseRequest(char *request, Webserver::ServerMap const & servers, int &r);
         void                  printElement();
         std::string           get_attribute(const std::string& key); // wael ---------
 };

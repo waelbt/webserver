@@ -103,7 +103,7 @@ class Webserver
 		void stop();
 		void reset();
 
-		int fetch_request (Client *client, const Configuration& conf);
+		int fetch_request (Client *client);
 		int send_response (Client *client);
 
 		static void add_socket(SOCKET socket);

@@ -472,7 +472,21 @@ void Request::badFormat()
     this->_badFormat = 1;
 }
 
-void Request::parseRequest(char *request, Configuration const & conf, int &r)
+void Request::checkServerName(Webserver::ServerMap const & servers)
+{
+    std::string serverName = this->_request["Host"];
+
+    for (Webserver::ServerMap::const_iterator it = servers.begin(); it != servers.end(); it++)
+    {
+        if (it->second->() == serverName)
+        {
+            this->_conf = *it->second;
+            return ;
+        }
+    }
+}
+
+void Request::parseRequest(char *request, Webserver::ServerMap const & servers, int &r)
 {
     std::string line;
     std::istringstream req(request);
@@ -480,7 +494,6 @@ void Request::parseRequest(char *request, Configuration const & conf, int &r)
 
     if (!this->_request.empty())
         goto setbody;
-    this->_conf = conf;
     std::getline(req, line);
     bodySize -= line.length() + 1;
     this->parseUrl(line);
@@ -495,6 +508,7 @@ void Request::parseRequest(char *request, Configuration const & conf, int &r)
         if (separator != std::string::npos)
             this->_request[line.substr(0, separator)] = line.substr(separator + 2, line.length() - separator - 3);
     }
+    checkServerName(servers);
     setbody:
     std::string method = this->_request["Method"];
     if (method == "POST")
