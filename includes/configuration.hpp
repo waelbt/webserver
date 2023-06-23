@@ -121,15 +121,6 @@ std::vector<std::string> converter(const std::string& content, func function)
     return values;
 }
 
-// struct s_cgi
-// {
-// 	std::vector<std::string> _exec;
-// 	std::string _path;
-
-// 	s_cgi(std::string value);
-// 	friend std::ostream& operator<<(std::ostream& o, s_cgi obj);
-// };
-
 class CustomeExceptionMsg : public std::exception {
 	protected:
     	std::string _message;
@@ -150,6 +141,7 @@ class CommonEntity
 		std::map<int, std::string> 	 						_error_pages;
 		size_t 												_client_max_body_size;
 		bool 												_AutoIndex;
+		bool												_root_exits;
 	public:
 		CommonEntity();
 		CommonEntity(TokenVectsIter begin, TokenVectsIter end);
@@ -177,6 +169,7 @@ class Location : public CommonEntity
 		std::map<std::string, std::string> _cgi;
 		std::string _upload;
 		std::string _redirect;
+		bool		_pattren_exists;
 	public:
 		Location();
 		Location(const CommonEntity& base, TokenVectsIter& begin, TokenVectsIter& end);
@@ -201,9 +194,12 @@ class Configuration
 	public:
 		typedef void (Configuration::*methods)(std::string);
 	private:
+		static std::map<std::string, std::string>			_host_port_map;
 		std::string 										_host;
 		std::string 										_port;
 		std::vector<std::string>							_server_name;
+		bool 												_host_exists;
+		bool 												_port_exists;
 		std::vector<Location>								_locations;
 	public:
 		Configuration();
@@ -214,6 +210,7 @@ class Configuration
 		void InitHost(std::string value);
 		void InitPort(std::string value);
 		void InitServerName(std::string value);
+		static	void check_dup(std::string host, std::string port);
 		std::string 				getHost() const;
 		std::string					getPort() const;
 		std::vector<std::string>	getServerNames() const;

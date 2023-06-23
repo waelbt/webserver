@@ -86,6 +86,8 @@ public:
 	std::vector<std::string> split(const std::string &s, std::string delim);
 	void initHTTPResponses();
 	void reset();
+	void delete_file(std::string path);
+	void delete_directory(std::string path, const Request &request);
 public : 
 	int _status;
 	int _length;
@@ -98,6 +100,7 @@ public :
 	bool _isBodySent;
 	bool _isHeaderParsed;
 	bool _isRedirect;
+	bool _isDeleted;
 	pid_t _pid;
 	std::string _body;
 	std::string _generatedName;

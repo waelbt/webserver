@@ -14,14 +14,19 @@
 
 #include "../includes/server.hpp"
 
-Location::Location() : _pattren("/"), _limit_except(), _cgi(), _upload()
+Location::Location() : _pattren(), _limit_except(), _cgi(), _upload(), _pattren_exists(false)
 {
 }
 
 
 Location::Location(const Location& other) : CommonEntity(other)
 {
-    *this = other;
+    this->_pattren = other._pattren;
+    this->_limit_except = other._limit_except;
+    this->_cgi = other._cgi;
+    this->_upload = other._upload;
+    this->_redirect = other._redirect;
+    this->_pattren_exists = other._pattren_exists;
 }
 
 
@@ -33,13 +38,14 @@ Location& Location::operator=(const Location& other)
     this->_cgi = other._cgi;
     this->_upload = other._upload;
     this->_redirect = other._redirect;
+    this->_pattren_exists = other._pattren_exists;
     return *this;
 }
 
 void Location::InitPattern(std::string value)
 {
-    if (value != "")
-        _pattren =  value; //maybe : i will check later if the path is valid or not
+    _pattren =  value; //maybe : i will check later if the path is valid or not
+    _pattren_exists = true;
 }
 
 void Location::InitLimitExcept(std::string value)
@@ -66,15 +72,13 @@ void Location::InitRedirect(std::string value)
     _redirect = value;
 }
 
-Location::Location(const CommonEntity& Base, TokenVectsIter& begin, TokenVectsIter& end) : CommonEntity(Base), _pattren("/"), _limit_except(), _cgi(), _upload()
+Location::Location(const CommonEntity& Base, TokenVectsIter& begin, TokenVectsIter& end) : CommonEntity(Base), _pattren("/"), _limit_except(), _cgi(), _upload(), _pattren_exists(false)
 {
-    Location::methods init[10] = {&Location::InitPattern, &Location::InitLimitExcept, &Location::InitCgi, &Location::InitUpload, &Location::InitRoot, &Location::InitIndex, &Location::InitErrorPage, &Location::InitClienBodySize,&Location::InitAutoIndex, &Location::InitRedirect};
-    static std::string keywords[11] = {"pattern", "limit_except", "cgi", "upload", "root", "index", "error_page", "client_max_body_size", "AutoIndex", "redirect", InvalidLocationKey};
-    std::vector<TokenPair> directive;
-    std::string *key;
-    size_t counter;
+    Location::methods       init[10] = {&Location::InitPattern, &Location::InitLimitExcept, &Location::InitCgi, &Location::InitUpload, &Location::InitRoot, &Location::InitIndex, &Location::InitErrorPage, &Location::InitClienBodySize,&Location::InitAutoIndex, &Location::InitRedirect};
+    static std::string      keywords[11] = {"pattern", "limit_except", "cgi", "upload", "root", "index", "error_page", "client_max_body_size", "AutoIndex", "redirect", InvalidLocationKey};
+    std::vector<TokenPair>  directive;
+    std::string             *key;
 
-    counter = 0;
     while (++begin < end)
     {
         if (begin->second == END_BLOCK || begin->second == BLOCK)
@@ -87,10 +91,11 @@ Location::Location(const CommonEntity& Base, TokenVectsIter& begin, TokenVectsIt
         if (*key == InvalidLocationKey)
             throw CustomeExceptionMsg(directive[0].first + InvalidLocationKey);
         ((this->*init[key - keywords]))(directive[1].first);
-        counter++;
     }
-    if (!counter)
-        throw CustomeExceptionMsg(EmptyLocation);
+    if (!_root_exits)
+        throw CustomeExceptionMsg("you should explicitly define root directive -_-");
+    if (!_pattren_exists)
+        throw CustomeExceptionMsg("you should explicitly define pattern directive -_-");
 }
 
 
