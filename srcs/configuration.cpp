@@ -10,7 +10,8 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "../includes/server.hpp"
+#include "../includes/webserv.hpp"
+#include "../includes/client.hpp"
 
 std::map<std::string, std::string> Configuration::_host_port_map;
 
@@ -60,7 +61,7 @@ void Configuration::initAttributes(TokenVectsIter& begin, TokenVectsIter& end)
     }
     if (!_host_exists || !_port_exists)
         throw CustomeExceptionMsg(MISSINGPORTHOST);
-    check_dup(_host, _port);
+    // check_dup(_host, _port);
 }
 
 void Configuration::check_dup(std::string host, std::string port)
@@ -104,7 +105,7 @@ void Configuration::InitPort(std::string value)
 
 void Configuration::InitServerName(std::string value)
 {
-    _server_name = converter(value, TokenToString());
+    _server_name = value;
 }
 
 std::string Configuration::getHost() const
@@ -117,7 +118,7 @@ std::string    Configuration::getPort() const
     return this->_port;
 }
 
-std::vector<std::string>    Configuration::getServerNames() const
+std::string  Configuration::getServerNames() const
 {
     return this->_server_name;
 }
@@ -133,8 +134,7 @@ std::ostream& operator<<(std::ostream& o, Configuration obj)
     std::cout << "Server:" << std::endl;
     std::cout << " hosts: "<< obj.getHost() << ";" << std::endl;
     std::cout << " listen:" << obj.getPort() << ";" << std::endl;
-    std::cout << " server name:";
-    print_vec(obj.getServerNames(), "");
+    std::cout << " server name:" << obj.getServerNames() << ";" << std::endl;
     std::cout << ";\n" << std::endl;
     print_vec(obj.getLocations(), "");
     return o;

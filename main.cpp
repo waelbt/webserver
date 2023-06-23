@@ -10,7 +10,8 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "includes/server.hpp"
+#include "includes/webserv.hpp"
+#include "includes/client.hpp"
 
 #include <iostream>
 #include <csignal>

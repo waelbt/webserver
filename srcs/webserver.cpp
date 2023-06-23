@@ -1,4 +1,5 @@
-#include "../includes/server.hpp"
+#include "../includes/webserv.hpp"
+#include "../includes/client.hpp"
 
 fd_set Webserver::_readset;
 fd_set Webserver::_writeset;
@@ -126,6 +127,8 @@ int Webserver::fetch_request (Client *client)
 	else
 	{
 		request[r] = '\0';
+		client->_request.setPort(client->_port);
+		client->_request.setHost(client->_host);
 		client->_request.parseRequest(request, this->_servers, r);
 		if (client->_request.getChunkedState() == DONE)
 		{

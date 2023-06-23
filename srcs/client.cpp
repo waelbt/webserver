@@ -1,4 +1,5 @@
-#include "../includes/server.hpp"
+#include "../includes/webserv.hpp"
+#include "../includes/client.hpp"
 
 
 Client::Client() : _server_socket(), _address(), _address_length(sizeof(_address)), _request(), _response(), _data_sent(), _bytesSent(), _remaining()

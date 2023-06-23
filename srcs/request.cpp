@@ -83,7 +83,7 @@ size_t stringToDecimal(std::string const &str)
     return decimal;
 }
 
-Request::Request() : _request(), _conf(), _location(), _path(), _body(), _queries(), _extention(), _chunkedBodySize(),
+Request::Request() : _request(), _conf(), _location(), _host(), _port(),  _path(), _body(), _queries(), _extention(), _chunkedBodySize(),
                 _chunkState(UNDONE), _fdBody(), _bodySize(0), _chunkSize(0), _status(200), _contentLength(0),
                 _badFormat(0)
 {
@@ -475,18 +475,26 @@ void Request::badFormat()
 void Request::checkServerName(Webserver::ServerMap const & servers)
 {
     std::string serverName = this->_request["Host"];
+    std::vector<Configuration> tmp;
 
     for (Webserver::ServerMap::const_iterator it = servers.begin(); it != servers.end(); it++)
     {
-        if (it->second->() == serverName)
+        Configuration conf = it->second->get_configuration();
+        if (this->_port == conf.getPort() && this->_host ==  conf.getHost())
+            tmp.push_back(it->second->get_configuration());
+    }
+    for (size_t i = 0; i < tmp.size(); i++)
+    {
+        if (serverName == tmp[i].getServerNames())
         {
-            this->_conf = *it->second;
+            this->_conf = tmp[i];
             return ;
         }
     }
+    this->_conf = tmp[0];
 }
 
-void Request::parseRequest(char *request, Webserver::ServerMap const & servers, int &r)
+void Request::parseRequest(char *request, Webserver::ServerMap const & servers , int &r)
 {
     std::string line;
     std::istringstream req(request);
@@ -503,12 +511,12 @@ void Request::parseRequest(char *request, Webserver::ServerMap const & servers, 
     {
         bodySize -= line.length() + 1;
         if (line == "\r")
-            goto setbody;
+            break ;
         size_t separator = line.find(": ");
         if (separator != std::string::npos)
             this->_request[line.substr(0, separator)] = line.substr(separator + 2, line.length() - separator - 3);
     }
-    checkServerName(servers);
+    this->checkServerName(servers);
     setbody:
     std::string method = this->_request["Method"];
     if (method == "POST")
@@ -571,4 +579,14 @@ size_t const &   Request::getContentLength() const
 std::string const &   Request::getQueries() const
 {
     return this->_queries;
+}
+
+void Request::setHost(std::string const & host)
+{
+    this->_host = host;
+}
+
+void Request::setPort(std::string const & port)
+{
+    this->_port = port;
 }

@@ -10,7 +10,8 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "../includes/server.hpp"
+#include "../includes/webserv.hpp"
+#include "../includes/client.hpp"
 
 Server::Server() : _conf(), _listen_sockets(), _client()
 {

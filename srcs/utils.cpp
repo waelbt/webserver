@@ -1,4 +1,5 @@
-#include "../includes/server.hpp"
+#include "../includes/webserv.hpp"
+#include "../includes/client.hpp"
 
 std::string TokenToString::operator()(TokenPair& pair)
 {
