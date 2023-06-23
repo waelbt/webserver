@@ -37,13 +37,15 @@ SOCKET Server::server_socket(std::string host, std::string port)
 	int opt;
 	s_addrinfo hints;
     s_addrinfo *bind_addr;
-	std::string error_message("getaddrinfo system call failed.");
+	std::string error_message("");
 
     memset(&hints, 0, sizeof(hints));
     hints.ai_family = AF_INET;
     hints.ai_socktype = SOCK_STREAM;
     getaddrinfo(host.c_str(), port.c_str(), &hints, &bind_addr);
-	if (bind_addr)
+	if (!bind_addr)
+		error_message = "getaddrinfo system call failed.";
+	else
 	{
 		_listen_sockets = socket(bind_addr->ai_family, bind_addr->ai_socktype, bind_addr->ai_protocol);
 		Webserver::add_socket(_listen_sockets);
@@ -52,15 +54,14 @@ SOCKET Server::server_socket(std::string host, std::string port)
 		setsockopt(_listen_sockets, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
 		setnonblocking(_listen_sockets);
 		if (bind(_listen_sockets, bind_addr->ai_addr, bind_addr->ai_addrlen))
-			error_message = "bind system call failed.";
+			error_message = "bind system call failed." + std::string(strerror(errno));
 		if (listen(_listen_sockets, SOMAXCONN) < 0)
 			error_message = "listen system call failed.";
-		freeaddrinfo(bind_addr);
-		return _listen_sockets;
 	}
 	freeaddrinfo(bind_addr);
-	throw ServerException(error_message);
-	return 0;
+	if (!error_message.empty())
+		throw ServerException(error_message);
+	return _listen_sockets;
 }
 
 

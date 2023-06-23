@@ -12,7 +12,7 @@ Client::Client(SOCKET server_socket) : _server_socket(server_socket), _address()
     std::cout << "_server_socket "<< _server_socket << std::endl;
     _socket = accept(_server_socket, NULL, NULL);
     if (_socket <= 0)
-        throw CustomeExceptionMsg("accept() failed. ("+  std::string(strerror(errno)) + ")");
+        throw Webserver::WebserverReset("accept() fail");
     Server::setnonblocking(_socket);
     Webserver::add_socket(_socket);
     std::cout << "New connection from , socket " << get_client_address() << _socket << std::endl;

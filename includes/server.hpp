@@ -97,6 +97,13 @@ class Webserver
 		Webserver& operator=(const Webserver&  _servers);
 		~Webserver();
 
+		class WebserverReset : public CustomeExceptionMsg
+		{
+			public:
+				WebserverReset();
+    			WebserverReset(const std::string& message);
+				virtual ~WebserverReset() throw();
+		};
 		void setup(std::string content);
 		bool wait_on_client(SetsPair& sets);
 		void run();

@@ -142,27 +142,36 @@ void Webserver::run()
 
 	while (1)
     {
-        if (!wait_on_client(temps))
-			continue;
-        for (ServerMap::iterator it = _servers.begin(); it != _servers.end(); it++)
-        {
-            std::vector<Client *>& _client = it->second->get_clients();
-    	    if (FD_ISSET(it->first, &temps.first))
-		    	_client.insert(_client.end(), new Client(it->first));
-		    for (size_t i = 0; i < _client.size(); i++)
-		    {
-		    	if (FD_ISSET(_client[i]->_socket, &temps.first))
+		try
+		{
+			if (!wait_on_client(temps))
+				continue;
+        	for (ServerMap::iterator it = _servers.begin(); it != _servers.end(); it++)
+        	{
+            	std::vector<Client *>& _client = it->second->get_clients();
+    	    	if (FD_ISSET(it->first, &temps.first))
+		    		_client.insert(_client.end(), new Client(it->first));
+		   		for (size_t i = 0; i < _client.size(); i++)
 		    	{
-					if (!fetch_request(_client[i], it->second->get_configuration())) {
-						it->second->drop_client(i); continue ; }
-				}
-				if (FD_ISSET(_client[i]->_socket, &temps.second))
-				{
-					if(send_response(_client[i]))
-						it->second->drop_client(i);
-				}
-		    }
-        }
+		    		if (FD_ISSET(_client[i]->_socket, &temps.first))
+		    		{
+						if (!fetch_request(_client[i], it->second->get_configuration())) {
+							it->second->drop_client(i); continue ; }
+					}
+					if (FD_ISSET(_client[i]->_socket, &temps.second))
+					{
+						if(send_response(_client[i]))
+							it->second->drop_client(i);
+					}
+		   		}
+        	}
+		}
+		catch(const std::exception& e)
+		{
+			std::cerr << e.what() << std::endl;
+			std::cout << "restarting the server\n.\n..\n...\n...\n.....\n........." << std::endl;
+			this->reset();
+		}
     }
 	this->stop();
 }
@@ -195,9 +204,7 @@ int Webserver::send_response(Client *client)
 	if (client->_response.getIsBodySent() || client->_bytesSent == -1) 
 	{
 		std::cout << "***************************************** disconnected **************************************************" << std::endl;
-		// kill(client->_response._pid, SIGKILL);
 		FD_CLR(client->_socket, &_writeset);
-		// client->_response.reset();
 		return 1;
 	}
 	return 0;
@@ -207,14 +214,19 @@ void Webserver::stop()
 {
 	for (ServerMap::iterator it = _servers.begin(); it != _servers.end(); it++)
 	{
-		// if (!it->first)
-		// {
-		// 	std::cout << "zadawawdawdawdawdawdawdawaab" << std::endl;
-		// 	exit(0);
-		// }
 		close(it->first);
 	}
 }
+
+
+Webserver::WebserverReset::WebserverReset() : CustomeExceptionMsg()
+{}
+
+Webserver::WebserverReset::WebserverReset(const std::string& message) : CustomeExceptionMsg(message)
+{}
+
+Webserver::WebserverReset::~WebserverReset() throw()
+{}
 
 
 Webserver::~Webserver()
