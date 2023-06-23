@@ -34,6 +34,22 @@ void deleteContent(const std::string& path)
 		throw -1;
 }
 
+void Response::delete_directory(std::string path, const Request &request)
+{
+	std::map<std::string, std::string> headers(request.getRequest());
+
+	if (headers["URL"][headers["URL"].length() - 1] != '/')
+		this->setStatus(409);
+	else
+	{
+		this->setStatus(204);
+		try {
+			deleteContent(path); }
+		catch(const int& e) {
+			(!access(path.c_str(), W_OK | X_OK)) ? this->setStatus(500) : this->setStatus(403); }
+	}
+}
+
 void Response::delete_file(std::string path)
 {
 	if (access(path.c_str(), F_OK | W_OK) != 0)
@@ -44,28 +60,6 @@ void Response::delete_file(std::string path)
 		remove(path.c_str());
 	}
 }
-
-
-void Response::delete_directory(std::string path, const Request &request)
-{
-	std::map<std::string, std::string> headers(request.getRequest());
-
-	if (headers["URL"][headers["URL"].length() - 1] != '/')
-		this->setStatus(409);
-	else
-	{
-		try 
-		{
-			this->setStatus(204);
-			deleteContent(path);
-		}
-		catch(const int& e)
-		{
-			this->setStatus(409);
-		}
-	}
-}
-
 
 void Response::del(const Request &request)
 {
