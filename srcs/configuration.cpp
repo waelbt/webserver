@@ -12,6 +12,7 @@
 
 #include "../includes/server.hpp"
 
+std::map<std::string, std::string> Configuration::_host_port_map;
 
 Configuration::Configuration() : _host(), _port(), _server_name()
 {
@@ -65,8 +66,16 @@ void Configuration::initAttributes(TokenVectsIter& begin, TokenVectsIter& end)
     }
     if (counter != 2)
         throw CustomeExceptionMsg(MISSINGPORTHOST);
+    check_dup(_host, _port);
 }
 
+void Configuration::check_dup(std::string host, std::string port)
+{
+    std::map<std::string, std::string>::iterator it = _host_port_map.find(host);
+    if (it != _host_port_map.end() && it->second == port)
+        throw CustomeExceptionMsg("you're not allowed to reuse the same port:host -__-");
+    _host_port_map[host] = port;
+}
 
 Configuration::Configuration(const Configuration& other)
 {

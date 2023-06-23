@@ -36,6 +36,7 @@ void  Webserver::setup(std::string content)
 				try
 				{
 					Server  *tmp = new Server(Configuration(it.first, it.second));
+
 					_servers[tmp->get_listen_sockets()] = tmp;
 				}
 				catch(Server::ServerException& e)
@@ -103,8 +104,6 @@ void  Webserver::clear_set()
 	for (SOCKET fd = 0; fd <= Webserver::_max_socket; fd++) {
 		if (FD_ISSET(fd, &Webserver::_readset) || FD_ISSET(fd, &Webserver::_writeset))
 		{
-			// if (fd == 0) {
-			// 	std::cout << "wwwwwwwwwwdawdawdawdawdwa" << std::endl; exit(0);}
 			close(fd);
 		}
 	}

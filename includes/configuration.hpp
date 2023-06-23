@@ -201,6 +201,7 @@ class Configuration
 	public:
 		typedef void (Configuration::*methods)(std::string);
 	private:
+		static std::map<std::string, std::string>			_host_port_map;
 		std::string 										_host;
 		std::string 										_port;
 		std::vector<std::string>							_server_name;
@@ -214,6 +215,7 @@ class Configuration
 		void InitHost(std::string value);
 		void InitPort(std::string value);
 		void InitServerName(std::string value);
+		static	void check_dup(std::string host, std::string port);
 		std::string 				getHost() const;
 		std::string					getPort() const;
 		std::vector<std::string>	getServerNames() const;
