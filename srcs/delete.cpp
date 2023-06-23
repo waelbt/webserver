@@ -34,43 +34,48 @@ void deleteContent(const std::string& path)
 		throw -1;
 }
 
+void Response::delete_file(std::string path)
+{
+	if (access(path.c_str(), F_OK | W_OK) != 0)
+		this->setStatus(403);
+	else 
+	{
+		this->setStatus(204);
+		remove(path.c_str());
+	}
+}
+
+
+void Response::delete_directory(std::string path, const Request &request)
+{
+	std::map<std::string, std::string> headers(request.getRequest());
+
+	if (headers["URL"][headers["URL"].length() - 1] != '/')
+		this->setStatus(409);
+	else
+	{
+		try 
+		{
+			this->setStatus(204);
+			deleteContent(path);
+		}
+		catch(const int& e)
+		{
+			this->setStatus(409);
+		}
+	}
+}
+
+
 void Response::del(const Request &request)
 {
 	std::cout << "status " <<this->_status << std::endl;
-	std::map<std::string, std::string> headers(request.getRequest());
 	std::string path = request.getPath();
 
 	if (this->_isDeleted == false)
 	{
-		if (is_directory(path.c_str()))
-		{
-			if (headers["URL"][headers["URL"].length() - 1] != '/')
-				this->setStatus(409);
-			else
-			{
-				try 
-				{
-					this->setStatus(204);
-					deleteContent(path);
-				}
-				catch(const int& e)
-				{
-					this->setStatus(409);
-				}
-			}
-		}
-    	else if (is_file(path.c_str()))
-		{
-			if (access(path.c_str(), F_OK | W_OK) != 0)
-				this->setStatus(403);
-			else 
-			{
-				this->setStatus(204);
-				remove(path.c_str());
-			}
-		}
-		else
-			this->setStatus(404);
+		(is_directory(path.c_str())) ? delete_directory(path, request) : \
+		(is_file(path.c_str())) ? delete_file(path) : this->setStatus(404);
 		if (this->_status == 204)
 		{
 			this->_isHeaderParsed = true;
@@ -79,7 +84,5 @@ void Response::del(const Request &request)
 		this->_isDeleted = true;
 	}
 	if (this->_status != 204)
-	{
 		this->serveErrorPage(request.getLocation().getErrorPages());
-	}
 }
