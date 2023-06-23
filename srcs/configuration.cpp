@@ -14,11 +14,11 @@
 
 std::map<std::string, std::string> Configuration::_host_port_map;
 
-Configuration::Configuration() : _host(), _port(), _server_name()
+Configuration::Configuration() : _host(), _port(), _server_name(), _host_exists(0), _port_exists(0), _locations()
 {
 }
 
-Configuration::Configuration(TokenVectsIter& begin, TokenVectsIter& end)  : _host(), _port(), _server_name()
+Configuration::Configuration(TokenVectsIter& begin, TokenVectsIter& end)  : _host(), _port(), _server_name(), _host_exists(0), _port_exists(0), _locations()
 {
     int             Count;
     CommonEntity    tmp(begin, end);
@@ -43,9 +43,7 @@ void Configuration::initAttributes(TokenVectsIter& begin, TokenVectsIter& end)
     Configuration::methods MemberInit[3] = {&Configuration::InitHost, &Configuration::InitPort, &Configuration::InitServerName};
     std::vector<TokenPair> directive;
     std::string *key;
-    size_t counter;
 
-    counter = 0;
     while (++begin < end)
     {
         if (begin->second == END_BLOCK || begin->second == BLOCK)
@@ -58,13 +56,9 @@ void Configuration::initAttributes(TokenVectsIter& begin, TokenVectsIter& end)
         if (*key == InvalidSeverKey)
             throw CustomeExceptionMsg(directive[0].first + InvalidSeverKey);
         if ((key - keywords) < 3)
-        {
-            if (key - keywords < 2)
-                counter++;
             ((this->*MemberInit[key - keywords]))(directive[1].first);
-        }
     }
-    if (counter != 2)
+    if (!_host_exists || !_port_exists)
         throw CustomeExceptionMsg(MISSINGPORTHOST);
     check_dup(_host, _port);
 }
@@ -87,6 +81,8 @@ Configuration& Configuration::operator=(const Configuration& other)
     _host = other._host;
     _port = other._port;
     _server_name = other._server_name;
+    _port_exists = other._port_exists;
+    _host_exists = other._host_exists;
     _locations = other._locations;
     return *this;
 }
@@ -94,6 +90,7 @@ Configuration& Configuration::operator=(const Configuration& other)
 void Configuration::InitHost(std::string value)
 {
     _host = value;
+    _host_exists = true;
 }
 
 void Configuration::InitPort(std::string value)
@@ -102,6 +99,7 @@ void Configuration::InitPort(std::string value)
     long long check = to_integer(_port);
      if (check < 0 || check > 65535)
         throw CustomeExceptionMsg(InvalidPort);
+    _port_exists = true;
 }
 
 void Configuration::InitServerName(std::string value)

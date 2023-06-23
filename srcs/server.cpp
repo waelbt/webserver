@@ -48,19 +48,19 @@ SOCKET Server::server_socket(std::string host, std::string port)
 	else
 	{
 		_listen_sockets = socket(bind_addr->ai_family, bind_addr->ai_socktype, bind_addr->ai_protocol);
-		Webserver::add_socket(_listen_sockets);
 		if (_listen_sockets < 0)
 			error_message = "socket system call failed.";
 		setsockopt(_listen_sockets, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
 		setnonblocking(_listen_sockets);
 		if (bind(_listen_sockets, bind_addr->ai_addr, bind_addr->ai_addrlen))
-			error_message = "bind system call failed." + std::string(strerror(errno));
+		{ close(_listen_sockets); error_message = "bind system call failed." + std::string(strerror(errno)); }
 		if (listen(_listen_sockets, SOMAXCONN) < 0)
-			error_message = "listen system call failed.";
+		{ close(_listen_sockets); error_message = "listen system call failed."; }
 	}
 	freeaddrinfo(bind_addr);
 	if (!error_message.empty())
 		throw ServerException(error_message);
+	Webserver::add_socket(_listen_sockets);
 	return _listen_sockets;
 }
 

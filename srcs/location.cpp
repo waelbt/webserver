@@ -38,8 +38,7 @@ Location& Location::operator=(const Location& other)
 
 void Location::InitPattern(std::string value)
 {
-    if (value != "")
-        _pattren =  value; //maybe : i will check later if the path is valid or not
+    _pattren =  value; //maybe : i will check later if the path is valid or not
 }
 
 void Location::InitLimitExcept(std::string value)
@@ -68,11 +67,12 @@ void Location::InitRedirect(std::string value)
 
 Location::Location(const CommonEntity& Base, TokenVectsIter& begin, TokenVectsIter& end) : CommonEntity(Base), _pattren("/"), _limit_except(), _cgi(), _upload()
 {
-    Location::methods init[10] = {&Location::InitPattern, &Location::InitLimitExcept, &Location::InitCgi, &Location::InitUpload, &Location::InitRoot, &Location::InitIndex, &Location::InitErrorPage, &Location::InitClienBodySize,&Location::InitAutoIndex, &Location::InitRedirect};
-    static std::string keywords[11] = {"pattern", "limit_except", "cgi", "upload", "root", "index", "error_page", "client_max_body_size", "AutoIndex", "redirect", InvalidLocationKey};
-    std::vector<TokenPair> directive;
-    std::string *key;
-    size_t counter;
+    Location::methods       init[10] = {&Location::InitPattern, &Location::InitLimitExcept, &Location::InitCgi, &Location::InitUpload, &Location::InitRoot, &Location::InitIndex, &Location::InitErrorPage, &Location::InitClienBodySize,&Location::InitAutoIndex, &Location::InitRedirect};
+    static std::string      keywords[11] = {"pattern", "limit_except", "cgi", "upload", "root", "index", "error_page", "client_max_body_size", "AutoIndex", "redirect", InvalidLocationKey};
+    std::vector<TokenPair>  directive;
+    std::string             *key;
+    size_t                  counter;
+    bool                    pattern_exist(false);
 
     counter = 0;
     while (++begin < end)
@@ -86,9 +86,13 @@ Location::Location(const CommonEntity& Base, TokenVectsIter& begin, TokenVectsIt
         key = std::find(keywords, keywords + 10, directive[0].first);
         if (*key == InvalidLocationKey)
             throw CustomeExceptionMsg(directive[0].first + InvalidLocationKey);
+        if (keywords[key - keywords] == "pattern")
+            pattern_exist = true;
         ((this->*init[key - keywords]))(directive[1].first);
         counter++;
     }
+    if (!pattern_exist)
+        throw CustomeExceptionMsg("you should explicitly define pattern directive -_-");
     if (!counter)
         throw CustomeExceptionMsg(EmptyLocation);
 }

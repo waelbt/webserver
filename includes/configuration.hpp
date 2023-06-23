@@ -205,6 +205,8 @@ class Configuration
 		std::string 										_host;
 		std::string 										_port;
 		std::vector<std::string>							_server_name;
+		bool 												_host_exists;
+		bool 												_port_exists;
 		std::vector<Location>								_locations;
 	public:
 		Configuration();
