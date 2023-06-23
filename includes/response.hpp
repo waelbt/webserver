@@ -98,6 +98,7 @@ public :
 	bool _isBodySent;
 	bool _isHeaderParsed;
 	bool _isRedirect;
+	bool _isDeleted;
 	pid_t _pid;
 	std::string _body;
 	std::string _generatedName;

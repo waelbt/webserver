@@ -23,7 +23,7 @@ void Response::initHTTPResponses()
 }
 
 
-Response::Response(): _status(200), _length(0), _isCGIInProcess(0), _isCGIFinished(0), _isCGIParsed(0), _isFileOpned(0), _isHeaderSent(0), _isBodySent(0), _isHeaderParsed(0), _isRedirect(0), _body(""), _generatedName(""), _cgiOutput(""), _headers()
+Response::Response(): _status(200), _length(0), _isCGIInProcess(0), _isCGIFinished(0), _isCGIParsed(0), _isFileOpned(0), _isHeaderSent(0), _isBodySent(0), _isHeaderParsed(0), _isRedirect(0), _isDeleted(false) , _body(""), _generatedName(""), _cgiOutput(""), _headers()
 {
 	this->initHTTPResponses();
 }
@@ -79,7 +79,8 @@ void Response::serveResponse(const Request &request)
 	std::string method = request.getRequest().find("Method")->second;
 	std::map<int, std::string> errorPages = location.getErrorPages();
 
-	this->setStatus(request.getStatus());
+	if (!this->_isDeleted)
+		this->setStatus(request.getStatus());
 
 	if (this->_status != 200)
 		this->serveErrorPage(errorPages);
@@ -671,6 +672,7 @@ void Response::reset()
 	this->_isCGIInProcess = false;
 	this->_isCGIFinished = false;
 	this->_isCGIParsed = false;
+	this->_isDeleted = false;
 }
 
 std::string Response::generateRandomFile(std::time_t result)
