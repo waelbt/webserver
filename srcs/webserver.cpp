@@ -68,11 +68,9 @@ SOCKET server_socket(std::string host, std::string port)
 	return listen_sockets;
 }
 
-
-Webserver::Webserver(std::string content): _configs(init_configs(content))
+void Webserver::get_registry()
 {
-	// create socket;
-	std::map<std::string, std::string>				_host_port_map;
+	std::map<std::string, std::string>						_host_port_map;
 	typedef std::map<std::string, std::string>::iterator	iterator;
 
 	for (size_t i = 0; i < _configs.size(); i++)
@@ -83,8 +81,13 @@ Webserver::Webserver(std::string content): _configs(init_configs(content))
 		if (tmp == -1)
 			std::cout << "socket setuping failed for " << it->first << ":" << it->second << std::endl;
 		else
-			_listen_sockets.insert(_listen_sockets.end(), tmp);
+			_registry.insert(_registry.end(), Registry(it->first, it->second, tmp));
 	}
+}
+
+Webserver::Webserver(std::string content): _configs(init_configs(content))
+{
+	this->get_registry();
 }
 
 void Webserver::add_socket(SOCKET socket)

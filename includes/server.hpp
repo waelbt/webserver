@@ -26,50 +26,77 @@
 // 	int			_conf_id;
 // };
 
-class Server
+struct Registry
 {
-	public:
-		typedef std::vector<Client>::iterator clientIter;
-    private:
-        Configuration _conf;
-		SOCKET _listen_sockets;
-		std::vector<Client *> _client;
-    public:
-		Server();
-		Server(const Configuration& conf);
-		Server(const Server& other);
-		Server& operator=(const Server& other);
+	std::string _host;
+	std::string	_port;
+	SOCKET  _listen_socket;
 
-		// SOCKET server_socket(std::string host, std::string port);
-		class ServerException : public CustomeExceptionMsg
-		{
-			public:
-				ServerException();
-    			ServerException(const std::string& message);
-				virtual ~ServerException() throw();
-		};
-		std::vector<Client *>& get_clients();
-		SOCKET get_listen_sockets() const;
-		Configuration get_configuration() const;
-
-		static void setnonblocking(int sock);
-		void drop_client(size_t i);
-		void showConfig() const;
-
-		void clear_clients();
-		~Server();
+	Registry() : _host(), _port(), _listen_socket()
+	{}
+	Registry(std::string host, std::string port, SOCKET  listen_socket) : _host(host), _port(port), _listen_socket(listen_socket)
+	{}
+	Registry(const Registry& other)
+	{
+		*this = other;
+	}
+	Registry& operator=(const Registry& other)
+	{
+		_host = other._host;
+		_port = other._port;
+		_listen_socket = other._listen_socket;	
+		return *this;
+	}
+	~Registry()
+	{
+		// close (_listen_socket);
+	}
 };
+
+// class Server
+// {
+// 	public:
+// 		typedef std::vector<Client>::iterator clientIter;
+//     private:
+//         Configuration _conf;
+// 		SOCKET _listen_sockets;
+// 		std::vector<Client *> _client;
+//     public:
+// 		Server();
+// 		Server(const Configuration& conf);
+// 		Server(const Server& other);
+// 		Server& operator=(const Server& other);
+
+// 		// SOCKET server_socket(std::string host, std::string port);
+// 		class ServerException : public CustomeExceptionMsg
+// 		{
+// 			public:
+// 				ServerException();
+//     			ServerException(const std::string& message);
+// 				virtual ~ServerException() throw();
+// 		};
+// 		std::vector<Client *>& get_clients();
+// 		SOCKET get_listen_sockets() const;
+// 		Configuration get_configuration() const;
+
+// 		static void setnonblocking(int sock);
+// 		void drop_client(size_t i);
+// 		void showConfig() const;
+
+// 		void clear_clients();
+// 		~Server();
+// };
 
 
 class Webserver
 {
 	public:
 		typedef std::pair<fd_set, fd_set> SetsPair;
-		typedef std::vector<Server*> ServerVec;
+		// typedef std::vector<Server*> ServerVec;
 		typedef std::vector<Configuration> ConfVec;
 	public:
 		ConfVec 	_configs;
-		std::vector<SOCKET> _listen_sockets;
+		std::vector<Registry> _registry;
 		// ServerVec  _servers;
 		// static fd_set _writeset;
 		// static fd_set _readset;
@@ -89,6 +116,7 @@ class Webserver
 				virtual ~WebserverReset() throw();
 		};
 		ConfVec init_configs(std::string content);
+		void get_registry();
 		// bool wait_on_client(SetsPair& sets);
 		// void run();
 		// void stop();
