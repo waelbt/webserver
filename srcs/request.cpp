@@ -229,7 +229,6 @@ void Request::setChunkedBody(char *request, int &r)
         this->_chunkedBodySize.clear();
         if (this->_bodySize == 0)
         {
-            std::cout << "done" << std::endl;
             this->_fdBody.close();
             this->_chunkState = DONE;
             return ;

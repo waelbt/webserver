@@ -37,7 +37,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         exit(1);
     }
 } else if ($_SERVER['REQUEST_METHOD'] == 'GET' && isset($_GET['logout'])) {
-    print_r($_COOKIE);
     unset($_COOKIE['name']);
     unset($_COOKIE['email']);
     unset($_COOKIE['avatar']);

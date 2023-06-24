@@ -96,7 +96,10 @@ void Response::serveResponse(const Request &request)
 
 void Response::serveFile(std::string url, std::map<int, std::string> &errorPages, Request const &request)
 {
-	if (this->endWith(url, ".py") || this->endWith(url, ".php"))
+	std::string extention = this->getExtention(url);
+	std::map<std::string, std::string> cgi = request.getLocation().getCgi();
+
+	if (cgi.find(extention) != cgi.end())
 		this->serveCGI(url, request);
 	else
 		this->serveStaticFile(url, errorPages);
