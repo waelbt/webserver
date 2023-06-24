@@ -1,5 +1,4 @@
-#include "../includes/webserv.hpp"
-#include "../includes/client.hpp"
+#include "../includes/server.hpp"
 
 fd_set Webserver::_readset;
 fd_set Webserver::_writeset;
@@ -112,7 +111,7 @@ void  Webserver::clear_set()
 	FD_ZERO(&_writeset);
 }
 
-int Webserver::fetch_request (Client *client)
+int Webserver::fetch_request (Client *client, const Configuration& conf)
 {
 	char request[MAX_REQUEST_SIZE + 1] = {0};
 	int r;
@@ -127,9 +126,7 @@ int Webserver::fetch_request (Client *client)
 	else
 	{
 		request[r] = '\0';
-		client->_request.setPort(client->_port);
-		client->_request.setHost(client->_host);
-		client->_request.parseRequest(request, this->_servers, r);
+		client->_request.parseRequest(request, conf, r);
 		if (client->_request.getChunkedState() == DONE)
 		{
 			FD_CLR(client->_socket, &_readset);
@@ -152,14 +149,13 @@ void Webserver::run()
         	for (ServerMap::iterator it = _servers.begin(); it != _servers.end(); it++)
         	{
             	std::vector<Client *>& _client = it->second->get_clients();
-				Configuration conf = it->second->get_configuration();
     	    	if (FD_ISSET(it->first, &temps.first))
-		    		_client.insert(_client.end(), new Client(it->first, conf.getHost(), conf.getPort()));
+		    		_client.insert(_client.end(), new Client(it->first));
 		   		for (size_t i = 0; i < _client.size(); i++)
 		    	{
 		    		if (FD_ISSET(_client[i]->_socket, &temps.first))
 		    		{
-						if (!fetch_request(_client[i])) {
+						if (!fetch_request(_client[i], it->second->get_configuration())) {
 							it->second->drop_client(i); continue ; }
 					}
 					if (FD_ISSET(_client[i]->_socket, &temps.second))

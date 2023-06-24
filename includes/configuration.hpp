@@ -197,7 +197,7 @@ class Configuration
 		static std::map<std::string, std::string>			_host_port_map;
 		std::string 										_host;
 		std::string 										_port;
-		std::string							_server_name;
+		std::vector<std::string>							_server_name;
 		bool 												_host_exists;
 		bool 												_port_exists;
 		std::vector<Location>								_locations;
@@ -213,7 +213,7 @@ class Configuration
 		static	void check_dup(std::string host, std::string port);
 		std::string 				getHost() const;
 		std::string					getPort() const;
-		std::string	getServerNames() const;
+		std::vector<std::string>	getServerNames() const;
 		std::vector<Location>		getLocations() const;
 		friend std::ostream& operator<<(std::ostream& o, Configuration obj);
 		~Configuration();

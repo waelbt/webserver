@@ -12,8 +12,7 @@
 /* ************************************************************************** */
 
 
-#include "../includes/webserv.hpp"
-#include "../includes/client.hpp"
+#include "../includes/server.hpp"
 
 Location::Location() : _pattren(), _limit_except(), _cgi(), _upload(), _pattren_exists(false)
 {

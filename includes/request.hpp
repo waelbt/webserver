@@ -12,9 +12,9 @@
 #include <unistd.h>
 #include <sys/stat.h>
 #include "configuration.hpp"
-#include "webserv.hpp"
 
 #define RequestMap std::map<std::string, std::string>
+#define QueriesMap std::map<std::string, std::string>
 
 
 struct invalidUrl
@@ -34,8 +34,6 @@ class Request
         RequestMap    _request;
         Configuration _conf;
         Location      _location;
-        std::string   _host;
-        std::string   _port;
         std::string   _path;
         std::string   _body;
         std::string   _queries;
@@ -62,7 +60,6 @@ class Request
         void setBody(char *request, int &r);
         void setFullBody(char *request, int &r);
         void setChunkedBody(char *request, int &r);
-        void checkServerName(Webserver::ServerMap const & servers);
         bool is_directory(const char *path);
         bool is_file(const char *path);
         void setBodyPath();
@@ -80,9 +77,7 @@ class Request
         ChunkState const &    getChunkedState() const;
         std::string const &   getBody() const;
         size_t const &        getContentLength() const;
-        void                  setHost(std::string const & host);
-        void                  setPort(std::string const & port);
-        void                  parseRequest(char *request, Webserver::ServerMap const & servers, int &r);
+        void                  parseRequest(char *request, Configuration const & conf, int &r);
         void                  printElement();
         std::string           get_attribute(const std::string& key); // wael ---------
 };
