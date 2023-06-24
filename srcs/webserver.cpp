@@ -39,18 +39,23 @@ SOCKET server_socket(std::string host, std::string port)
 	}
 	listen_sockets = socket(bind_addr->ai_family, bind_addr->ai_socktype, bind_addr->ai_protocol);
 	(listen_sockets < 0) ? throw Webserver::ServerException("socket  " + std::string(strerror(errno))) : (NULL);
-	setsockopt(listen_sockets, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
+	if (setsockopt(listen_sockets, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)))
+	{
+		close(listen_sockets); freeaddrinfo(bind_addr);
+		throw Webserver::ServerException("set sock option  " +  std::string(strerror(errno)));
+	}
 	(fcntl(listen_sockets,F_SETFL,O_NONBLOCK) == -1) ? throw Webserver::ServerException("failed to set socket descriptor to non-blocking mod") : (NULL);
 	if(bind(listen_sockets, bind_addr->ai_addr, bind_addr->ai_addrlen))
 	{	
-		close(listen_sockets);
+		close(listen_sockets); freeaddrinfo(bind_addr);
 		throw Webserver::ServerException("bind  " +  std::string(strerror(errno)));
 	}
 	if (listen(listen_sockets, SOMAXCONN) < 0)
 	{	
-		close(listen_sockets);
+		close(listen_sockets); freeaddrinfo(bind_addr);
 		throw Webserver::ServerException("listen  " +  std::string(strerror(errno)));
 	}
+	freeaddrinfo(bind_addr);
 	Webserver::add_socket(listen_sockets);
 	return listen_sockets;
 }
@@ -76,6 +81,7 @@ void Webserver::get_registry()
 	{
 		try
 		{
+			system("leaks webserve");
 			SOCKET tmp = server_socket(host_port[i].first, host_port[i].second);
 			_registry.insert(_registry.end(), Registry(host_port[i].first, host_port[i].second, tmp));
 		}	
