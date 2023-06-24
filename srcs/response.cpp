@@ -73,6 +73,47 @@ std::string Response::toString() const
 	return ss.str();
 }
 
+void Response::redirectLocation(const Request &request, std::string const &url)
+{
+	std::cout << "the new url is " << url << std::endl;
+	Configuration conf = request.getConf();
+	std::vector<Location> locations = conf.getLocations();
+    std::vector<Location>::iterator it = locations.begin();
+	Location newLocation;
+    std::string upper;
+
+    for(;it != locations.end();it++)
+    {
+        std::string pattern = (*it).getPattren();
+        if (url.length() <  pattern.length())
+            continue ;
+        std::string lower = url.substr(0, pattern.length());
+        if (pattern == lower && (url[pattern.length()] == '\0' || url[pattern.length()] == '/'))
+        {
+            if (upper.empty())
+            {
+                upper = lower;
+                newLocation = *it;
+            }
+            else
+            {
+                if (lower.length() > upper.length())
+                {
+                    upper = lower;
+                    newLocation = *it;
+                }
+            }
+        }
+    }
+    if (upper.empty())
+	{
+		this->setStatus(404);
+		this->serveErrorPage(newLocation.getErrorPages());
+	}
+	else
+		this->redirect(url.substr(upper.length()));
+}
+
 void Response::serveResponse(const Request &request)
 {
 	Location location = request.getLocation();
@@ -125,9 +166,13 @@ void Response::serveDirectory(std::string directoryPath, std::map<int, std::stri
 		}
 		if (i == indexes.size())
 		{
-			std::cout << "here" << std::endl;
-			this->setStatus(404);
-			this->serveErrorPage(errorPages);
+			if (location.getAutoIndex() == true)
+				this->serveDirectoryAutoIndex(directoryPath, errorPages);
+			else
+			{
+				this->setStatus(403);
+				this->serveErrorPage(errorPages);
+			}
 		}
 	}
 	else if (location.getAutoIndex() == false)

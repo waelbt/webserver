@@ -637,3 +637,8 @@ std::string const &   Request::getQueries() const
 {
     return this->_queries;
 }
+
+Configuration const & Request::getConf() const
+{
+    return this->_conf;
+}

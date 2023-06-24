@@ -81,6 +81,7 @@ class Request
         ChunkState const &    getChunkedState() const;
         std::string const &   getBody() const;
         size_t const &        getContentLength() const;
+        Configuration const & getConf() const;
         void                  parseRequest(char *request, const Registry& registry, const  ConfVec& configs, int &r);
         void                  printElement();
         std::string           get_attribute(const std::string& key); // wael ---------
