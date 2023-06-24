@@ -64,7 +64,7 @@ public:
 	void serveFile(std::string url, std::map<int, std::string> &errorPages, Request const &request);
 	void serveStaticFile(std::string url, std::map<int, std::string> &errorPages);
 	void serveErrorPage(std::map<int, std::string> errorPages);
-	void serveDirectory(std::string url, std::map<int, std::string> &errorPages, Location const &location);
+	void serveDirectory(std::string url, std::map<int, std::string> &errorPages, Location const &location, Request const &request);
 	void serveDirectoryAutoIndex(std::string url, std::map<int, std::string> &errorPages);
 	void redirect(std::string url);
 	char **getENV(std::string url, const Request &request);

@@ -22,7 +22,7 @@ void Response::post(const Request &request)
 			if (headers["URL"][headers["URL"].length() - 1] != '/')
 				this->redirect(headers["URL"] + "/");
 			else
-				this->serveDirectory(path, errorPages, location);
+				this->serveDirectory(path, errorPages, location, request);
 		}
 		else
 		{

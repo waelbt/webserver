@@ -147,7 +147,7 @@ void Response::serveFile(std::string url, std::map<int, std::string> &errorPages
 		this->serveStaticFile(url, errorPages);
 }
 
-void Response::serveDirectory(std::string directoryPath, std::map<int, std::string> &errorPages, Location const &location)
+void Response::serveDirectory(std::string directoryPath, std::map<int, std::string> &errorPages, Location const &location, const Request &request)
 {
 	std::cout << "Serving directory: " << directoryPath << std::endl;
 	std::vector<std::string> indexes = location.getIndex();
@@ -160,7 +160,7 @@ void Response::serveDirectory(std::string directoryPath, std::map<int, std::stri
 			std::ifstream file(index.c_str());
 			if (this->isFileExists(index))
 			{
-				this->serveStaticFile(index, errorPages);
+				this->serveFile(index, errorPages, request);
 				return;
 			}
 			i++;
@@ -210,7 +210,7 @@ void Response::get(const Request &request)
 		if (headers["URL"][headers["URL"].length() - 1] != '/')
 			this->redirect(headers["URL"] + "/");
 		else
-			this->serveDirectory(path, errorPages, location);
+			this->serveDirectory(path, errorPages, location, request);
 	}
 	else
 	{
