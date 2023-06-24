@@ -162,6 +162,11 @@ void Request::setBodyPath()
         dirPath = "/tmp/";
     this->_body = dirPath + generateRandomFile() + this->_extention;
     this->_fdBody.open(this->_body, std::ios::app);
+    if (!this->_fdBody.is_open())
+    {
+        this->_status = 500;
+        this->_chunkState = DONE;
+    }
 }
 
 void Request::setFullBody(char *request, int &r)
