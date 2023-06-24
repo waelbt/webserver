@@ -210,7 +210,7 @@ class Configuration
 		void InitHost(std::string value);
 		void InitPort(std::string value);
 		void InitServerName(std::string value);
-		static	void check_dup(std::string host, std::string port);
+		// static	void check_dup(std::string host, std::string port);
 		std::string 				getHost() const;
 		std::string					getPort() const;
 		std::vector<std::string>	getServerNames() const;

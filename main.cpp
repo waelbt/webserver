@@ -31,7 +31,7 @@ void signalHandler(int signal)
 {
    if (signal == SIGINT || signal == SIGTSTP)
    {
-    	Webserver::clear_set();
+    	// Webserver::clear_set();
 		std::exit(0);
    }
 }
@@ -44,10 +44,10 @@ int main(int ac, char **av)
 	{
 		std::string content(((ac != 2) ? OpenPath() : OpenPath(av[1])));
 
-		Webserver::clear_set();
+		// Webserver::clear_set();
 		Webserver webserver(content);
-
-		webserver.run();
+		std::cout << webserver._configs[0] << std::endl;
+		// webserver.run();
 	}
 	catch(const std::exception& e)
 	{
