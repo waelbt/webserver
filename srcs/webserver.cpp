@@ -52,18 +52,28 @@ SOCKET server_socket(std::string host, std::string port)
 
 void Webserver::get_registry()
 {
-	std::map<std::string, std::string>						_host_port_map;
-	typedef std::map<std::string, std::string>::iterator	iterator;
+	std::vector<std::pair<std::string, std::string> >					host_port;
+	std::vector<std::string>											servers_name;
 
 	for (size_t i = 0; i < _configs.size(); i++)
-		_host_port_map[_configs[i].getHost()] = _configs[i].getPort();
-	for (iterator it = _host_port_map.begin(); it != _host_port_map.end(); it++)
 	{
-		SOCKET tmp = server_socket(it->first, it->second);
-		if (tmp == -1)
-			std::cout << std::string(strerror(errno)) << it->first << ":" << it->second << std::endl;
+		std::pair<std::string, std::string> tmp = std::make_pair(_configs[i].getHost(), _configs[i].getPort());
+		if (find(host_port.begin(), host_port.end(), tmp) == host_port.end())
+			host_port.insert(host_port.end(), tmp);
 		else
-			_registry.insert(_registry.end(), Registry(it->first, it->second, tmp));
+		{
+			if (find(servers_name.begin(), servers_name.end(), _configs[i].getServerNames()) != servers_name.end())
+				throw CustomeExceptionMsg("it's forbidden to set two identical server, at least change the server name -_-");
+		}
+		servers_name.insert(servers_name.end(), _configs[i].getServerNames());
+	}
+	for (size_t i = 0; i < host_port.size(); i++)
+	{
+		SOCKET tmp = server_socket(host_port[i].first, host_port[i].second);
+		if (tmp == -1)
+			std::cout << std::string(strerror(errno)) << host_port[i].first << ":" << host_port[i].second << std::endl;
+		else
+			_registry.insert(_registry.end(), Registry(host_port[i].first, host_port[i].second, tmp));
 	}
 }
 
