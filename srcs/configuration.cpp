@@ -10,23 +10,8 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "../includes/server.hpp"
+#include "../includes/webserver.hpp"
 
-// #define SERVER_NAME  "DefAulT_SeRveR_Name"
-
-// std::map<std::string, std::string> Configuration::_host_port_map;
-
-int setnonblocking(int sock)
-{
-	int opts;
-
-	opts = fcntl(sock,F_GETFL);
-	// (opts < 0) ? ret : (NULL);
-	opts = (opts | O_NONBLOCK);
-	fcntl(sock,F_SETFL,opts);
-	// throw ServerException("fcntl failed to set set the modified file status flags back to the socket") : (NULL);
-    return 0;
-}
 
 Configuration::Configuration() : _host(), _port(), _host_exists(0), _port_exists(0), _server_name("default_serve_name"), _locations()
 {
@@ -74,16 +59,7 @@ void Configuration::initAttributes(TokenVectsIter& begin, TokenVectsIter& end)
     }
     if (!_host_exists || !_port_exists)
         throw CustomeExceptionMsg(MISSINGPORTHOST);
-    // check_dup(_host, _port);
 }
-
-// void Configuration::check_dup(std::string host, std::string port)
-// {
-//     std::map<std::string, std::string>::iterator it = _host_port_map.find(host);
-//     if (it != _host_port_map.end() && it->second == port)
-//         throw CustomeExceptionMsg("you're not allowed to reuse the same port:host -__-");
-//     _host_port_map[host] = port;
-// }
 
 Configuration::Configuration(const Configuration& other)
 {

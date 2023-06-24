@@ -10,7 +10,7 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "../includes/server.hpp"
+#include "../includes/webserver.hpp"
 
 
 CommonEntity::CommonEntity() : _root(), _index(), _error_pages(), _client_max_body_size(), _AutoIndex(false), _root_exits(false)

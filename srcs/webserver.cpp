@@ -1,4 +1,4 @@
-#include "../includes/server.hpp"
+#include "../includes/webserver.hpp"
 
 fd_set Webserver::_readset;
 fd_set Webserver::_writeset;
@@ -161,6 +161,9 @@ bool Webserver::wait_on_client(SetsPair& sets)
 // 			(*it)->drop_client(i);
 // 	}
 // }
+
+// Webserver::ServerException::ServerException(const std::string& message) : CustomeExceptionMsg(message)
+// {}
 
 void  Webserver::clear_set()
 {
