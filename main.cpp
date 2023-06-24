@@ -46,7 +46,8 @@ int main(int ac, char **av)
 
 		// Webserver::clear_set();
 		Webserver webserver(content);
-		std::cout << webserver._configs[0] << std::endl;
+		for (size_t i = 0; i < webserver._listen_sockets.size(); i++)
+			std::cout << webserver._listen_sockets[i] << std::endl;
 		// webserver.run();
 	}
 	catch(const std::exception& e)

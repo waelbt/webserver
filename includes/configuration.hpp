@@ -194,15 +194,16 @@ class Configuration
 	public:
 		typedef void (Configuration::*methods)(std::string);
 	private:
-		static std::map<std::string, std::string>			_host_port_map;
 		std::string 										_host;
 		std::string 										_port;
-		std::vector<std::string>							_server_name;
 		bool 												_host_exists;
 		bool 												_port_exists;
+		// static std::map<std::string, std::string>			_host_port_map;
+		std::string											_server_name;
 		std::vector<Location>								_locations;
 	public:
 		Configuration();
+		// Configuration operator()(std::string host, std::string  port);
 		Configuration(TokenVectsIter& begin, TokenVectsIter& end);
 		void initAttributes(TokenVectsIter& begin, TokenVectsIter& end);
         Configuration(const Configuration& other);
@@ -213,7 +214,7 @@ class Configuration
 		// static	void check_dup(std::string host, std::string port);
 		std::string 				getHost() const;
 		std::string					getPort() const;
-		std::vector<std::string>	getServerNames() const;
+		std::string	getServerNames() const;
 		std::vector<Location>		getLocations() const;
 		friend std::ostream& operator<<(std::ostream& o, Configuration obj);
 		~Configuration();

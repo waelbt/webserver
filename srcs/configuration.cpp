@@ -12,13 +12,15 @@
 
 #include "../includes/server.hpp"
 
-std::map<std::string, std::string> Configuration::_host_port_map;
+// #define SERVER_NAME  "DefAulT_SeRveR_Name"
 
-Configuration::Configuration() : _host(), _port(), _server_name(), _host_exists(0), _port_exists(0), _locations()
+// std::map<std::string, std::string> Configuration::_host_port_map;
+
+Configuration::Configuration() : _host(), _port(), _host_exists(0), _port_exists(0), _server_name("default_serve_name"), _locations()
 {
 }
 
-Configuration::Configuration(TokenVectsIter& begin, TokenVectsIter& end)  : _host(), _port(), _server_name(), _host_exists(0), _port_exists(0), _locations()
+Configuration::Configuration(TokenVectsIter& begin, TokenVectsIter& end)  : _host(), _port(),  _host_exists(0), _port_exists(0),_server_name("default_serve_name"), _locations()
 {
     int             Count;
     CommonEntity    tmp(begin, end);
@@ -104,7 +106,7 @@ void Configuration::InitPort(std::string value)
 
 void Configuration::InitServerName(std::string value)
 {
-    _server_name = converter(value, TokenToString());
+    _server_name = value;
 }
 
 std::string Configuration::getHost() const
@@ -117,7 +119,7 @@ std::string    Configuration::getPort() const
     return this->_port;
 }
 
-std::vector<std::string>    Configuration::getServerNames() const
+std::string    Configuration::getServerNames() const
 {
     return this->_server_name;
 }
@@ -133,8 +135,7 @@ std::ostream& operator<<(std::ostream& o, Configuration obj)
     std::cout << "Server:" << std::endl;
     std::cout << " hosts: "<< obj.getHost() << ";" << std::endl;
     std::cout << " listen:" << obj.getPort() << ";" << std::endl;
-    std::cout << " server name:";
-    print_vec(obj.getServerNames(), "");
+    std::cout << " server name: " << obj.getServerNames() << std::endl;;
     std::cout << ";\n" << std::endl;
     print_vec(obj.getLocations(), "");
     return o;

@@ -17,6 +17,15 @@
 
 // s_addrinfo *get_s_addrinfo(std::string host, std::string port);
 
+// struct server_infos
+// {
+// 	SOCKET		_listen_sockets;
+// 	std::string	_servername;
+// 	std::string _port;
+// 	std::string _host;
+// 	int			_conf_id;
+// };
+
 class Server
 {
 	public:
@@ -31,7 +40,7 @@ class Server
 		Server(const Server& other);
 		Server& operator=(const Server& other);
 
-		SOCKET server_socket(std::string host, std::string port);
+		// SOCKET server_socket(std::string host, std::string port);
 		class ServerException : public CustomeExceptionMsg
 		{
 			public:
@@ -60,6 +69,7 @@ class Webserver
 		typedef std::vector<Configuration> ConfVec;
 	public:
 		ConfVec 	_configs;
+		std::vector<SOCKET> _listen_sockets;
 		// ServerVec  _servers;
 		// static fd_set _writeset;
 		// static fd_set _readset;
@@ -70,7 +80,7 @@ class Webserver
 		Webserver(const Webserver&  other);
 		Webserver& operator=(const Webserver&  _servers);
 		~Webserver();
-
+	
 		class WebserverReset : public CustomeExceptionMsg
 		{
 			public:
@@ -78,7 +88,7 @@ class Webserver
     			WebserverReset(const std::string& message);
 				virtual ~WebserverReset() throw();
 		};
-		void setup(std::string content);
+		ConfVec init_configs(std::string content);
 		// bool wait_on_client(SetsPair& sets);
 		// void run();
 		// void stop();

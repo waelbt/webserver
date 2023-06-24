@@ -10,10 +10,81 @@ Webserver::Webserver()
 
 }
 
-Webserver::Webserver(std::string content)
-// : _servers()
+
+bool compare(Configuration a, Configuration b)
 {
-	setup(content);
+	if((a.getHost() == b.getHost()) && a.getPort() == b.getPort())
+		return true;
+	return false;
+}
+
+// int setnonblocking(int sock)
+// {
+// 	int opts;
+
+// 	opts = fcntl(sock,F_GETFL);
+// 	(opts < 0) ? ret : (NULL);
+// 	opts = (opts | O_NONBLOCK);
+// 	(fcntl(sock,F_SETFL,opts) < 0) ? \
+// 	throw ServerException("fcntl failed to set set the modified file status flags back to the socket") : (NULL);
+// }
+
+
+SOCKET server_socket(std::string host, std::string port)
+{	
+	int opt;
+	SOCKET listen_sockets;
+	s_addrinfo hints;
+    s_addrinfo *bind_addr;
+	std::string error_message("");
+
+    memset(&hints, 0, sizeof(hints));
+    hints.ai_family = AF_INET;
+    hints.ai_socktype = SOCK_STREAM;
+    getaddrinfo(host.c_str(), port.c_str(), &hints, &bind_addr);
+	if (!bind_addr)
+		error_message = "getaddrinfo system call failed.";
+	else
+	{
+		listen_sockets = socket(bind_addr->ai_family, bind_addr->ai_socktype, bind_addr->ai_protocol);
+		if (listen_sockets < 0)
+			error_message = "socket system call failed.";
+		setsockopt(listen_sockets, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
+		if (fcntl(listen_sockets, F_SETFL, fcntl(listen_sockets, F_GETFL, 0) | O_NONBLOCK) == -1) {
+			freeaddrinfo(bind_addr);
+			close(listen_sockets);
+        	return -1;
+		}
+		// setnonblocking(listen_sockets);
+		if (bind(listen_sockets, bind_addr->ai_addr, bind_addr->ai_addrlen))
+		{ close(listen_sockets); error_message = "bind system call failed." + std::string(strerror(errno)); }
+		if (listen(listen_sockets, SOMAXCONN) < 0)
+		{ close(listen_sockets); error_message = "listen system call failed."; }
+	}
+	freeaddrinfo(bind_addr);
+	if (!error_message.empty())
+		return -1;
+	Webserver::add_socket(listen_sockets);
+	return listen_sockets;
+}
+
+
+Webserver::Webserver(std::string content): _configs(init_configs(content))
+{
+	// create socket;
+	std::map<std::string, std::string>				_host_port_map;
+	typedef std::map<std::string, std::string>::iterator	iterator;
+
+	for (size_t i = 0; i < _configs.size(); i++)
+		_host_port_map[_configs[i].getHost()] = _configs[i].getPort();
+	for (iterator it = _host_port_map.begin(); it != _host_port_map.end(); it++)
+	{
+		SOCKET tmp = server_socket(it->first, it->second);
+		if (tmp == -1)
+			std::cout << "socket setuping failed for " << it->first << ":" << it->second << std::endl;
+		else
+			_listen_sockets.insert(_listen_sockets.end(), tmp);
+	}
 }
 
 void Webserver::add_socket(SOCKET socket)
@@ -24,8 +95,9 @@ void Webserver::add_socket(SOCKET socket)
 		// _max_socket = socket;
 }
 
-void  Webserver::setup(std::string content)
+Webserver::ConfVec  Webserver::init_configs(std::string content)
 {
+	ConfVec 	configs;
 	TokenVects 									data(SplitValues(content));
 	std::pair<TokenVectsIter, TokenVectsIter>	it(std::make_pair(data.begin(),  data.end()));
 
@@ -35,7 +107,7 @@ void  Webserver::setup(std::string content)
 		{
 			string_trim(*(it.first));
 			if (it.first->first == "server")
-				_configs.insert(_configs.end(), Configuration(it.first, it.second));
+				configs.insert(configs.end(), Configuration(it.first, it.second));
 			else
 				throw CustomeExceptionMsg(it.first->first + BlockErro);
 		}
@@ -43,8 +115,9 @@ void  Webserver::setup(std::string content)
 			throw CustomeExceptionMsg(it.first->first + BlockErro);
 		it.first++;
 	}
-	if (_configs.empty())
+	if (configs.empty())
 		throw CustomeExceptionMsg(EmptyFile);
+	return configs;
 }
 
 

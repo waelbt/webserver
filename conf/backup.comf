@@ -1,0 +1,97 @@
+server{
+    host: 127.0.0.1;
+    listen: 1937;
+    client_max_body_size: 100000000;
+
+    location {
+        pattern: /;
+        limit_except: GET, POST,DELETE;
+        cgi: .php, static/cgi-bin/php-cgi;
+        cgi: .py, /usr/local/bin/python3;
+        root: static;
+        AutoIndex: on;
+    }
+    location {
+        pattern: /code.mp4;
+        limit_except: GET,POST,DELETE;
+        upload: cgi-bin/upload;
+        AutoIndex: on;
+        root: static;
+    }
+    location {
+        pattern: /error;
+        limit_except: GET,POST,DELETE;
+        root: static/error;
+        upload:  parsing/test/upload;
+        AutoIndex: on;
+    }
+    location {
+        pattern: /test/it;
+        limit_except: GET,POST,DELETE;
+        cgi: .py, parsing/test/cgi;
+        index: index.html,index.php,index.py;
+        root: parsing/test/www;
+        upload:  parsing/test/upload;
+        AutoIndex: on;
+    }
+    location {
+        pattern: /test/itesd;
+        limit_except: GET,POST,DELETE;
+        cgi: .php, parsing/test/cgi;
+        cgi: .py, parsing/test/cgi;
+        index: index.html,index.php,index.py;
+        root: parsing/test/www;
+        upload:  parsing/test/upload;
+        AutoIndex: on;
+    }
+}
+
+server{
+    host: 10.12.12.3;
+    server_name: first_server;
+    listen: 1337;
+    client_max_body_size: 100000000;
+
+    location {
+        pattern: /;
+        limit_except: GET, POST,DELETE;
+        cgi: .php, static/cgi-bin/php-cgi;
+        cgi: .py, /usr/local/bin/python3;
+        upload: upload;
+        root: static;
+        AutoIndex: on;
+    }
+    location {
+        pattern: /code.mp4;
+        limit_except: GET,POST,DELETE;
+        upload: cgi-bin/upload;
+        AutoIndex: on;
+        root: static;
+    }
+    location {
+        pattern: /error;
+        limit_except: GET,POST,DELETE;
+        root: static/error;
+        upload:  parsing/test/upload;
+        AutoIndex: on;
+    }
+    location {
+        pattern: /test/it;
+        limit_except: GET,POST,DELETE;
+        cgi: .py, parsing/test/cgi;
+        index: index.html,index.php,index.py;
+        root: parsing/test/www;
+        upload:  parsing/test/upload;
+        AutoIndex: on;
+    }
+    location {
+        pattern: /test/itesd;
+        limit_except: GET,POST,DELETE;
+        cgi: .php, parsing/test/cgi;
+        cgi: .py, parsing/test/cgi;
+        index: index.html,index.php,index.py;
+        root: parsing/test/www;
+        upload:  parsing/test/upload;
+        AutoIndex: on;
+    }
+}
