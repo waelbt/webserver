@@ -515,7 +515,7 @@ void Request::parseRequest(char *request, const Registry& registry,const  ConfVe
         if (separator != std::string::npos)
             this->_request[line.substr(0, separator)] = line.substr(separator + 2, line.length() - separator - 3);
     }
-     this->config_matching(registry, configs);
+    this->config_matching(registry, configs);
     setbody:
     std::string method = this->_request["Method"];
     if (method == "POST")

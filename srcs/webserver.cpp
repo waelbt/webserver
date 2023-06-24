@@ -63,9 +63,7 @@ void Webserver::get_registry()
 		if (tmp == -1)
 			std::cout << std::string(strerror(errno)) << it->first << ":" << it->second << std::endl;
 		else
-		{
 			_registry.insert(_registry.end(), Registry(it->first, it->second, tmp));
-		}
 	}
 }
 
