@@ -17,6 +17,7 @@
 
 
 
+
 class Webserver
 {
 	public:
@@ -35,11 +36,10 @@ class Webserver
 		Webserver& operator=(const Webserver&  _servers);
 		~Webserver();
 		
-		// class ServerException : public CustomeExceptionMsg
-		// {
-		// 	public:
-    	// 		ServerException(const std::string& message);
-		// };
+		struct ServerException : public CustomeExceptionMsg
+		{
+    		ServerException(const std::string& message);
+		};
 
 		class WebserverReset : public CustomeExceptionMsg
 		{
@@ -54,7 +54,7 @@ class Webserver
 		void drop_client(size_t i);
 		void run();
 		void stop();
-		// void reset();
+		void reset();
 
 		int fetch_request (Client *client);
 		int send_response (Client *client);

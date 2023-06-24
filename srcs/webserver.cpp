@@ -17,35 +17,40 @@ bool compare(Configuration a, Configuration b)
 	return false;
 }
 
+
+Webserver::ServerException::ServerException(const std::string& message) : CustomeExceptionMsg(message)
+{
+}
+
 SOCKET server_socket(std::string host, std::string port)
 {	
 	int opt;
 	SOCKET listen_sockets;
 	s_addrinfo hints;
     s_addrinfo *bind_addr;
-	std::string error_message("");
 
     memset(&hints, 0, sizeof(hints));
     hints.ai_family = AF_INET;
     hints.ai_socktype = SOCK_STREAM;
     getaddrinfo(host.c_str(), port.c_str(), &hints, &bind_addr);
-	if (!bind_addr)
-		error_message = "getaddrinfo system call failed.";
-	else
-	{
-		listen_sockets = socket(bind_addr->ai_family, bind_addr->ai_socktype, bind_addr->ai_protocol);
-		if (listen_sockets < 0)
-			error_message = "socket  " + std::string(strerror(errno));
-		setsockopt(listen_sockets, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
-		fcntl(listen_sockets, F_SETFL, O_NONBLOCK);
-		if (bind(listen_sockets, bind_addr->ai_addr, bind_addr->ai_addrlen))
-		{ close(listen_sockets); error_message = "bind  " +  std::string(strerror(errno)); }
-		if (listen(listen_sockets, SOMAXCONN) < 0)
-		{ close(listen_sockets); error_message =  "listen  " + std::string(strerror(errno)); }
+	if (!bind_addr) {
+		freeaddrinfo(bind_addr);
+		throw Webserver::ServerException("getaddrinfo system call failed.");
 	}
-	freeaddrinfo(bind_addr);
-	if (!error_message.empty())
-		return -1;
+	listen_sockets = socket(bind_addr->ai_family, bind_addr->ai_socktype, bind_addr->ai_protocol);
+	(listen_sockets < 0) ? throw Webserver::ServerException("socket  " + std::string(strerror(errno))) : (NULL);
+	setsockopt(listen_sockets, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
+	(fcntl(listen_sockets,F_SETFL,O_NONBLOCK) == -1) ? throw Webserver::ServerException("failed to set socket descriptor to non-blocking mod") : (NULL);
+	if(bind(listen_sockets, bind_addr->ai_addr, bind_addr->ai_addrlen))
+	{	
+		close(listen_sockets);
+		throw Webserver::ServerException("bind  " +  std::string(strerror(errno)));
+	}
+	if (listen(listen_sockets, SOMAXCONN) < 0)
+	{	
+		close(listen_sockets);
+		throw Webserver::ServerException("listen  " +  std::string(strerror(errno)));
+	}
 	Webserver::add_socket(listen_sockets);
 	return listen_sockets;
 }
@@ -69,11 +74,15 @@ void Webserver::get_registry()
 	}
 	for (size_t i = 0; i < host_port.size(); i++)
 	{
-		SOCKET tmp = server_socket(host_port[i].first, host_port[i].second);
-		if (tmp == -1)
-			std::cout << std::string(strerror(errno)) << host_port[i].first << ":" << host_port[i].second << std::endl;
-		else
+		try
+		{
+			SOCKET tmp = server_socket(host_port[i].first, host_port[i].second);
 			_registry.insert(_registry.end(), Registry(host_port[i].first, host_port[i].second, tmp));
+		}	
+		catch(const ServerException& e)
+		{
+			std::cout << "WARNING " << e.what() << " " << host_port[i].first << ":" << host_port[i].second << std::endl;
+		}
 	}
 }
 
@@ -88,9 +97,6 @@ void Webserver::add_socket(SOCKET socket)
 	if (_max_socket < socket)
 		_max_socket = socket;
 }
-
-
-// check_duplicate_conf(Webserver::ConfVec configs); // chi compare;
 
 ConfVec  Webserver::init_configs(std::string content)
 {
@@ -114,7 +120,6 @@ ConfVec  Webserver::init_configs(std::string content)
 	}
 	if (configs.empty())
 		throw CustomeExceptionMsg(EmptyFile);
-	// check_duplicate_conf(Webserver::ConfVec configs);
 	return configs;
 }
 
@@ -143,27 +148,23 @@ bool Webserver::wait_on_client(SetsPair& sets)
 	sets = std::make_pair(_readset, _writeset);
 	if (select(_max_socket + 1, &sets.first, &sets.second, 0, &timeout) < 0)
 	{
-		// this->reset();
+		this->reset();
 		return false;
 	}
 	return true;
 }
 
-// void Webserver::reset()
-// {
-// 	FD_ZERO(&_readset);
-// 	FD_ZERO(&_writeset);
-// 	for (ServerVec::iterator it = _servers.begin(); it != _servers.end(); it++)
-// 	{
-// 		FD_SET((*it)->get_listen_sockets(), &_readset);
-// 		size_t clients_num = (*it)->get_clients().size();
-// 		for (size_t i = 0; i < clients_num; i++)
-// 			(*it)->drop_client(i);
-// 	}
-// }
-
-// Webserver::ServerException::ServerException(const std::string& message) : CustomeExceptionMsg(message)
-// {}
+void Webserver::reset()
+{
+	FD_ZERO(&_readset);
+	FD_ZERO(&_writeset);
+	for (size_t i = _registry.size(); i != _registry.size(); i++)
+	{
+		FD_SET(_registry[i]._listen_socket, &_readset);
+		for (size_t i = 0; i < _clients.size(); i++)
+			this->drop_client(i);
+	}
+}
 
 void  Webserver::clear_set()
 {
@@ -216,10 +217,12 @@ void Webserver::run()
 {
     SetsPair temps;
 
+	if (_registry.empty())
+		exit(0);
 	while (1)
     {
-		// try
-		// {
+		try
+		{
 			if (!wait_on_client(temps))
 				continue;
 			for (size_t i = 0; i < _registry.size(); i++)
@@ -240,15 +243,15 @@ void Webserver::run()
 						this->drop_client(i);
 				}
 			}
-		// }
-		// catch(const std::exception& e)
-		// {
-			// std::cerr << e.what() << std::endl;
-			// std::cout << "restarting the server\n.\n..\n...\n...\n.....\n........." << std::endl;
-			// this->reset();
-		// }
+		}
+		catch(const Client::ClientException& e) {
+			std::cerr << "WARNING : "<< e.what() << std::endl; }
+		catch(const WebserverReset& e)
+		{
+			std::cerr << e.what() << "\nrestarting the server\n.\n..\n...\n...\n.....\n........." << std::endl;
+			this->reset();
+		}
     }
-	this->stop();
 }
 
 int Webserver::send_response(Client *client)
@@ -287,10 +290,8 @@ int Webserver::send_response(Client *client)
 
 void Webserver::stop()
 {
-	// for (ServerVec::iterator it = _servers.begin(); it != _servers.end(); it++)
-	// {
-	// 	close((*it)->get_listen_sockets());
-	// }
+	for (size_t i = 0; i != _registry.size(); i++)
+		close(_registry[i]._listen_socket);
 }
 
 
@@ -306,8 +307,5 @@ Webserver::WebserverReset::~WebserverReset() throw()
 
 Webserver::~Webserver()
 {
-    // for (ServerVec::iterator it = _servers.begin(); it != _servers.end(); it++)
-    // {
-    //     delete (*it);
-    // }
+	this->stop();
 }

@@ -11,14 +11,15 @@ Client::Client(const Registry& registry) : _registry(registry), _address(), _add
     std::cout << "procces " << getpid() << "paremt process   "<< getppid() << std::endl;
     std::cout << "_listen_socket "<< registry._listen_socket << std::endl;
     _socket = accept(registry._listen_socket, NULL, NULL);
-    if (_socket <= 0)
-        throw Webserver::WebserverReset("accept() fail");
-    if(fcntl(_socket,F_SETFL,O_NONBLOCK) == -1)
-        throw Webserver::WebserverReset("failed to set socket descriptor to non-blocking mod");
+    (_socket <= 0) ?  throw ClientException("establish a connection with a client failed") : (NULL);
+    (fcntl(_socket,F_SETFL,O_NONBLOCK) == -1) ? throw ClientException("failed to set socket descriptor to non-blocking mod") : (NULL);
     Webserver::add_socket(_socket);
     std::cout << "New connection from , socket " << get_client_address() << _socket << std::endl;
 }
 
+Client::ClientException::ClientException(const std::string& message) : CustomeExceptionMsg(message)
+{
+}
 
 Client::Client(const Client& other)
 {
