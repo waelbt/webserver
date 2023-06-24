@@ -52,7 +52,7 @@ void Response::delete_directory(std::string path, const Request &request)
 
 void Response::delete_file(std::string path)
 {
-	if (access(path.c_str(), F_OK | W_OK) != 0)
+	if (access(path.c_str(), X_OK | W_OK) != 0)
 		this->setStatus(403);
 	else 
 	{

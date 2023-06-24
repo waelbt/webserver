@@ -24,7 +24,7 @@ Webserver::ServerException::ServerException(const std::string& message) : Custom
 
 SOCKET server_socket(std::string host, std::string port)
 {	
-	int opt;
+	int opt = 1;
 	SOCKET listen_sockets;
 	s_addrinfo hints;
     s_addrinfo *bind_addr;
@@ -39,12 +39,12 @@ SOCKET server_socket(std::string host, std::string port)
 	}
 	listen_sockets = socket(bind_addr->ai_family, bind_addr->ai_socktype, bind_addr->ai_protocol);
 	(listen_sockets < 0) ? throw Webserver::ServerException("socket  " + std::string(strerror(errno))) : (NULL);
+	(fcntl(listen_sockets,F_SETFL,O_NONBLOCK) == -1) ? throw Webserver::ServerException("failed to set socket descriptor to non-blocking mod") : (NULL);
 	if (setsockopt(listen_sockets, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)))
 	{
 		close(listen_sockets); freeaddrinfo(bind_addr);
 		throw Webserver::ServerException("set sock option  " +  std::string(strerror(errno)));
 	}
-	(fcntl(listen_sockets,F_SETFL,O_NONBLOCK) == -1) ? throw Webserver::ServerException("failed to set socket descriptor to non-blocking mod") : (NULL);
 	if(bind(listen_sockets, bind_addr->ai_addr, bind_addr->ai_addrlen))
 	{	
 		close(listen_sockets); freeaddrinfo(bind_addr);
