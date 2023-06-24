@@ -12,7 +12,7 @@
 /* ************************************************************************** */
 
 
-#include "../includes/server.hpp"
+#include "../includes/webserver.hpp"
 
 Location::Location() : _pattren(), _limit_except(), _cgi(), _upload(), _pattren_exists(false)
 {
@@ -44,7 +44,7 @@ Location& Location::operator=(const Location& other)
 
 void Location::InitPattern(std::string value)
 {
-    _pattren =  value; //maybe : i will check later if the path is valid or not
+    _pattren =  value;
     _pattren_exists = true;
 }
 

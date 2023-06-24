@@ -34,7 +34,13 @@ class Webserver
 		Webserver(const Webserver&  other);
 		Webserver& operator=(const Webserver&  _servers);
 		~Webserver();
-	
+		
+		// class ServerException : public CustomeExceptionMsg
+		// {
+		// 	public:
+    	// 		ServerException(const std::string& message);
+		// };
+
 		class WebserverReset : public CustomeExceptionMsg
 		{
 			public:

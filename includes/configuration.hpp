@@ -68,7 +68,6 @@ typedef std::vector<TokenPair>				TokenVects;
 typedef TokenVects::iterator	             TokenVectsIter;
 
 
-int setnonblocking(int sock);
 
 struct TokenToString {
 	std::string  operator()(TokenPair& pair);

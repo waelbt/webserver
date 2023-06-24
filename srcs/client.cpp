@@ -1,4 +1,4 @@
-#include "../includes/server.hpp"
+#include "../includes/webserver.hpp"
 
 
 Client::Client() : _registry(), _address(), _address_length(sizeof(_address)), _request(), _response(), _data_sent(), _bytesSent(), _remaining()
@@ -13,11 +13,8 @@ Client::Client(const Registry& registry) : _registry(registry), _address(), _add
     _socket = accept(registry._listen_socket, NULL, NULL);
     if (_socket <= 0)
         throw Webserver::WebserverReset("accept() fail");
-    fcntl(_socket,F_SETFL,O_NONBLOCK);
-    // if (fcntl(_socket, F_SETFL, fcntl(_socket, F_GETFL, 0) | O_NONBLOCK) == -1) {
-	// 	close(_socket);
-    //     throw "client setsocket file "; // catch it later
-	// }
+    if(fcntl(_socket,F_SETFL,O_NONBLOCK) == -1)
+        throw Webserver::WebserverReset("failed to set socket descriptor to non-blocking mod");
     Webserver::add_socket(_socket);
     std::cout << "New connection from , socket " << get_client_address() << _socket << std::endl;
 }
