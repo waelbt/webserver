@@ -7,6 +7,7 @@ typedef int	SOCKET;
 typedef struct addrinfo s_addrinfo;
 typedef struct sockaddr_storage s_sockaddr_storage;
 
+
 struct Client {
 	// attributes
 	Registry _registry;

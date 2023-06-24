@@ -11,11 +11,11 @@
 #include <dirent.h>
 #include <unistd.h>
 #include <sys/stat.h>
+#include "Registry.hpp"
 #include "configuration.hpp"
 
 #define RequestMap std::map<std::string, std::string>
 #define QueriesMap std::map<std::string, std::string>
-
 
 struct invalidUrl
 {
@@ -64,6 +64,7 @@ class Request
         bool is_file(const char *path);
         void setBodyPath();
         int  readChunkedBody(char *request, int &r);
+        void  config_matching(Registry registry, ConfVec configs);
     public:
         Request();
         ~Request();
@@ -77,7 +78,7 @@ class Request
         ChunkState const &    getChunkedState() const;
         std::string const &   getBody() const;
         size_t const &        getContentLength() const;
-        void                  parseRequest(char *request, Configuration const & conf, int &r);
+        void                   parseRequest(char *request, Registry registry, ConfVec configs, int &r);
         void                  printElement();
         std::string           get_attribute(const std::string& key); // wael ---------
 };

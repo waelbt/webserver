@@ -66,7 +66,6 @@ class Webserver
 	public:
 		typedef std::pair<fd_set, fd_set> SetsPair;
 		// typedef std::vector<Server*> ServerVec;
-		typedef std::vector<Configuration> ConfVec;
 	public:
 		ConfVec 	_configs;
 		std::vector<Registry> _registry;
@@ -92,12 +91,13 @@ class Webserver
 		ConfVec init_configs(std::string content);
 		void get_registry();
 		bool wait_on_client(SetsPair& sets);
+		void drop_client(size_t i);
 		void run();
-		// void stop();
+		void stop();
 		// void reset();
 
 		int fetch_request (Client *client);
-		// int send_response (Client *client);
+		int send_response (Client *client);
 
 		static void add_socket(SOCKET socket);
 		static void clear_set();		

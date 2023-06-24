@@ -48,5 +48,5 @@ std::string Client::get_client_address()
 
 Client::~Client()
 {
-    close(_socket);
+    // close(_socket);
 }

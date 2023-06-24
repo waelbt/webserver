@@ -55,7 +55,6 @@ SOCKET server_socket(std::string host, std::string port)
 			close(listen_sockets);
         	return -1;
 		}
-		// setnonblocking(listen_sockets);
 		if (bind(listen_sockets, bind_addr->ai_addr, bind_addr->ai_addrlen))
 		{ close(listen_sockets); error_message = "bind system call failed." + std::string(strerror(errno)); }
 		if (listen(listen_sockets, SOMAXCONN) < 0)
@@ -102,7 +101,7 @@ void Webserver::add_socket(SOCKET socket)
 
 // check_duplicate_conf(Webserver::ConfVec configs); // chi compare;
 
-Webserver::ConfVec  Webserver::init_configs(std::string content)
+ConfVec  Webserver::init_configs(std::string content)
 {
 	ConfVec 	configs;
 	TokenVects 									data(SplitValues(content));
@@ -199,7 +198,7 @@ int Webserver::fetch_request (Client *client)
 	else
 	{
 		request[r] = '\0';
-		// client->_request.parseRequest(request, conf, r);
+		client->_request.parseRequest(request, client->_registry, this->_configs, r);
 		if (client->_request.getChunkedState() == DONE)
 		{
 			FD_CLR(client->_socket, &_readset);
@@ -207,6 +206,16 @@ int Webserver::fetch_request (Client *client)
 		}
 	}
 	return 1;
+}
+
+void Webserver::drop_client(size_t i)
+{
+	if (i < _clients.size())
+	{
+		std::cout << "drop_clients socket  " << _clients[i]->_socket << std::endl;
+		delete _clients[i];
+		_clients.erase(_clients.begin() + i);
+	}
 }
 
 void Webserver::run()
@@ -229,29 +238,15 @@ void Webserver::run()
 				if (FD_ISSET(_clients[i]->_socket, &temps.first))
 				{
 					this->fetch_request(_clients[i]);
-					// if (!fetch_request(_client[i])) {
-					// 	(*it)->drop_client(i); continue ; }
+					if (!fetch_request(_clients[i])) {
+						drop_client(i); continue ; }
+				}
+				if (FD_ISSET(_clients[i]->_socket, &temps.second))
+				{
+					if(send_response(_clients[i]))
+						drop_client(i);
 				}
 			}
-        	// for (ServerVec::iterator it = _servers.begin(); it != _servers.end(); it++)
-        	// {
-            // 	std::vector<Client *>& _client = (*it)->get_clients();
-    	    // 	if (FD_ISSET((*it)->get_listen_sockets(), &temps.first))
-		    // 		_client.insert(_client.end(), new Client((*it)->get_listen_sockets()));
-		   	// 	for (size_t i = 0; i < _client.size(); i++)
-		    // 	{
-		    // 		if (FD_ISSET(_client[i]->_socket, &temps.first))
-		    // 		{
-			// 			if (!fetch_request(_client[i], (*it)->get_configuration())) {
-			// 				(*it)->drop_client(i); continue ; }
-			// 		}
-			// 		if (FD_ISSET(_client[i]->_socket, &temps.second))
-			// 		{
-			// 			if(send_response(_client[i]))
-			// 				(*it)->drop_client(i);
-			// 		}
-		   	// 	}
-        	// }
 		// }
 		// catch(const std::exception& e)
 		// {
@@ -260,50 +255,50 @@ void Webserver::run()
 			// this->reset();
 		// }
     }
-	// this->stop();
+	this->stop();
 }
 
-// int Webserver::send_response(Client *client)
-// {
-// 	if (!client->_remaining)
-// 	{
-// 		client->_response.serveResponse(client->_request);
-// 		if (client->_response.getIsHeaderParsed() && !client->_response.getIsHeaderSent())
-// 			client->_data_sent = client->_response.sendHeader();
-// 		else
-// 			client->_data_sent = client->_response.getBody();
-// 	}
-// 	client->_bytesSent = send(client->_socket, client->_data_sent.c_str(), client->_data_sent.size(), 0);
-// 	if (client->_bytesSent == (ssize_t)client->_data_sent.size())
-// 	{
-// 		std::cout << "send all" << std::endl;
-// 		client->_remaining = false;
-// 	}
-// 	else if (client->_bytesSent < (ssize_t)client->_data_sent.size())
-// 	{
-// 		client->_remaining = true;
-// 		if (client->_bytesSent != -1)
-// 		{
-// 			std::cout << "_remaining " << client->_bytesSent << std::endl;
-// 			client->_data_sent = client->_data_sent.substr(client->_bytesSent, client->_data_sent.length());
-// 		}
-// 	}
-// 	if (client->_response.getIsBodySent() || client->_bytesSent == -1) 
-// 	{
-// 		std::cout << "***************************************** disconnected **************************************************" << std::endl;
-// 		FD_CLR(client->_socket, &_writeset);
-// 		return 1;
-// 	}
-// 	return 0;
-// }
+int Webserver::send_response(Client *client)
+{
+	if (!client->_remaining)
+	{
+		client->_response.serveResponse(client->_request);
+		if (client->_response.getIsHeaderParsed() && !client->_response.getIsHeaderSent())
+			client->_data_sent = client->_response.sendHeader();
+		else
+			client->_data_sent = client->_response.getBody();
+	}
+	client->_bytesSent = send(client->_socket, client->_data_sent.c_str(), client->_data_sent.size(), 0);
+	if (client->_bytesSent == (ssize_t)client->_data_sent.size())
+	{
+		std::cout << "send all" << std::endl;
+		client->_remaining = false;
+	}
+	else if (client->_bytesSent < (ssize_t)client->_data_sent.size())
+	{
+		client->_remaining = true;
+		if (client->_bytesSent != -1)
+		{
+			std::cout << "_remaining " << client->_bytesSent << std::endl;
+			client->_data_sent = client->_data_sent.substr(client->_bytesSent, client->_data_sent.length());
+		}
+	}
+	if (client->_response.getIsBodySent() || client->_bytesSent == -1) 
+	{
+		std::cout << "***************************************** disconnected **************************************************" << std::endl;
+		FD_CLR(client->_socket, &_writeset);
+		return 1;
+	}
+	return 0;
+}
 
-// void Webserver::stop()
-// {
-// 	for (ServerVec::iterator it = _servers.begin(); it != _servers.end(); it++)
-// 	{
-// 		close((*it)->get_listen_sockets());
-// 	}
-// }
+void Webserver::stop()
+{
+	// for (ServerVec::iterator it = _servers.begin(); it != _servers.end(); it++)
+	// {
+	// 	close((*it)->get_listen_sockets());
+	// }
+}
 
 
 Webserver::WebserverReset::WebserverReset() : CustomeExceptionMsg()

@@ -29,6 +29,8 @@
  #include <sys/types.h>
  #include <signal.h>
 
+
+
 #define NOROUTE				"define a server without location is forbidden"
 #define ServerError			": can't be in the server scope"
 #define BlockErro			": can't be in the main scope"
@@ -219,3 +221,7 @@ class Configuration
 		friend std::ostream& operator<<(std::ostream& o, Configuration obj);
 		~Configuration();
 };
+
+
+
+typedef std::vector<Configuration> ConfVec;

@@ -472,7 +472,28 @@ void Request::badFormat()
     this->_badFormat = 1;
 }
 
-void Request::parseRequest(char *request, Configuration const & conf, int &r)
+void  Request::config_matching(Registry registry, ConfVec configs)
+{
+    std::string serverName = this->_request["Host"];
+    std::vector<Configuration> filter;
+
+    for (size_t i = 0; i < configs.size(); i++)
+    {
+        if (registry._port == configs[i].getPort() && registry._host ==  configs[i].getHost())
+            filter.push_back(configs[i]);
+    }
+    for (size_t i = 0; i < filter.size(); i++)
+    {
+        if (serverName == filter[i].getServerNames())
+        {
+            this->_conf = filter[i];
+            return ;
+        }
+    }
+    this->_conf = filter[0];
+}
+
+void Request::parseRequest(char *request, Registry registry, ConfVec configs, int &r)
 {
     std::string line;
     std::istringstream req(request);
@@ -480,7 +501,6 @@ void Request::parseRequest(char *request, Configuration const & conf, int &r)
 
     if (!this->_request.empty())
         goto setbody;
-    this->_conf = conf;
     std::getline(req, line);
     bodySize -= line.length() + 1;
     this->parseUrl(line);
@@ -495,6 +515,7 @@ void Request::parseRequest(char *request, Configuration const & conf, int &r)
         if (separator != std::string::npos)
             this->_request[line.substr(0, separator)] = line.substr(separator + 2, line.length() - separator - 3);
     }
+    this->config_matching(registry, configs);
     setbody:
     std::string method = this->_request["Method"];
     if (method == "POST")

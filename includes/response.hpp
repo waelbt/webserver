@@ -24,6 +24,9 @@
 
 #define MAX_BUFFER_SIZE 1024
 
+
+class Request;
+
 class Response
 {
 
