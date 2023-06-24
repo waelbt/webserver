@@ -13,10 +13,11 @@ Client::Client(const Registry& registry) : _registry(registry), _address(), _add
     _socket = accept(registry._listen_socket, NULL, NULL);
     if (_socket <= 0)
         throw Webserver::WebserverReset("accept() fail");
-    if (fcntl(_socket, F_SETFL, fcntl(_socket, F_GETFL, 0) | O_NONBLOCK) == -1) {
-		close(_socket);
-        throw "client setsocket file "; // catch it later
-	}
+    fcntl(_socket,F_SETFL,O_NONBLOCK);
+    // if (fcntl(_socket, F_SETFL, fcntl(_socket, F_GETFL, 0) | O_NONBLOCK) == -1) {
+	// 	close(_socket);
+    //     throw "client setsocket file "; // catch it later
+	// }
     Webserver::add_socket(_socket);
     std::cout << "New connection from , socket " << get_client_address() << _socket << std::endl;
 }
@@ -48,5 +49,5 @@ std::string Client::get_client_address()
 
 Client::~Client()
 {
-    // close(_socket);
+    close(_socket);
 }

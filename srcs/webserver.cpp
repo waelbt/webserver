@@ -4,8 +4,7 @@ fd_set Webserver::_readset;
 fd_set Webserver::_writeset;
 SOCKET Webserver::_max_socket = 0;
 
-Webserver::Webserver() 
-// : _servers()
+Webserver::Webserver()
 {
 
 }
@@ -17,18 +16,6 @@ bool compare(Configuration a, Configuration b)
 		return true;
 	return false;
 }
-
-// int setnonblocking(int sock)
-// {
-// 	int opts;
-
-// 	opts = fcntl(sock,F_GETFL);
-// 	(opts < 0) ? ret : (NULL);
-// 	opts = (opts | O_NONBLOCK);
-// 	(fcntl(sock,F_SETFL,opts) < 0) ? \
-// 	throw ServerException("fcntl failed to set set the modified file status flags back to the socket") : (NULL);
-// }
-
 
 SOCKET server_socket(std::string host, std::string port)
 {	
@@ -48,21 +35,18 @@ SOCKET server_socket(std::string host, std::string port)
 	{
 		listen_sockets = socket(bind_addr->ai_family, bind_addr->ai_socktype, bind_addr->ai_protocol);
 		if (listen_sockets < 0)
-			error_message = "socket system call failed.";
+			error_message = "socket  " + std::string(strerror(errno));
 		setsockopt(listen_sockets, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
-		if (fcntl(listen_sockets, F_SETFL, fcntl(listen_sockets, F_GETFL, 0) | O_NONBLOCK) == -1) {
-			freeaddrinfo(bind_addr);
-			close(listen_sockets);
-        	return -1;
-		}
+		fcntl(listen_sockets, F_SETFL, O_NONBLOCK);
 		if (bind(listen_sockets, bind_addr->ai_addr, bind_addr->ai_addrlen))
-		{ close(listen_sockets); error_message = "bind system call failed." + std::string(strerror(errno)); }
+		{ close(listen_sockets); error_message = "bind  " +  std::string(strerror(errno)); }
 		if (listen(listen_sockets, SOMAXCONN) < 0)
-		{ close(listen_sockets); error_message = "listen system call failed."; }
+		{ close(listen_sockets); error_message =  "listen  " + std::string(strerror(errno)); }
 	}
 	freeaddrinfo(bind_addr);
 	if (!error_message.empty())
 		return -1;
+	Webserver::add_socket(listen_sockets);
 	return listen_sockets;
 }
 
@@ -77,10 +61,9 @@ void Webserver::get_registry()
 	{
 		SOCKET tmp = server_socket(it->first, it->second);
 		if (tmp == -1)
-			std::cout << "socket setuping failed for " << it->first << ":" << it->second << std::endl;
+			std::cout << std::string(strerror(errno)) << it->first << ":" << it->second << std::endl;
 		else
 		{
-			Webserver::add_socket(tmp);
 			_registry.insert(_registry.end(), Registry(it->first, it->second, tmp));
 		}
 	}
@@ -136,9 +119,9 @@ Webserver::Webserver(const Webserver&  other)
 Webserver& Webserver::operator=(const Webserver&  other)
 {
 	_configs = other._configs;
-	// _servers = other._servers;
-	// _readset = other._readset;
-	// _max_socket = other._max_socket;
+	_registry = other._registry;
+	_readset = other._readset;
+	_max_socket = other._max_socket;
 	return *this;
 }
 
@@ -150,7 +133,7 @@ bool Webserver::wait_on_client(SetsPair& sets)
 	timeout.tv_sec = 0;
 	timeout.tv_usec = 5;
 	sets = std::make_pair(_readset, _writeset);
-	if (select(_max_socket + 1, &sets.first, &sets.second, 0, &timeout) < 0)\
+	if (select(_max_socket + 1, &sets.first, &sets.second, 0, &timeout) < 0)
 	{
 		// this->reset();
 		return false;
@@ -237,14 +220,13 @@ void Webserver::run()
 			{
 				if (FD_ISSET(_clients[i]->_socket, &temps.first))
 				{
-					this->fetch_request(_clients[i]);
 					if (!fetch_request(_clients[i])) {
-						drop_client(i); continue ; }
+						this->drop_client(i); continue ; }
 				}
 				if (FD_ISSET(_clients[i]->_socket, &temps.second))
 				{
 					if(send_response(_clients[i]))
-						drop_client(i);
+						this->drop_client(i);
 				}
 			}
 		// }

@@ -472,7 +472,7 @@ void Request::badFormat()
     this->_badFormat = 1;
 }
 
-void  Request::config_matching(Registry registry, ConfVec configs)
+void  Request::config_matching(const Registry& registry,const  ConfVec& configs)
 {
     std::string serverName = this->_request["Host"];
     std::vector<Configuration> filter;
@@ -493,7 +493,7 @@ void  Request::config_matching(Registry registry, ConfVec configs)
     this->_conf = filter[0];
 }
 
-void Request::parseRequest(char *request, Registry registry, ConfVec configs, int &r)
+void Request::parseRequest(char *request, const Registry& registry,const  ConfVec& configs, int &r)
 {
     std::string line;
     std::istringstream req(request);
@@ -510,12 +510,12 @@ void Request::parseRequest(char *request, Registry registry, ConfVec configs, in
     {
         bodySize -= line.length() + 1;
         if (line == "\r")
-            goto setbody;
+            break ;
         size_t separator = line.find(": ");
         if (separator != std::string::npos)
             this->_request[line.substr(0, separator)] = line.substr(separator + 2, line.length() - separator - 3);
     }
-    this->config_matching(registry, configs);
+     this->config_matching(registry, configs);
     setbody:
     std::string method = this->_request["Method"];
     if (method == "POST")
@@ -530,7 +530,6 @@ void Request::parseRequest(char *request, Registry registry, ConfVec configs, in
         _chunkState = DONE;
     }
 }
-
 
 void Request::printElement()
 {

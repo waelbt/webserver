@@ -64,7 +64,7 @@ class Request
         bool is_file(const char *path);
         void setBodyPath();
         int  readChunkedBody(char *request, int &r);
-        void  config_matching(Registry registry, ConfVec configs);
+        void  config_matching(const Registry& registry,const  ConfVec& configs);
     public:
         Request();
         ~Request();
@@ -78,7 +78,7 @@ class Request
         ChunkState const &    getChunkedState() const;
         std::string const &   getBody() const;
         size_t const &        getContentLength() const;
-        void                   parseRequest(char *request, Registry registry, ConfVec configs, int &r);
+        void                  parseRequest(char *request, const Registry& registry, const  ConfVec& configs, int &r);
         void                  printElement();
         std::string           get_attribute(const std::string& key); // wael ---------
 };

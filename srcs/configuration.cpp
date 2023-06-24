@@ -16,6 +16,18 @@
 
 // std::map<std::string, std::string> Configuration::_host_port_map;
 
+int setnonblocking(int sock)
+{
+	int opts;
+
+	opts = fcntl(sock,F_GETFL);
+	// (opts < 0) ? ret : (NULL);
+	opts = (opts | O_NONBLOCK);
+	fcntl(sock,F_SETFL,opts);
+	// throw ServerException("fcntl failed to set set the modified file status flags back to the socket") : (NULL);
+    return 0;
+}
+
 Configuration::Configuration() : _host(), _port(), _host_exists(0), _port_exists(0), _server_name("default_serve_name"), _locations()
 {
 }
