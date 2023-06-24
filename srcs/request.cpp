@@ -284,6 +284,7 @@ void Request::checkMethod()
     std::string pattern = this->_location.getPattren();
     std::string method = this->_request["Method"];
     std::vector<std::string>::iterator it = limitExcept.begin();
+    std::string allowedMethods;
 
     for(; it != limitExcept.end(); it++)
     {
@@ -301,9 +302,23 @@ void Request::checkMethod()
             break;
         }
     }
-    
     if (it == limitExcept.end() || (method != "POST" && method != "DELETE" && method != "GET"))
+    {
+        it = limitExcept.begin();
+        if (limitExcept.empty())
+            this->_request["Allow"] = "";
+        else
+        {
+            for(size_t i = 0; it != limitExcept.end(); it++)
+            {
+                allowedMethods += (*it);
+                if (i != limitExcept.size() - 1)
+                    allowedMethods += ", ";
+            }
+            this->_request["Allow"] = allowedMethods;
+        }
         this->_status = 405;
+    }
 }
 
 void Request::checkLocation()
