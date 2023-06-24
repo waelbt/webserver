@@ -20,6 +20,10 @@ struct Client {
 	ssize_t _bytesSent;
 	bool _remaining; 
 
+	struct ClientException : public CustomeExceptionMsg
+	{
+    	ClientException(const std::string& message);
+	};
 
 	// methods
 	Client();

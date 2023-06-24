@@ -524,35 +524,41 @@ void Response::serveCGIFile(std::string cgiPath, std::map<int, std::string> &err
 	this->serveStaticFile(cgiPath, errorPages);
 }
 
-void Response::parseResponseHeader(std::string responseHeader)
-{
-	std::vector<std::string> lines = this->split(responseHeader, "\r\n");
-	std::vector<std::string> firstLine = this->split(lines[0], ": ");
-	if (firstLine[0] == "Status")
-		this->setStatus(atoi(firstLine[1].c_str()));
-	else
-	{
-		this->setHeader(firstLine[0], firstLine[1]);
-		this->setStatus(200);
-	}
-	for (int i = 1; i < (int)lines.size(); i++)
-	{
-		std::vector<std::string> header = this->split(lines[i], ": ");
-		if (header[0].empty())
-			continue;
-		if (header[0] == "Content-type")
-			header[0] = "Content-Type";
-		if (this->_headers.find(header[0]) != this->_headers.end())
-		{
-			std::string value = this->_headers[header[0]];
-			if (!value.empty())
-				value += " \r\n" + header[0] + ": ";
-			value += header[1];
-			header[1] = value;
-		}
-		this->setHeader(header[0], header[1]);
-		std::cout << "Header: " << header[0] << " " << header[1] << std::endl;
-	}
+void Response::parseResponseHeader(std::string responseHeader) {
+    std::vector<std::string> lines = this->split(responseHeader, "\r\n");
+    if (lines.empty()) return; // If lines are empty, don't proceed.
+
+    std::vector<std::string> firstLine = this->split(lines[0], ": ");
+    if (firstLine.size() < 2) return; // If we don't have at least 2 parts, don't proceed.
+
+    if (firstLine[0] == "Status") {
+        if (firstLine[1].find_first_not_of("0123456789") == std::string::npos) {
+            // Check if the status code is an integer.
+            this->setStatus(atoi(firstLine[1].c_str()));
+        } else {
+            this->setStatus(200);
+        }
+    } else {
+        this->setHeader(firstLine[0], firstLine[1]);
+        this->setStatus(200);
+    }
+
+    for (int i = 1; i < (int)lines.size(); i++) {
+        std::vector<std::string> header = this->split(lines[i], ": ");
+        if (header[0].empty() || header.size() < 2) continue; // If header name or value is missing, don't proceed.
+
+        if (header[0] == "Content-type")
+            header[0] = "Content-Type";
+        if (this->_headers.find(header[0]) != this->_headers.end()) {
+            std::string value = this->_headers[header[0]];
+            if (!value.empty())
+                value += " \r\n" + header[0] + ": ";
+            value += header[1];
+            header[1] = value;
+        }
+        this->setHeader(header[0], header[1]);
+        std::cout << "Header: " << header[0] << " " << header[1] << std::endl;
+    }
 }
 
 std::vector<std::string> Response::split(const std::string &s, std::string delimiter)
