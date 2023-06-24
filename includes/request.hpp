@@ -15,7 +15,7 @@
 #include "configuration.hpp"
 
 #define RequestMap std::map<std::string, std::string>
-#define QueriesMap std::map<std::string, std::string>
+
 
 struct invalidUrl
 {
@@ -35,6 +35,7 @@ class Request
         Configuration _conf;
         Location      _location;
         std::string   _path;
+        char *        _header;
         std::string   _body;
         std::string   _queries;
         std::string   _extention;
@@ -46,12 +47,14 @@ class Request
         int           _status;
         size_t        _contentLength;
         int           _badFormat;
+        int           _headerDone;
         static int    contentStatePost;
         static int    contentStateGet;
 
         std::string decodeUrl(std::string const &url);
         std::string decipherUrl(std::string const &url);
         void parseUrl(std::string const &line);
+        void fullRequest(char *request, const Registry& registry,const  ConfVec& configs, int &r);
         void setContentTypePost(std::string const & content);
         void setContentTypeGet(std::string const & content);
         void badFormat();

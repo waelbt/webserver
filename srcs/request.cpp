@@ -83,9 +83,9 @@ size_t stringToDecimal(std::string const &str)
     return decimal;
 }
 
-Request::Request() : _request(), _conf(), _location(), _path(), _body(), _queries(), _extention(), _chunkedBodySize(),
+Request::Request() : _request(), _conf(), _location(), _path(), _header(strdup("")), _body(), _queries(), _extention(), _chunkedBodySize(),
                 _chunkState(UNDONE), _fdBody(), _bodySize(0), _chunkSize(0), _status(200), _contentLength(0),
-                _badFormat(0)
+                _badFormat(0), _headerDone(0)
 {
     this->_fdBody.close();
 }
@@ -493,7 +493,47 @@ void  Request::config_matching(const Registry& registry,const  ConfVec& configs)
     this->_conf = filter[0];
 }
 
+char	*ft_strjoin(char const *s1, char const *s2, int s1r, int s2r)
+{
+	char	*str;
+	int		i;
+	int		j;
+
+	i = -1;
+	j = -1;
+    
+	str = (char *)malloc(s1r + s2r);
+	while (++i < s1r)
+		str[i] = s1[i];
+	while (++j < s2r)
+		str[i + j] = s2[j];
+	free((char *)s1);
+	return (str);
+}
+
 void Request::parseRequest(char *request, const Registry& registry,const  ConfVec& configs, int &r)
+{
+    if (!this->_headerDone)
+    {
+        this->_header = ft_strjoin(this->_header, request, this->_bodySize, r);
+        this->_bodySize += r;
+        std::string checker;
+        for (size_t i = 0; i < this->_bodySize; i++)
+            checker.push_back(this->_header[i]);
+        if (checker.find("\r\n\r\n") != std::string::npos)
+        {
+            int size = (int)this->_bodySize;
+            this->_headerDone = 1;
+            this->_bodySize = 0;
+            this->fullRequest(this->_header, registry, configs, size);
+            free(this->_header);
+        }
+    }
+    else
+        this->fullRequest(request, registry, configs, r);
+}
+
+void Request::fullRequest(char *request, const Registry& registry,const  ConfVec& configs, int &r)
 {
     std::string line;
     std::istringstream req(request);
