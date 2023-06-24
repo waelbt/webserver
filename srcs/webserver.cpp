@@ -1,8 +1,8 @@
 #include "../includes/server.hpp"
 
-// fd_set Webserver::_readset;
-// fd_set Webserver::_writeset;
-// SOCKET Webserver::_max_socket = 0;
+fd_set Webserver::_readset;
+fd_set Webserver::_writeset;
+SOCKET Webserver::_max_socket = 0;
 
 Webserver::Webserver() 
 // : _servers()
@@ -64,7 +64,6 @@ SOCKET server_socket(std::string host, std::string port)
 	freeaddrinfo(bind_addr);
 	if (!error_message.empty())
 		return -1;
-	Webserver::add_socket(listen_sockets);
 	return listen_sockets;
 }
 
@@ -81,7 +80,10 @@ void Webserver::get_registry()
 		if (tmp == -1)
 			std::cout << "socket setuping failed for " << it->first << ":" << it->second << std::endl;
 		else
+		{
+			Webserver::add_socket(tmp);
 			_registry.insert(_registry.end(), Registry(it->first, it->second, tmp));
+		}
 	}
 }
 
@@ -92,11 +94,13 @@ Webserver::Webserver(std::string content): _configs(init_configs(content))
 
 void Webserver::add_socket(SOCKET socket)
 {
-	(void) socket;
-	// FD_SET(socket, &_readset);
-	// if (_max_socket < socket)
-		// _max_socket = socket;
+	FD_SET(socket, &_readset);
+	if (_max_socket < socket)
+		_max_socket = socket;
 }
+
+
+// check_duplicate_conf(Webserver::ConfVec configs); // chi compare;
 
 Webserver::ConfVec  Webserver::init_configs(std::string content)
 {
@@ -120,6 +124,7 @@ Webserver::ConfVec  Webserver::init_configs(std::string content)
 	}
 	if (configs.empty())
 		throw CustomeExceptionMsg(EmptyFile);
+	// check_duplicate_conf(Webserver::ConfVec configs);
 	return configs;
 }
 
@@ -139,20 +144,20 @@ Webserver& Webserver::operator=(const Webserver&  other)
 }
 
 
-// bool Webserver::wait_on_client(SetsPair& sets)
-// {
-// 	struct timeval timeout;
+bool Webserver::wait_on_client(SetsPair& sets)
+{
+	struct timeval timeout;
 
-// 	timeout.tv_sec = 0;
-// 	timeout.tv_usec = 5;
-// 	sets = std::make_pair(_readset, _writeset);
-// 	if (select(_max_socket + 1, &sets.first, &sets.second, 0, &timeout) < 0)\
-// 	{
-// 		this->reset();
-// 		return false;
-// 	}
-// 	return true;
-// }
+	timeout.tv_sec = 0;
+	timeout.tv_usec = 5;
+	sets = std::make_pair(_readset, _writeset);
+	if (select(_max_socket + 1, &sets.first, &sets.second, 0, &timeout) < 0)\
+	{
+		// this->reset();
+		return false;
+	}
+	return true;
+}
 
 // void Webserver::reset()
 // {
@@ -167,82 +172,96 @@ Webserver& Webserver::operator=(const Webserver&  other)
 // 	}
 // }
 
-// void  Webserver::clear_set()
-// {
-// 	for (SOCKET fd = 0; fd <= Webserver::_max_socket; fd++) {
-// 		if (FD_ISSET(fd, &Webserver::_readset) || FD_ISSET(fd, &Webserver::_writeset))
-// 		{
-// 			close(fd);
-// 		}
-// 	}
-// 	FD_ZERO(&_readset);
-// 	FD_ZERO(&_writeset);
-// }
+void  Webserver::clear_set()
+{
+	for (SOCKET fd = 0; fd <= Webserver::_max_socket; fd++) {
+		if (FD_ISSET(fd, &Webserver::_readset) || FD_ISSET(fd, &Webserver::_writeset))
+		{
+			close(fd);
+		}
+	}
+	FD_ZERO(&_readset);
+	FD_ZERO(&_writeset);
+}
 
-// int Webserver::fetch_request (Client *client, const Configuration& conf)
-// {
-// 	char request[MAX_REQUEST_SIZE + 1] = {0};
-// 	int r;
+int Webserver::fetch_request (Client *client)
+{
+	char request[MAX_REQUEST_SIZE + 1] = {0};
+	int r;
 
-// 	r = recv(client->_socket, request, MAX_REQUEST_SIZE, 0);
-// 	if (r < 1)
-// 	{
-// 		std::cout << "Unexpected disconnect from " << client->get_client_address() << strerror(errno) << std::endl;
-// 		FD_CLR(client->_socket, &_readset);
-// 		return 0;
-// 	}
-// 	else
-// 	{
-// 		request[r] = '\0';
-// 		client->_request.parseRequest(request, conf, r);
-// 		if (client->_request.getChunkedState() == DONE)
-// 		{
-// 			FD_CLR(client->_socket, &_readset);
-// 			FD_SET(client->_socket, &_writeset);
-// 		}
-// 	}
-// 	return 1;
-// }
+	r = recv(client->_socket, request, MAX_REQUEST_SIZE, 0);
+	if (r < 1)
+	{
+		std::cout << "Unexpected disconnect from " << client->get_client_address() << strerror(errno) << std::endl;
+		FD_CLR(client->_socket, &_readset);
+		return 0;
+	}
+	else
+	{
+		request[r] = '\0';
+		// client->_request.parseRequest(request, conf, r);
+		if (client->_request.getChunkedState() == DONE)
+		{
+			FD_CLR(client->_socket, &_readset);
+			FD_SET(client->_socket, &_writeset);
+		}
+	}
+	return 1;
+}
 
-// void Webserver::run()
-// {
-//     SetsPair temps;
+void Webserver::run()
+{
+    SetsPair temps;
 
-// 	while (1)
-//     {
-// 		try
-// 		{
-// 			if (!wait_on_client(temps))
-// 				continue;
-//         	for (ServerVec::iterator it = _servers.begin(); it != _servers.end(); it++)
-//         	{
-//             	std::vector<Client *>& _client = (*it)->get_clients();
-//     	    	if (FD_ISSET((*it)->get_listen_sockets(), &temps.first))
-// 		    		_client.insert(_client.end(), new Client((*it)->get_listen_sockets()));
-// 		   		for (size_t i = 0; i < _client.size(); i++)
-// 		    	{
-// 		    		if (FD_ISSET(_client[i]->_socket, &temps.first))
-// 		    		{
-// 						if (!fetch_request(_client[i], (*it)->get_configuration())) {
-// 							(*it)->drop_client(i); continue ; }
-// 					}
-// 					if (FD_ISSET(_client[i]->_socket, &temps.second))
-// 					{
-// 						if(send_response(_client[i]))
-// 							(*it)->drop_client(i);
-// 					}
-// 		   		}
-//         	}
-// 		}
-// 		catch(const std::exception& e)
-// 		{
-// 			std::cerr << e.what() << std::endl;
-// 			std::cout << "restarting the server\n.\n..\n...\n...\n.....\n........." << std::endl;
-// 			this->reset();
-// 		}
-//     }
-// 	this->stop();
-// }
+	while (1)
+    {
+		// try
+		// {
+			if (!wait_on_client(temps))
+				continue;
+			for (size_t i = 0; i < _registry.size(); i++)
+			{
+				if (FD_ISSET(_registry[i]._listen_socket, &temps.first))
+					_clients.insert(_clients.end(), new Client(_registry[i]));
+			}
+			for (size_t i = 0; i < _clients.size(); i++)
+			{
+				if (FD_ISSET(_clients[i]->_socket, &temps.first))
+				{
+					this->fetch_request(_clients[i]);
+					// if (!fetch_request(_client[i])) {
+					// 	(*it)->drop_client(i); continue ; }
+				}
+			}
+        	// for (ServerVec::iterator it = _servers.begin(); it != _servers.end(); it++)
+        	// {
+            // 	std::vector<Client *>& _client = (*it)->get_clients();
+    	    // 	if (FD_ISSET((*it)->get_listen_sockets(), &temps.first))
+		    // 		_client.insert(_client.end(), new Client((*it)->get_listen_sockets()));
+		   	// 	for (size_t i = 0; i < _client.size(); i++)
+		    // 	{
+		    // 		if (FD_ISSET(_client[i]->_socket, &temps.first))
+		    // 		{
+			// 			if (!fetch_request(_client[i], (*it)->get_configuration())) {
+			// 				(*it)->drop_client(i); continue ; }
+			// 		}
+			// 		if (FD_ISSET(_client[i]->_socket, &temps.second))
+			// 		{
+			// 			if(send_response(_client[i]))
+			// 				(*it)->drop_client(i);
+			// 		}
+		   	// 	}
+        	// }
+		// }
+		// catch(const std::exception& e)
+		// {
+			// std::cerr << e.what() << std::endl;
+			// std::cout << "restarting the server\n.\n..\n...\n...\n.....\n........." << std::endl;
+			// this->reset();
+		// }
+    }
+	// this->stop();
+}
 
 // int Webserver::send_response(Client *client)
 // {

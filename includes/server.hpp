@@ -26,33 +26,6 @@
 // 	int			_conf_id;
 // };
 
-struct Registry
-{
-	std::string _host;
-	std::string	_port;
-	SOCKET  _listen_socket;
-
-	Registry() : _host(), _port(), _listen_socket()
-	{}
-	Registry(std::string host, std::string port, SOCKET  listen_socket) : _host(host), _port(port), _listen_socket(listen_socket)
-	{}
-	Registry(const Registry& other)
-	{
-		*this = other;
-	}
-	Registry& operator=(const Registry& other)
-	{
-		_host = other._host;
-		_port = other._port;
-		_listen_socket = other._listen_socket;	
-		return *this;
-	}
-	~Registry()
-	{
-		// close (_listen_socket);
-	}
-};
-
 // class Server
 // {
 // 	public:
@@ -97,10 +70,11 @@ class Webserver
 	public:
 		ConfVec 	_configs;
 		std::vector<Registry> _registry;
+		std::vector<Client *> _clients;
 		// ServerVec  _servers;
-		// static fd_set _writeset;
-		// static fd_set _readset;
-		// static SOCKET _max_socket;
+		static fd_set _writeset;
+		static fd_set _readset;
+		static SOCKET _max_socket;
 	public:
 		Webserver();
 		Webserver(std::string content);
@@ -117,14 +91,14 @@ class Webserver
 		};
 		ConfVec init_configs(std::string content);
 		void get_registry();
-		// bool wait_on_client(SetsPair& sets);
-		// void run();
+		bool wait_on_client(SetsPair& sets);
+		void run();
 		// void stop();
 		// void reset();
 
-		// int fetch_request (Client *client, const Configuration& conf);
+		int fetch_request (Client *client);
 		// int send_response (Client *client);
 
 		static void add_socket(SOCKET socket);
-		// static void clear_set();		
+		static void clear_set();		
 };
