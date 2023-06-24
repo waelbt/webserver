@@ -132,25 +132,19 @@ void Request::setBodyPath()
     std::string upload = this->_location.getUpload();
     std::string dirPath;
     std::string rootPath = this->_location.getRoot();
-    std::cout << "root directory: " << rootPath << std::endl;
-    std::cout << "upload directory: " << upload << std::endl;
+
     if (!rootPath.empty() && rootPath[0] != '/' && rootPath[0] != '.')
         rootPath =  "./" + rootPath;
-    std::cout << "after goin " << rootPath << std::endl;
     if (!upload.empty())
     {
-        std::string path = rootPath + "/" + upload;
-        std::cout << "the path ---->" << path << std::endl;
         if (is_file(path.c_str()))
         {
-            std::cout << "file" << std::endl;
             this->_status = 400;
             this->_chunkState = DONE;
             return ;
         }
         else if (is_directory(path.c_str()))
         {
-            std::cout << "directory" << std::endl;
             if (access(path.c_str(), W_OK) == 0)
                 dirPath = path + "/";
             else
@@ -162,7 +156,6 @@ void Request::setBodyPath()
         }
         else
         {
-            std::cout << "not found" << std::endl;
             this->_status = 404;
             this->_chunkState = DONE;
             return ;
