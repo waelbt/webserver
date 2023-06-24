@@ -73,9 +73,10 @@ std::string Response::toString() const
 	return ss.str();
 }
 
-void Response::redirectLocation(const Request &request, std::string const &url)
+void Response::redirectLocation(const Request &request, std::string url)
 {
-	std::cout << "the new url is " << url << std::endl;
+	if (url[0] != '/')
+		url = "/" + url;
 	Configuration conf = request.getConf();
 	std::vector<Location> locations = conf.getLocations();
     std::vector<Location>::iterator it = locations.begin();
@@ -111,7 +112,7 @@ void Response::redirectLocation(const Request &request, std::string const &url)
 		this->serveErrorPage(newLocation.getErrorPages());
 	}
 	else
-		this->redirect(url.substr(upper.length()));
+		this->redirect(upper);
 }
 
 void Response::serveResponse(const Request &request)
@@ -126,7 +127,7 @@ void Response::serveResponse(const Request &request)
 	if (this->_status != 200)
 		this->serveErrorPage(errorPages);
 	else if (!location.getRedirect().empty())
-		this->redirect(location.getRedirect());
+		this->redirectLocation(request, location.getRedirect());
 	else if (method == "GET")
 		this->get(request);
 	else if (method == "POST")
