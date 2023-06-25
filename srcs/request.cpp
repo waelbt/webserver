@@ -530,11 +530,12 @@ char	*ft_strjoin(char const *s1, char const *s2, int s1r, int s2r)
 	i = -1;
 	j = -1;
     
-	str = (char *)malloc(s1r + s2r);
+	str = (char *)malloc(s1r + s2r + 1);
 	while (++i < s1r)
 		str[i] = s1[i];
 	while (++j < s2r)
 		str[i + j] = s2[j];
+    str[i + j] = '\0';
 	free((char *)s1);
 	return (str);
 }

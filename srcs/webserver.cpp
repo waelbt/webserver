@@ -147,12 +147,8 @@ Webserver& Webserver::operator=(const Webserver&  other)
 
 bool Webserver::wait_on_client(SetsPair& sets)
 {
-	struct timeval timeout;
-
-	timeout.tv_sec = 0;
-	timeout.tv_usec = 5;
 	sets = std::make_pair(_readset, _writeset);
-	if (select(_max_socket + 1, &sets.first, &sets.second, 0, &timeout) < 0)
+	if (select(_max_socket + 1, &sets.first, &sets.second, 0, 0) < 0)
 	{
 		this->reset();
 		return false;
