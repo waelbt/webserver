@@ -187,7 +187,7 @@ void Response::serveDirectory(std::string directoryPath, std::map<int, std::stri
 
 void Response::get(const Request &request)
 {
-	std::cout << "GET" << std::endl;
+	std::cout << "Method :       GET" << std::endl;
 	std::cout << _isHeaderSent << std::endl;
 	std::cout << _isBodySent << std::endl;
 	Location const &location = request.getLocation();

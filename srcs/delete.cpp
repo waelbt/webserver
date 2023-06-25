@@ -63,7 +63,7 @@ void Response::delete_file(std::string path)
 
 void Response::del(const Request &request)
 {
-	std::cout << "status " <<this->_status << std::endl;
+	std::cout << "Method :       DELETE" << std::endl;
 	std::string path = request.getPath();
 
 	if (this->_isDeleted == false)

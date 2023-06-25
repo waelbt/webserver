@@ -2,6 +2,7 @@
 
 void Response::post(const Request &request)
 {
+	std::cout << "Method :       POST" << std::endl;
     Location const &location = request.getLocation();
     std::map<int, std::string> errorPages = location.getErrorPages();
 	std::map<std::string, std::string> headers = request.getRequest();
