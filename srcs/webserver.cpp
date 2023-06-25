@@ -234,7 +234,16 @@ void Webserver::run()
 			for (size_t i = 0; i < _registry.size(); i++)
 			{
 				if (FD_ISSET(_registry[i]._listen_socket, &temps.first))
-					_clients.insert(_clients.end(), new Client(_registry[i]));
+				{
+					try 
+					{
+						_clients.insert(_clients.end(), new Client(_registry[i]));
+					}
+					catch(const Client::ClientException& e)
+					{
+						std::cerr << "WARNING : "<< e.what() << std::endl; 
+					}
+				}
 			}
 			for (size_t i = 0; i < _clients.size(); i++)
 			{
@@ -250,8 +259,6 @@ void Webserver::run()
 				}
 			}
 		}
-		catch(const Client::ClientException& e) {
-			std::cerr << "WARNING : "<< e.what() << std::endl; }
 		catch(const WebserverReset& e)
 		{
 			std::cerr << e.what() << "\nrestarting the server\n.\n..\n...\n...\n.....\n........." << std::endl;
