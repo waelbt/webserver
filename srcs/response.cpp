@@ -187,18 +187,13 @@ void Response::serveDirectory(std::string directoryPath, std::map<int, std::stri
 
 void Response::get(const Request &request)
 {
-	std::cout << "Method :       GET" << std::endl;
-	std::cout << _isHeaderSent << std::endl;
-	std::cout << _isBodySent << std::endl;
 	Location const &location = request.getLocation();
 	std::map<int, std::string> errorPages = location.getErrorPages();
 	std::map<std::string, std::string> headers = request.getRequest();
 	std::string path = request.getPath();
-	std::cout << "Path: " << path << std::endl;
 
 	std::string pathType = this->getPathType(path);
 
-	std::cout << "pathType: " << pathType << std::endl;
 	if (pathType == "file")
 	{
 		if (!this->_isFileOpned)
@@ -379,7 +374,6 @@ char **Response::getENV(std::string url, const Request &request)
 		std::string envVar = it->first + "=" + it->second;
 		envp[i] = new char[envVar.length() + 1];
 		std::strcpy(envp[i], envVar.c_str());
-		std::cout << envp[i] << std::endl;
 		i++;
 	}
 	// exit(0);
@@ -402,8 +396,6 @@ void Response::addHTTPToEnvForCGI(std::map<std::string, std::string> &env, std::
 
 void Response::serveCGI(std::string url, const Request &request)
 {
-	// std::cout << "Serving CGI: " << url << "is in process " << this->_isCGIInProcess << " is execution finished " << this->_isCGIFinished << std::endl;
-
 	std::string cgiPath = url;
 	Location const &location = request.getLocation();
 	std::map<int, std::string> errorPages = location.getErrorPages();
@@ -546,7 +538,6 @@ void Response::serveCGIFile(std::string cgiPath, std::map<int, std::string> &err
 				header += line;
 				header += "\n";
 			}
-			std::cout << "Header: " << header << std::endl;
 
 			this->parseResponseHeader(header);
 
@@ -561,7 +552,6 @@ void Response::serveCGIFile(std::string cgiPath, std::map<int, std::string> &err
 			this->_file.close();
 			ofs.close();
 			// exit(0);
-			std::cout << "File closed" << std::endl;
 			this->setIsFileOpned(false);
 		}
 		this->_isCGIParsed = true;
@@ -603,7 +593,6 @@ void Response::parseResponseHeader(std::string responseHeader) {
             header[1] = value;
         }
         this->setHeader(header[0], header[1]);
-        std::cout << "Header: " << header[0] << " " << header[1] << std::endl;
     }
 }
 
