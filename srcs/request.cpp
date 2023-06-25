@@ -137,16 +137,16 @@ void Request::setBodyPath()
         rootPath =  "./" + rootPath;
     if (!upload.empty())
     {
-        if (is_file(path.c_str()))
+        if (is_file(rootPath.c_str()))
         {
             this->_status = 400;
             this->_chunkState = DONE;
             return ;
         }
-        else if (is_directory(path.c_str()))
+        else if (is_directory(rootPath.c_str()))
         {
-            if (access(path.c_str(), W_OK) == 0)
-                dirPath = path + "/";
+            if (access(rootPath.c_str(), W_OK) == 0)
+                dirPath = rootPath + "/";
             else
             {
                 this->_status = 403;
