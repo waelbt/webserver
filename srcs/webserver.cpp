@@ -81,7 +81,6 @@ void Webserver::get_registry()
 	{
 		try
 		{
-			system("leaks webserve");
 			SOCKET tmp = server_socket(host_port[i].first, host_port[i].second);
 			_registry.insert(_registry.end(), Registry(host_port[i].first, host_port[i].second, tmp));
 		}	
