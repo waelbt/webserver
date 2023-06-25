@@ -86,7 +86,7 @@ void Webserver::get_registry()
 		}	
 		catch(const ServerException& e)
 		{
-			std::cout << "WARNING " << e.what() << " " << host_port[i].first << ":" << host_port[i].second << std::endl;
+			std::cerr << "WARNING " << e.what() << " " << host_port[i].first << ":" << host_port[i].second << std::endl;
 		}
 	}
 }

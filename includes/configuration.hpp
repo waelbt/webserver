@@ -79,8 +79,6 @@ std::string to_string(T num)
 	std::stringstream ss;
 
 	ss << num;
-
-	//std::cout << "to_string log" << std::endl;
 	return ss.str();
 }
 

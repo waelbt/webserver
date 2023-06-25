@@ -8,8 +8,6 @@ Client::Client() : _registry(), _address(), _address_length(sizeof(_address)), _
 
 Client::Client(const Registry& registry) : _registry(registry), _address(), _address_length(sizeof _address), _request(), _response(), _data_sent(), _bytesSent(), _remaining()
 {
-    std::cout << "procces " << getpid() << "paremt process   "<< getppid() << std::endl;
-    std::cout << "_listen_socket "<< registry._listen_socket << std::endl;
     _socket = accept(registry._listen_socket, NULL, NULL);
     (_socket <= 0) ?  throw ClientException("establish a connection with a client failed") : (NULL);
     (fcntl(_socket,F_SETFL,O_NONBLOCK) == -1) ? throw ClientException("failed to set socket descriptor to non-blocking mod") : (NULL);
