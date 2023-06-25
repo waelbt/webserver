@@ -38,22 +38,22 @@ SOCKET server_socket(std::string host, std::string port)
 		throw Webserver::ServerException("getaddrinfo system call failed.");
 	}
 	listen_sockets = socket(bind_addr->ai_family, bind_addr->ai_socktype, bind_addr->ai_protocol);
-	(listen_sockets < 0) ? throw Webserver::ServerException("socket  " + std::string(strerror(errno))) : (NULL);
+	(listen_sockets < 0) ? throw Webserver::ServerException("socket() system call failed") : (NULL);
 	(fcntl(listen_sockets,F_SETFL,O_NONBLOCK) == -1) ? throw Webserver::ServerException("failed to set socket descriptor to non-blocking mod") : (NULL);
 	if (setsockopt(listen_sockets, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)))
 	{
 		close(listen_sockets); freeaddrinfo(bind_addr);
-		throw Webserver::ServerException("set sock option  " +  std::string(strerror(errno)));
+		throw Webserver::ServerException("set sock option failed");
 	}
 	if(bind(listen_sockets, bind_addr->ai_addr, bind_addr->ai_addrlen))
 	{	
 		close(listen_sockets); freeaddrinfo(bind_addr);
-		throw Webserver::ServerException("bind  " +  std::string(strerror(errno)));
+		throw Webserver::ServerException("bind system call failed");
 	}
 	if (listen(listen_sockets, SOMAXCONN) < 0)
 	{	
 		close(listen_sockets); freeaddrinfo(bind_addr);
-		throw Webserver::ServerException("listen  " +  std::string(strerror(errno)));
+		throw Webserver::ServerException("listen system call failed");
 	}
 	freeaddrinfo(bind_addr);
 	Webserver::add_socket(listen_sockets);
@@ -187,7 +187,7 @@ int Webserver::fetch_request (Client *client)
 	r = recv(client->_socket, request, MAX_REQUEST_SIZE, 0);
 	if (r < 1)
 	{
-		std::cout << "Unexpected disconnect from " << client->get_client_address() << strerror(errno) << std::endl;
+		std::cout << "Unexpected disconnect from " << client->get_client_address() << std::endl;
 		FD_CLR(client->_socket, &_readset);
 		return 0;
 	}
