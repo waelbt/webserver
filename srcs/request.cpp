@@ -135,6 +135,10 @@ void Request::setBodyPath()
 
     if (!rootPath.empty() && rootPath[0] != '/' && rootPath[0] != '.')
         rootPath =  "./" + rootPath;
+    if (!rootPath.empty() && rootPath[rootPath.length() - 1] != '/')
+        rootPath += ( "/" + upload);
+    else
+        rootPath += upload;
     if (!upload.empty())
     {
         if (is_file(rootPath.c_str()))
@@ -146,7 +150,7 @@ void Request::setBodyPath()
         else if (is_directory(rootPath.c_str()))
         {
             if (access(rootPath.c_str(), W_OK) == 0)
-                dirPath = rootPath + "/";
+                dirPath = rootPath;
             else
             {
                 this->_status = 403;
@@ -163,6 +167,8 @@ void Request::setBodyPath()
     }
     else
         dirPath = "/tmp/";
+    if (dirPath[dirPath.length() - 1] != '/')
+        dirPath += "/";
     this->_body = dirPath + generateRandomFile() + this->_extention;
     this->_fdBody.open(this->_body, std::ios::app);
     if (!this->_fdBody.is_open())
