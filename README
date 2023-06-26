@@ -1,14 +1,14 @@
 The partition that we use to implement webserve :
   -  waelbt (dos) : 
           -> parsing configuration file.
-          -> multiplexing
-          -> delete method
+          -> multiplexing.
+          -> delete method.
   -   abelqasm (vendetta) : 
-          -> request parsing
-          -> request processing
-          -> post method
+          -> request parsing.
+          -> request processing.
+          -> post method.
   -    hamzalimouri (guts) : 
-          -> generate response
-          -> get method
-          -> implement multi cgi
-          -> set cookies
+          -> generate response.
+          -> get method.
+          -> implement multi cgi.
+          -> set cookies.
