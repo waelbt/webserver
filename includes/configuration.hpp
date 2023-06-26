@@ -6,7 +6,7 @@
 /*   By: waboutzo <waboutzo@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/23 16:35:07 by waboutzo          #+#    #+#             */
-/*   Updated: 2023/06/15 15:28:49 by waboutzo         ###   ########.fr       */
+/*   Updated: 2023/06/26 02:39:54 by waboutzo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,10 +26,9 @@
 #include <string>
 #include <exception>
 #include <vector>
- #include <sys/types.h>
- #include <signal.h>
-
-
+#include <sys/types.h>
+#include <signal.h>
+#include <string.h>
 
 #define NOROUTE				"define a server without location is forbidden"
 #define ServerError			": can't be in the server scope"

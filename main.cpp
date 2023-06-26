@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   main.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: hlimouri <hlimouri@student.42.fr>          +#+  +:+       +#+        */
+/*   By: waboutzo <waboutzo@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/15 15:38:53 by waboutzo          #+#    #+#             */
-/*   Updated: 2023/06/18 13:09:44 by hlimouri         ###   ########.fr       */
+/*   Updated: 2023/06/26 02:50:54 by waboutzo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -46,12 +46,16 @@ int main(int ac, char **av)
 
 		Webserver::clear_set();
 		Webserver webserver(content);
-		for (size_t i = 0; i < webserver._registry.size(); i++)
+		const std::vector<Registry>& registry = webserver.get_registry();
+		if (!registry.empty())
 		{
-			std::cout << "server "<< (i + 1) << " is running : " << std::endl;
-			std::cout << webserver._registry[i]._host << "         " << webserver._registry[i]._port << "         " << webserver._registry[i]._listen_socket << std::endl;
+			std::cout << "servers infos : " << std::endl;
+			for (size_t i = 0; i < registry.size(); i++)
+			{
+				std::cout << "servers (" << i + 1 << "): " << "host: " << registry[i]._host << "         " << " port: "<< registry[i]._port << "         " << "  fd : "<< registry[i]._listen_socket << std::endl;
+			}
+			webserver.run();
 		}
-		webserver.run();
 	}
 	catch(const std::exception& e)
 	{

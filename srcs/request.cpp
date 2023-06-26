@@ -37,15 +37,15 @@ bool invalidUrl::operator()(const char& c)
 std::string generateRandomFile() {
     static const char charset[] = "abcdefghijklmnopqrstuvwxyz";
     const int charsetSize = sizeof(charset) - 1;
-    
+
     std::string randomFile;
     srand(time(0));
-    
+
     for (int i = 0; i < 10; ++i) {
         int randomIndex = rand() % charsetSize;
         randomFile += charset[randomIndex];
     }
-    
+
     return randomFile;
 }
 
@@ -170,7 +170,7 @@ void Request::setBodyPath()
     if (dirPath[dirPath.length() - 1] != '/')
         dirPath += "/";
     this->_body = dirPath + generateRandomFile() + this->_extention;
-    this->_fdBody.open(this->_body, std::ios::app);
+    this->_fdBody.open(this->_body.c_str(), std::ios::app);
     if (!this->_fdBody.is_open())
     {
         this->_status = 500;
@@ -529,7 +529,7 @@ char	*ft_strjoin(char const *s1, char const *s2, int s1r, int s2r)
 
 	i = -1;
 	j = -1;
-    
+
 	str = (char *)malloc(s1r + s2r + 1);
 	while (++i < s1r)
 		str[i] = s1[i];

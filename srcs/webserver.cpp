@@ -23,7 +23,7 @@ Webserver::ServerException::ServerException(const std::string& message) : Custom
 }
 
 SOCKET server_socket(std::string host, std::string port)
-{	
+{
 	int opt = 1;
 	SOCKET listen_sockets;
 	s_addrinfo hints;
@@ -46,12 +46,12 @@ SOCKET server_socket(std::string host, std::string port)
 		throw Webserver::ServerException("set sock option failed");
 	}
 	if(bind(listen_sockets, bind_addr->ai_addr, bind_addr->ai_addrlen))
-	{	
+	{
 		close(listen_sockets); freeaddrinfo(bind_addr);
 		throw Webserver::ServerException("bind system call failed");
 	}
 	if (listen(listen_sockets, SOMAXCONN) < 0)
-	{	
+	{
 		close(listen_sockets); freeaddrinfo(bind_addr);
 		throw Webserver::ServerException("listen system call failed");
 	}
@@ -60,7 +60,7 @@ SOCKET server_socket(std::string host, std::string port)
 	return listen_sockets;
 }
 
-void Webserver::get_registry()
+void Webserver::init_registry()
 {
 	std::vector<std::pair<std::string, std::string> >					host_port;
 	std::vector<std::string>											servers_name;
@@ -83,7 +83,7 @@ void Webserver::get_registry()
 		{
 			SOCKET tmp = server_socket(host_port[i].first, host_port[i].second);
 			_registry.insert(_registry.end(), Registry(host_port[i].first, host_port[i].second, tmp));
-		}	
+		}
 		catch(const ServerException& e)
 		{
 			std::cerr << "WARNING " << e.what() << " " << host_port[i].first << ":" << host_port[i].second << std::endl;
@@ -93,7 +93,7 @@ void Webserver::get_registry()
 
 Webserver::Webserver(std::string content): _configs(init_configs(content))
 {
-	this->get_registry();
+	this->init_registry();
 }
 
 void Webserver::add_socket(SOCKET socket)
@@ -187,7 +187,7 @@ int Webserver::fetch_request (Client *client)
 	r = recv(client->_socket, request, MAX_REQUEST_SIZE, 0);
 	if (r < 1)
 	{
-		std::cout << "Unexpected disconnect from " << client->get_client_address() << std::endl;
+		std::cerr << "Unexpected disconnect from " << client->get_client_address() << std::endl;
 		FD_CLR(client->_socket, &_readset);
 		return 0;
 	}
@@ -208,18 +208,20 @@ void Webserver::drop_client(size_t i)
 {
 	if (i < _clients.size())
 	{
-		std::cout << "drop_clients socket  " << _clients[i]->_socket << std::endl;
 		delete _clients[i];
 		_clients.erase(_clients.begin() + i);
 	}
+}
+
+const std::vector<Registry>& Webserver::get_registry() const
+{
+	return this->_registry;
 }
 
 void Webserver::run()
 {
     SetsPair temps;
 
-	if (_registry.empty())
-		exit(0);
 	while (1)
     {
 		try
@@ -230,13 +232,13 @@ void Webserver::run()
 			{
 				if (FD_ISSET(_registry[i]._listen_socket, &temps.first))
 				{
-					try 
+					try
 					{
 						_clients.insert(_clients.end(), new Client(_registry[i]));
 					}
 					catch(const Client::ClientException& e)
 					{
-						std::cerr << "WARNING : "<< e.what() << std::endl; 
+						std::cerr << "WARNING : "<< e.what() << std::endl;
 					}
 				}
 			}
@@ -273,25 +275,21 @@ int Webserver::send_response(Client *client)
 			client->_data_sent = client->_response.getBody();
 	}
 	client->_bytesSent = send(client->_socket, client->_data_sent.c_str(), client->_data_sent.size(), 0);
-	if (client->_bytesSent == (ssize_t)client->_data_sent.size())
+	if (client->_response.getIsBodySent() || client->_bytesSent == -1)
 	{
-		std::cout << "send all" << std::endl;
-		client->_remaining = false;
+		if(client->_response.getIsBodySent())
+			std::cout << "data sent succefully" << std::endl;
+		else
+			std::cerr << "send system call fail" << std::endl;
+		FD_CLR(client->_socket, &_writeset);
+		return 1;
 	}
+	if (client->_bytesSent == (ssize_t)client->_data_sent.size())
+		client->_remaining = false;
 	else if (client->_bytesSent < (ssize_t)client->_data_sent.size())
 	{
 		client->_remaining = true;
-		if (client->_bytesSent != -1)
-		{
-			std::cout << "_remaining " << client->_bytesSent << std::endl;
-			client->_data_sent = client->_data_sent.substr(client->_bytesSent, client->_data_sent.length());
-		}
-	}
-	if (client->_response.getIsBodySent() || client->_bytesSent == -1) 
-	{
-		std::cout << "***************************************** disconnected **************************************************" << std::endl;
-		FD_CLR(client->_socket, &_writeset);
-		return 1;
+		client->_data_sent = client->_data_sent.substr(client->_bytesSent, client->_data_sent.length());
 	}
 	return 0;
 }

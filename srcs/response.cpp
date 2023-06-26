@@ -192,6 +192,7 @@ void Response::get(const Request &request)
 	std::map<std::string, std::string> headers = request.getRequest();
 	std::string path = request.getPath();
 
+	std::cout << "Method :       GET\n" << std::endl;
 	std::string pathType = this->getPathType(path);
 
 	if (pathType == "file")
@@ -255,7 +256,7 @@ void Response::serveDirectoryAutoIndex(std::string url, std::map<int, std::strin
 	DIR *dir = opendir(url.c_str());
 	if (dir == NULL)
 	{
-		std::cout << "Error opening directory" << std::endl;
+		std::cerr << "Error opening directory" << std::endl;
 		this->setStatus(403);
 		this->serveErrorPage(errorPages);
 	}
@@ -276,7 +277,7 @@ void Response::serveDirectoryAutoIndex(std::string url, std::map<int, std::strin
 	this->_isHeaderParsed = true;
 	std::time_t result = std::time(NULL);
 	this->_generatedName = "/tmp/" + this->generateRandomFile(result) + ".txt";
-	std::fstream file(this->_generatedName, std::ios::out);
+	std::fstream file(this->_generatedName.c_str(), std::ios::out);
 	file << responseBody;
 	file.close();
 	this->serveStaticFile(this->_generatedName, errorPages);
@@ -439,7 +440,7 @@ void Response::executeCGI(std::string cgiPath, std::string binary, std::map<int,
 		fd[1] = open(this->_cgiOutput.c_str() , O_WRONLY | O_CREAT | O_TRUNC, 0666);
 		if (fd[0] == -1 || fd[1] == -1)
 		{
-			std::cout << "Error opening file" << std::endl;
+			std::cerr << "Error opening file" << std::endl;
 			this->setStatus(403);
 			this->serveErrorPage(errorPages);
 			return;
@@ -462,7 +463,7 @@ void Response::executeCGI(std::string cgiPath, std::string binary, std::map<int,
 			char *args[3] = {(char*)binary.c_str(), (char*)cgiPath.c_str(), NULL};
 			if (execve(binary.c_str(), args, envp) == -1)
 			{
-				std::cout << "Error executing CGI" << std::endl;
+				std::cerr << "Error executing CGI" << std::endl;
 				exit(1);
 			}
 		}

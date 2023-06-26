@@ -18,8 +18,9 @@ struct Client {
 	Response _response;
 	std::string _data_sent;
 	ssize_t _bytesSent;
-	bool _remaining; 
+	bool _remaining;
 
+	// nested class
 	struct ClientException : public CustomeExceptionMsg
 	{
     	ClientException(const std::string& message);

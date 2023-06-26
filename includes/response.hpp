@@ -19,7 +19,8 @@
 #include <sys/stat.h>
 #include "request.hpp"
 #include <ctime>
-
+#include <sys/types.h>
+#include <sys/wait.h>
 #include <dirent.h>
 
 #define MAX_BUFFER_SIZE 1024
@@ -92,7 +93,7 @@ public:
 	void reset();
 	void delete_file(std::string path);
 	void delete_directory(std::string path, const Request &request);
-public : 
+public :
 	int _status;
 	int _length;
 	std::ifstream _file;

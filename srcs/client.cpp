@@ -3,7 +3,7 @@
 
 Client::Client() : _registry(), _address(), _address_length(sizeof(_address)), _request(), _response(), _data_sent(), _bytesSent(), _remaining()
 {
-    
+
 }
 
 Client::Client(const Registry& registry) : _registry(registry), _address(), _address_length(sizeof _address), _request(), _response(), _data_sent(), _bytesSent(), _remaining()
@@ -12,7 +12,7 @@ Client::Client(const Registry& registry) : _registry(registry), _address(), _add
     (_socket <= 0) ?  throw ClientException("establish a connection with a client failed") : (NULL);
     (fcntl(_socket,F_SETFL,O_NONBLOCK) == -1) ? throw ClientException("failed to set socket descriptor to non-blocking mod") : (NULL);
     Webserver::add_socket(_socket);
-    std::cout << "New connection from , socket " << get_client_address() << _socket << std::endl;
+    std::cout << "\nNew connection from\n" << get_client_address() << std::endl;
 }
 
 Client::ClientException::ClientException(const std::string& message) : CustomeExceptionMsg(message)
@@ -35,7 +35,7 @@ Client& Client::operator=(const Client& other)
     return *this;
 }
 
-std::string Client::get_client_address() 
+std::string Client::get_client_address()
 {
     static char address_buffer[100];
 
@@ -45,5 +45,6 @@ std::string Client::get_client_address()
 
 Client::~Client()
 {
+    std::cout << "\nclient " << get_client_address() << "  disconnected \n" << std::endl;
     close(_socket);
 }

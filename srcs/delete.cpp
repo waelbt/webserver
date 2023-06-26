@@ -54,7 +54,7 @@ void Response::delete_file(std::string path)
 {
 	if (access(path.c_str(), X_OK | W_OK) != 0)
 		this->setStatus(403);
-	else 
+	else
 	{
 		this->setStatus(204);
 		remove(path.c_str());
@@ -63,9 +63,9 @@ void Response::delete_file(std::string path)
 
 void Response::del(const Request &request)
 {
-	std::cout << "Method :       DELETE" << std::endl;
 	std::string path = request.getPath();
 
+	std::cout << "Method :       DELETE\n" << std::endl;
 	if (this->_isDeleted == false)
 	{
 		(is_directory(path.c_str())) ? delete_directory(path, request) : \

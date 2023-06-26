@@ -21,7 +21,7 @@ class Webserver
 {
 	public:
 		typedef std::pair<fd_set, fd_set> SetsPair;
-	public:
+	private:
 		ConfVec 	_configs;
 		std::vector<Registry> _registry;
 		std::vector<Client *> _clients;
@@ -34,7 +34,7 @@ class Webserver
 		Webserver(const Webserver&  other);
 		Webserver& operator=(const Webserver&  _servers);
 		~Webserver();
-		
+		const std::vector<Registry>& get_registry() const;
 		struct ServerException : public CustomeExceptionMsg
 		{
     		ServerException(const std::string& message);
@@ -48,7 +48,7 @@ class Webserver
 				virtual ~WebserverReset() throw();
 		};
 		ConfVec init_configs(std::string content);
-		void get_registry();
+		void init_registry();
 		bool wait_on_client(SetsPair& sets);
 		void drop_client(size_t i);
 		void run();
@@ -59,5 +59,5 @@ class Webserver
 		int send_response (Client *client);
 
 		static void add_socket(SOCKET socket);
-		static void clear_set();		
+		static void clear_set();
 };

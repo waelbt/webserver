@@ -8,7 +8,7 @@ void Response::post(const Request &request)
 	std::string path = request.getPath();
 	std::string pathType = this->getPathType(path);
 
-    
+	std::cout << "Method :       POST\n" << std::endl;
     if (location.getUpload().empty())
     {
 		if (pathType == "file")
