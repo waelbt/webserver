@@ -14,8 +14,6 @@ Registry::Registry(const Registry& other)
 	*this = other;
 }
 
-
-
 Registry& Registry::operator=(const Registry& other)
 {
 	_host = other._host;

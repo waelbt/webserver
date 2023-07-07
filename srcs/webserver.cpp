@@ -63,19 +63,23 @@ SOCKET server_socket(std::string host, std::string port)
 void Webserver::init_registry()
 {
 	std::vector<std::pair<std::string, std::string> >					host_port;
-	std::vector<std::string>											servers_name;
 
 	for (size_t i = 0; i < _configs.size(); i++)
 	{
 		std::pair<std::string, std::string> tmp = std::make_pair(_configs[i].getHost(), _configs[i].getPort());
 		if (find(host_port.begin(), host_port.end(), tmp) == host_port.end())
 			host_port.insert(host_port.end(), tmp);
-		else
+	}
+	for (size_t i = 0; i < _configs.size(); i++)
+	{
+		for (size_t j = i + 1; j < _configs.size(); j++)
 		{
-			if (find(servers_name.begin(), servers_name.end(), _configs[i].getServerNames()) != servers_name.end())
-				throw CustomeExceptionMsg("it's forbidden to set two identical server, at least change the server name -_-");
+			if ((_configs[i].getHost() == _configs[j].getHost()) && \
+				(_configs[i].getPort() == _configs[j].getPort()) && \
+				(_configs[i].getServerNames() == _configs[j].getServerNames()))
+					throw CustomeExceptionMsg("it's forbidden to set two identical server, at least change the server name -_-");
+
 		}
-		servers_name.insert(servers_name.end(), _configs[i].getServerNames());
 	}
 	for (size_t i = 0; i < host_port.size(); i++)
 	{
